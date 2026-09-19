@@ -13,7 +13,7 @@ function Layout.Compute(db)
     end
     Reserve('control',20,db.showLockButton~=false)
     Reserve('pet',48,db.showTargetTarget~=false)
-    Reserve('combat',56,db.markWarning~=false or db.showAngle~=false)
+    Reserve('combat',56,db.markWarning~=false or db.aspectWarning~=false or db.showAngle~=false)
     result.range={x=6,width=right-6}
     result.text={x=db.showRange~=false and 66 or 14,width=0}
     result.text.width=right-8-result.text.x

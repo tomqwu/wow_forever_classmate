@@ -95,3 +95,20 @@ function Context.MarkMissing(name)
     end
     return nil
 end
+
+function Context.AspectMissing(names)
+    if not next(names) then return nil end
+    if Call(UnitAffectingCombat,'player')~=true or Call(UnitIsDead,'player')~=false then return false end
+    local api=C_UnitAuras and C_UnitAuras.GetAuraDataByIndex
+    if type(api)~='function' then return nil end
+    local unknown=false
+    for index=1,255 do
+        local ok,aura=pcall(api,'player',index,'HELPFUL')
+        if not ok or not Core.IsReadable(aura) then return nil end
+        if aura==nil then if unknown then return nil end;return true end
+        if type(aura)~='table' then return nil end
+        if not Core.IsReadable(aura.name) or type(aura.name)~='string' then unknown=true
+        elseif names[aura.name] then return false end
+    end
+    return nil
+end

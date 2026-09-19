@@ -1,3 +1,13 @@
+## 0.14.0
+
+- Added an independently toggleable missing-aspect icon, shown only in combat when no learned aspect buff is active.
+- Any recognized learned aspect clears the warning; it does not force Hawk over other choices.
+- Shares the combat block with Mark in two compact icon slots; the bar stays 400 × 56.
+- Works without a selected target, updates on player aura changes, and stays quiet for dead players or restricted buff data.
+- Aspect discovery currently recognizes English spellbook names beginning “Aspect of”; other locales remain quiet rather than guessing.
+
+Use `/reload`, then `/fhunter` to configure the reminder.
+
 ## 0.13.3
 
 - Hunter’s Mark reminder now appears only while you are in combat with a living enemy target selected.

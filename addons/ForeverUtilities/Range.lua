@@ -97,6 +97,7 @@ function Range.Create(host, db)
     label:SetJustifyH('LEFT')
     label:SetWordWrap(false)
     local markName
+    local aspectNames={}
     local markBorder=frame:CreateTexture(nil,'ARTWORK',nil,0)
     markBorder:SetSize(24,24);markBorder:SetPoint('TOPLEFT',frame,'TOPLEFT',310,-27)
     markBorder:SetColorTexture(1,0.65,0.1,1);markBorder:Hide()
@@ -104,6 +105,16 @@ function Range.Create(host, db)
     markIcon:SetSize(20,20);markIcon:SetPoint('CENTER',markBorder,'CENTER',0,0)
     markIcon:SetTexture('Interface\\Icons\\Ability_Hunter_SniperShot');markIcon:Hide()
     frame.markIcon=markIcon
+    local aspectBorder=frame:CreateTexture(nil,'ARTWORK',nil,0)
+    aspectBorder:SetSize(24,24);aspectBorder:SetColorTexture(1,0.65,0.1,1);aspectBorder:Hide()
+    local aspectIcon=frame:CreateTexture(nil,'ARTWORK',nil,1)
+    aspectIcon:SetSize(20,20);aspectIcon:SetPoint('CENTER',aspectBorder,'CENTER',0,0)
+    aspectIcon:SetTexture('Interface\\Icons\\Spell_Nature_RavenForm');aspectIcon:Hide()
+    frame.aspectIcon=aspectIcon
+    local function UpdateAspect()
+        local missing=db.aspectWarning~=false and NS.TargetContext.AspectMissing(aspectNames)==true
+        aspectIcon:SetShown(missing);aspectBorder:SetShown(missing)
+    end
     local petHighlight=frame:CreateTexture(nil,'ARTWORK',nil,0)
     petHighlight:SetSize(44,44);petHighlight:SetPoint('RIGHT',frame,'RIGHT',-21,0)
     petHighlight:SetColorTexture(1,0.1,0.1,1);petHighlight:Hide()
@@ -162,7 +173,8 @@ function Range.Create(host, db)
         end
         if layout.combat then
             local x=layout.combat.x
-            markBorder:ClearAllPoints();markBorder:SetPoint('TOPLEFT',frame,'TOPLEFT',x+16,-5)
+            markBorder:ClearAllPoints();markBorder:SetPoint('TOPLEFT',frame,'TOPLEFT',x+(db.aspectWarning~=false and 3 or 16),-5)
+            aspectBorder:ClearAllPoints();aspectBorder:SetPoint('TOPLEFT',frame,'TOPLEFT',x+(db.markWarning~=false and 29 or 16),-5)
             angleLabel:ClearAllPoints();angleLabel:SetPoint('TOPLEFT',frame,'TOPLEFT',x+3,-34)
             angleLabel:SetWidth(50);angleLabel:SetJustifyH('CENTER')
         end
@@ -176,6 +188,7 @@ function Range.Create(host, db)
         markIcon:Hide();markBorder:Hide();petHighlight:Hide();portrait:Hide();portrait:SetTexture(nil);angleLabel:SetText('')
     end
     local function UpdateContext()
+        UpdateAspect()
         -- Clear first: an absent/restricted new unit must never retain the old portrait.
         petHighlight:Hide();portrait:Hide();portrait:SetTexture(nil)
         if db.showTargetTarget~=false and Call(UnitExists,'targettarget')==true
@@ -198,6 +211,7 @@ function Range.Create(host, db)
     local spells, shot, elapsed = {}, nil, 0
     local function Discover()
         spells, shot, markName = {}, nil, nil
+        aspectNames={}
         local markInfo=Call(C_Spell and C_Spell.GetSpellInfo,"Hunter's Mark")
         local wanted=type(markInfo)=='table' and markInfo.name or "Hunter's Mark"
         if not Core.IsReadable(wanted) then wanted=nil end
@@ -216,6 +230,11 @@ function Range.Create(host, db)
                         and Call(C_SpellBook.IsSpellKnown,id)==true then
                         seen[id]=true
                         local data=Call(C_Spell.GetSpellInfo,id)
+                        if type(data)=='table' and Core.IsReadable(data.name) and type(data.name)=='string'
+                            and data.name:match('^Aspect of ') then
+                            aspectNames[data.name]=true
+                            if Core.IsNumber(data.iconID) then aspectIcon:SetTexture(data.iconID) end
+                        end
                         if type(data)=='table' and Core.IsReadable(data.name) and wanted and data.name==wanted then
                             markName=data.name
                             if Core.IsNumber(data.iconID) then markIcon:SetTexture(data.iconID) end
@@ -303,7 +322,7 @@ function Range.Create(host, db)
             for _,event in ipairs(rangeEvents) do frame:RegisterEvent(event) end
             active=true;Discover()
         end
-        UpdateAmmo()
+        UpdateAmmo();UpdateAspect()
         local hasTarget=Call(UnitExists,'target')==true
         local inCombat=Call(UnitAffectingCombat,'player')==true
         frame:SetAlpha((db.fadeOutOfCombat==false or inCombat) and 1 or (hasTarget and 0.6 or 0.2))
@@ -322,7 +341,7 @@ function Range.Create(host, db)
     end
     frame:SetScript('OnEvent',function(_,event,unit)
         if not db.enabled then return end
-        if event=='UNIT_AURA' and (not Core.IsReadable(unit) or unit~='target') then return end
+        if event=='UNIT_AURA' and (not Core.IsReadable(unit) or (unit~='target' and unit~='player')) then return end
         if (event=='UNIT_HEALTH' or event=='UNIT_MAXHEALTH') and
             (not Core.IsReadable(unit) or (unit~='pet' and unit~='targettarget')) then return end
         if event=='UNIT_PET' and (not Core.IsReadable(unit) or unit~='player') then return end
@@ -332,7 +351,7 @@ function Range.Create(host, db)
         if (event=='UNIT_NAME_UPDATE' or event=='UNIT_PORTRAIT_UPDATE') and (not Core.IsReadable(unit) or (unit~='target' and unit~='targettarget')) then return end
         if event=='UNIT_FLAGS' and (not Core.IsReadable(unit) or unit~='target') then return end
         if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then
-            frame:SetScript('OnUpdate',nil); ClearContext(); Paint('unknown','Range inactive'); return
+            frame:SetScript('OnUpdate',nil); aspectIcon:Hide();aspectBorder:Hide();ClearContext(); Paint('unknown','Range inactive'); return
         end
         if event=='SPELLS_CHANGED' or event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_EQUIPMENT_CHANGED' then Discover() end
         Refresh()

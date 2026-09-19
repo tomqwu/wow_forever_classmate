@@ -102,4 +102,17 @@ UnitIsDead=function() return false end
 C_UnitAuras.GetAuraDataByIndex=function() error('restricted') end
 check(C.MarkMissing("Hunter's Mark")==nil,'aura API failure quiet')
 C_UnitAuras=nil;check(C.MarkMissing("Hunter's Mark")==nil,'missing aura API quiet')
+local aspects={['Aspect of the Hawk']=true,['Aspect of the Monkey']=true}
+UnitAffectingCombat=function() return true end;UnitIsDead=function() return false end
+local buffs={}
+C_UnitAuras={GetAuraDataByIndex=function(unit,i,filter) assert(unit=='player' and filter=='HELPFUL');return buffs[i] end}
+check(C.AspectMissing(aspects),'no aspect in combat warns')
+buffs={{name='Aspect of the Monkey'}};check(C.AspectMissing(aspects)==false,'any learned aspect clears warning')
+buffs={{name=secret}};check(C.AspectMissing(aspects)==nil,'restricted buff stays quiet')
+buffs={};UnitAffectingCombat=function() return false end
+check(C.AspectMissing(aspects)==false,'out of combat quiet')
+UnitAffectingCombat=function() return true end;UnitIsDead=function() return true end
+check(C.AspectMissing(aspects)==false,'dead player quiet')
+UnitIsDead=function() return false end;check(C.AspectMissing({})==nil,'no learned aspect quiet')
+C_UnitAuras=nil;check(C.AspectMissing(aspects)==nil,'missing aura API quiet')
 print('PASS: '..count..' target context checks')

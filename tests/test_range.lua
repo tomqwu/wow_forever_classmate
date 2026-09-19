@@ -282,4 +282,17 @@ db.fadeOutOfCombat=false;f.Refresh();check(f.alpha==1,'fading can be disabled')
 UnitIsUnit=function(unit,other) return unit=='targettarget' and other=='pet' end
 UnitHealth=function() return 10 end;UnitHealthMax=function() return 100 end
 db.petMendWarning=false;f.Refresh();check(not glow.shown and portrait.shown,'pet warning off keeps portrait')
+db.aspectWarning=true;combat=true;UnitIsDead=function() return false end
+C_Spell.GetSpellInfo=function() return {name='Aspect of the Hawk',iconID=987} end
+local aspect=false
+C_UnitAuras.GetAuraDataByIndex=function(unit,i)
+ if unit=='player' and aspect and i==1 then return {name='Aspect of the Hawk'} end
+end
+UnitExists=function() return false end
+f.scripts.OnEvent(f,'SPELLS_CHANGED')
+check(f.aspectIcon.shown and not f.scripts.OnUpdate,'aspect warns in combat without target and without idle polling')
+aspect=true;f.scripts.OnEvent(f,'UNIT_AURA','player');check(not f.aspectIcon.shown,'player aura immediately clears aspect warning')
+aspect=false;f.scripts.OnEvent(f,'UNIT_AURA','player');check(f.aspectIcon.shown,'removed aspect restores warning')
+combat=false;f.scripts.OnEvent(f,'PLAYER_REGEN_ENABLED');check(not f.aspectIcon.shown,'combat end clears aspect warning')
+combat=true;db.aspectWarning=false;f.Refresh();check(not f.aspectIcon.shown,'aspect toggle disables warning')
 print('PASS: '..count..' distance checks')
