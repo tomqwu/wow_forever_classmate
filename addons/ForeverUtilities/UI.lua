@@ -125,7 +125,7 @@ local function RefreshMinimap()
         Circle(26,'BORDER'):SetColorTexture(0.72,0.57,0.25,1)
         Circle(22,'ARTWORK'):SetColorTexture(0.025,0.035,0.025,1)
         local icon=Circle(19,'OVERLAY')
-        icon:SetTexture('Interface\\Icons\\Ability_Marksmanship');icon:SetTexCoord(0.08,0.92,0.08,0.92)
+        icon:SetTexture('Interface\\AddOns\\ForeverUtilities\\Textures\\HuntersFriend');icon:SetTexCoord(0,1,0,1)
         local highlight=Circle(24,'HIGHLIGHT');highlight:SetColorTexture(1,0.85,0.4,0.22)
         minimapButton:SetScript('OnEnter',function(self)
             if GameTooltip then
@@ -164,7 +164,7 @@ SlashCmdList.FOREVERUTILITIES=function(message)
         db.scale=value;Hunter.Apply()
     elseif command=='reset' then Hunter.Reset()
     elseif command=='status' then
-        Say('v0.14.0 | '..(db.enabled and 'Enabled' or 'Disabled'))
+        Say('v0.14.1 | '..(db.enabled and 'Enabled' or 'Disabled'))
         if db.enabled and Hunter.instance then Say(Hunter.instance.Status()) end
     else Say('/fhunter: unlock | lock | on | off | scale 0.5..2 | reset | status') end
 end

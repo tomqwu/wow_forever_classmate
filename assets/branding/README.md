@@ -3,3 +3,5 @@
 Original generated PNG for CurseForge project artwork and the GitHub README. Golden lynx, emerald bow, and arrow; no lettering so the symbol can work at small sizes.
 
 This source asset is outside the addon package and does not require an addon release. Upload hunters-friend-logo.png in CurseForge project settings to replace the project avatar.
+
+The same artwork is exported as an uncompressed 256 × 256 RGBA TGA at addons/ForeverUtilities/Textures/HuntersFriend.tga for the minimap button and addon-list icon. It retains the full logo without cropping.

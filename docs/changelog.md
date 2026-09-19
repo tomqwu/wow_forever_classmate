@@ -1,3 +1,11 @@
+## 0.14.1
+
+- The minimap button now uses the same lynx-and-bow logo as the GitHub project.
+- Added the matching icon to WoW’s addon list.
+- Bundled a game-compatible TGA texture; minimap dragging, position, and click behavior are unchanged.
+
+Use `/reload` to load the new artwork.
+
 ## 0.14.0
 
 - Added an independently toggleable missing-aspect icon, shown only in combat when no learned aspect buff is active.
