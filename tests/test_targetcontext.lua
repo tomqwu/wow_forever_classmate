@@ -115,4 +115,17 @@ UnitAffectingCombat=function() return true end;UnitIsDead=function() return true
 check(C.AspectMissing(aspects)==false,'dead player quiet')
 UnitIsDead=function() return false end;check(C.AspectMissing({})==nil,'no learned aspect quiet')
 C_UnitAuras=nil;check(C.AspectMissing(aspects)==nil,'missing aura API quiet')
+UnitExists=function() return true end;UnitIsDead=function() return false end
+local mood=1;C_PetInfo={GetPetHappiness=function() return mood end}
+check(C.PetMoodWarning()==1,'unhappy warns')
+mood=2;check(C.PetMoodWarning()==2,'content warns until fully happy')
+mood=3;check(C.PetMoodWarning()==nil,'happy clears warning')
+mood=secret;check(C.PetMoodWarning()==nil,'secret happiness quiet')
+mood=9;check(C.PetMoodWarning()==nil,'invalid happiness quiet')
+mood=1;UnitExists=function() return false end;check(C.PetMoodWarning()==nil,'no pet quiet')
+UnitExists=function() return true end;UnitIsDead=function() return true end
+check(C.PetMoodWarning()==nil,'dead pet quiet')
+UnitIsDead=function() return false end;C_PetInfo=nil;GetPetHappiness=function() return 2 end
+check(C.PetMoodWarning()==2,'legacy happiness fallback')
+GetPetHappiness=nil;check(C.PetMoodWarning()==nil,'missing happiness API quiet')
 print('PASS: '..count..' target context checks')

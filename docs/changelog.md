@@ -1,3 +1,12 @@
+## 0.15.0
+
+- Added an optional pet mood badge: red for unhappy, yellow for content, hidden when happy.
+- Works outside combat, without a target, and with the target-of-target portrait disabled.
+- Updates on pet happiness changes and dismissal without adding idle polling. Dead pets and unavailable readings stay quiet.
+- The badge uses the existing pet block; the bar remains 400 × 56. Hover for the feeding reminder.
+
+Use `/reload`, then `/fhunter` for the Pet happiness warning toggle.
+
 ## 0.14.1
 
 - The minimap button now uses the same lynx-and-bow logo as the GitHub project.

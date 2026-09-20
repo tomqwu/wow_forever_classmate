@@ -9,14 +9,14 @@ visual groups inside one hunter addon, not a return to the generic module system
 | --- | --- | --- |
 | Range / supplies | 6–270 | Weapon icon; white one-line range; ammo directly underneath |
 | Combat | 270–326 | Highlighted Mark icon above signed facing angle |
-| Pet | 326–374 | Target-of-target portrait; red health border only for own low-health pet |
+| Pet | 326–374 | Target-of-target portrait; red health border; small red/yellow mood badge |
 | Control | 374–394 | Small lock button |
 
 Six pixels remain as outer padding. Subtle dividers mark block boundaries.
 Range text starts at x=66 and has 196 pixels with all blocks enabled. It uses
 16px type when possible, scaling to 12px for long readings without wrapping.
 Ammo stays 12px below it. Disabling range removes its icon and moves supplies
-left. Disabling combat, portrait, or lock returns that width to range/supplies.
+left. Disabling combat, all pet displays (portrait and happiness), or lock returns that width to range/supplies.
 
 Blocks are allocated from preferences, not transient warning state. Applying
 Hunter's Mark or changing targets never shifts other icons or text. Combat icons

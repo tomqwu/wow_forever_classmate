@@ -12,6 +12,7 @@ you need at a glance without a toolbox or module selector.
 - **Target-of-target portrait:** a small portrait on the right shows who your target is targeting, without extra wording.
 - **Hunter's Mark reminder:** a highlighted spell icon appears only while you are in combat and your living enemy target has no readable Hunter's Mark debuff and you have learned the spell. It clears when marked, including by another hunter. Unavailable aura data stays quiet.
 - **Missing aspect reminder:** a highlighted aspect icon appears in combat if no learned aspect is active, even without a target. Any recognized aspect clears it. English spellbook names are currently supported; restricted readings stay quiet.
+- **Pet happiness:** a small red/yellow mood badge reminds you when your pet is unhappy or merely content. It disappears when happy, works without a target, and has its own toggle. Hover for the feeding reminder.
 - **Mend Pet reminder:** the right-hand portrait gets a red border when it shows your own living pet at 30% health or below. The border clears when healed or the target changes. This is a visual reminder, not an automatic cast.
 - **Optional facing angle:** signed degrees relative to your character: positive left, negative right, zero ahead. Hidden when valid position data is unavailable.
 - **Organized blocks:** range and ammo on the left, Mark and angle in a small combat block, pet portrait next, and a lock control at the edge. Subtle dividers keep information distinct. Disabled blocks return space to the range text.

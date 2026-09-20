@@ -295,4 +295,20 @@ aspect=true;f.scripts.OnEvent(f,'UNIT_AURA','player');check(not f.aspectIcon.sho
 aspect=false;f.scripts.OnEvent(f,'UNIT_AURA','player');check(f.aspectIcon.shown,'removed aspect restores warning')
 combat=false;f.scripts.OnEvent(f,'PLAYER_REGEN_ENABLED');check(not f.aspectIcon.shown,'combat end clears aspect warning')
 combat=true;db.aspectWarning=false;f.Refresh();check(not f.aspectIcon.shown,'aspect toggle disables warning')
+db.petHappinessWarning=true;db.showTargetTarget=false;combat=false
+UnitExists=function(unit) return unit=='pet' end;UnitIsDead=function() return false end
+local happiness=1;C_PetInfo={GetPetHappiness=function() return happiness end}
+f.Refresh()
+check(f.moodBadge.shown and not f.scripts.OnUpdate,'mood warns without target or idle polling')
+happiness=2;f.scripts.OnEvent(f,'UNIT_HAPPINESS','pet')
+check(f.moodBadge.shown,'content still warns')
+happiness=3;f.scripts.OnEvent(f,'UNIT_HAPPINESS','pet')
+check(not f.moodBadge.shown,'happy pet immediately clears badge')
+happiness=1;f.scripts.OnEvent(f,'UNIT_HAPPINESS','pet')
+check(f.moodBadge.shown,'mood change shows warning again')
+UnitExists=function() return false end;f.scripts.OnEvent(f,'UNIT_PET','player')
+check(not f.moodBadge.shown,'pet dismissal clears warning')
+UnitExists=function(unit) return unit=='pet' end;db.petHappinessWarning=false;f.Refresh()
+check(not f.moodBadge.shown,'mood warning toggle independent of portrait')
+db.enabled=false;f.Refresh();check(not f.events.UNIT_HAPPINESS,'disable removes happiness listener')
 print('PASS: '..count..' distance checks')

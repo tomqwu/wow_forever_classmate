@@ -67,7 +67,7 @@ slash('off');check(not db.enabled and not named.ForeverUtilitiesDistanceFrame.sh
 slash('unlock');check(db.enabled and not db.locked,'unlock enables dragging')
 slash('lock');check(db.locked,'lock command')
 slash('reset');check(db.scale==1 and db.locked,'reset defaults')
-for _,key in ipairs({'aspectWarning','showRange','showAmmo','lowAmmoWarning','petMendWarning','markWarning','fadeOutOfCombat','showTargetTarget','showAngle'}) do
+for _,key in ipairs({'petHappinessWarning','aspectWarning','showRange','showAmmo','lowAmmoWarning','petMendWarning','markWarning','fadeOutOfCombat','showTargetTarget','showAngle'}) do
  local control=panel.controls[key]
  check(control~=nil,'feature has checkbox: '..key)
  control:SetChecked(false);control.scripts.OnClick(control)

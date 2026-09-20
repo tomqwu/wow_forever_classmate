@@ -112,3 +112,12 @@ function Context.AspectMissing(names)
     end
     return nil
 end
+
+-- Matches Forever's PetHappinessIndicatorMixin: 1 unhappy, 2 content, 3 happy.
+function Context.PetMoodWarning()
+    if Call(UnitExists,'pet')~=true or Call(UnitIsDead,'pet')~=false then return nil end
+    local value=Call(C_PetInfo and C_PetInfo.GetPetHappiness or GetPetHappiness)
+    if not Core.IsNumber(value) then return nil end
+    if value==1 or value==2 then return value end
+    return nil
+end

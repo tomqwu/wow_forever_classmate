@@ -11,7 +11,7 @@ end
 NS.Hunter = {
     name="Forever - Hunter's Friend",
     description='Hunter range, ammunition, and target awareness.',
-    defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showTargetTarget=true,showAngle=true,showRange=true,showAmmo=true,lowAmmoWarning=true,petMendWarning=true,markWarning=true,aspectWarning=true,fadeOutOfCombat=true,showMinimap=true,showLockButton=true,minimapAngle=35}, normalize=Normalize,
+    defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showTargetTarget=true,showAngle=true,showRange=true,showAmmo=true,lowAmmoWarning=true,petMendWarning=true,petHappinessWarning=true,markWarning=true,aspectWarning=true,fadeOutOfCombat=true,showMinimap=true,showLockButton=true,minimapAngle=35}, normalize=Normalize,
     options={
         {key='showMinimap',label='Show minimap settings button',kind='toggle'},
         {key='showLockButton',label='Show lock button on bar',kind='toggle'},
@@ -22,6 +22,7 @@ NS.Hunter = {
         {key='showRange',label='Show range text and weapon icon',kind='toggle'},
         {key='showAmmo',label='Show ammo count',kind='toggle'},
         {key='lowAmmoWarning',label='Low-ammo warning (200 or fewer)',kind='toggle'},
+        {key='petHappinessWarning',label='Pet happiness warning',kind='toggle'},
         {key='petMendWarning',label='Pet portrait health warning (30%)',kind='toggle'},
         {key='aspectWarning',label='Missing aspect reminder icon',kind='toggle'},
         {key='markWarning',label="Hunter's Mark reminder icon",kind='toggle'},

@@ -122,6 +122,26 @@ function Range.Create(host, db)
     portrait:SetSize(38,38);portrait:SetPoint('RIGHT',frame,'RIGHT',-24,0)
     portrait:Hide()
     frame.portrait=portrait;frame.petHighlight=petHighlight
+    local mood=CreateFrame('Button',nil,frame)
+    mood:SetSize(18,18);mood:Hide()
+    local moodIcon=mood:CreateTexture(nil,'OVERLAY')
+    moodIcon:SetAllPoints();moodIcon:SetTexture('Interface\\PetPaperDollFrame\\UI-PetHappiness')
+    frame.moodBadge=mood
+    local moodValue
+    mood:SetScript('OnEnter',function(self)
+        if GameTooltip and moodValue then
+            GameTooltip:SetOwner(self,'ANCHOR_TOP')
+            GameTooltip:SetText(moodValue==1 and 'Pet unhappy' or 'Pet content — not fully happy')
+            GameTooltip:AddLine('Feed your pet when safe.',1,1,1);GameTooltip:Show()
+        end
+    end)
+    mood:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
+    local function UpdateHappiness()
+        moodValue=db.petHappinessWarning~=false and NS.TargetContext.PetMoodWarning() or nil
+        mood:SetShown(moodValue~=nil)
+        if moodValue==1 then moodIcon:SetTexCoord(0.375,0.5625,0,0.359375)
+        elseif moodValue==2 then moodIcon:SetTexCoord(0.1875,0.375,0,0.359375) end
+    end
     local angleLabel=frame:CreateFontString(nil,'OVERLAY','GameFontHighlight')
     angleLabel:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',12,'OUTLINE')
     angleLabel:SetJustifyH('LEFT');angleLabel:SetWordWrap(false)
@@ -180,15 +200,16 @@ function Range.Create(host, db)
         end
         angleLabel:SetShown(db.showAngle~=false)
         if layout.pet then
+            mood:ClearAllPoints();mood:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.pet.x+27,-31)
             portrait:ClearAllPoints();portrait:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.pet.x+5,-9)
             petHighlight:ClearAllPoints();petHighlight:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.pet.x+2,-6)
-        else portrait:Hide();petHighlight:Hide() end
+        else portrait:Hide();petHighlight:Hide();mood:Hide() end
     end
     local function ClearContext()
         markIcon:Hide();markBorder:Hide();petHighlight:Hide();portrait:Hide();portrait:SetTexture(nil);angleLabel:SetText('')
     end
     local function UpdateContext()
-        UpdateAspect()
+        UpdateAspect();UpdateHappiness()
         -- Clear first: an absent/restricted new unit must never retain the old portrait.
         petHighlight:Hide();portrait:Hide();portrait:SetTexture(nil)
         if db.showTargetTarget~=false and Call(UnitExists,'targettarget')==true
@@ -308,7 +329,7 @@ function Range.Create(host, db)
     end
     local active=false
     local rangeEvents={'PLAYER_TARGET_CHANGED','SPELLS_CHANGED','PLAYER_ENTERING_WORLD',
-        'PLAYER_LEAVING_WORLD','PLAYER_DEAD','PLAYER_EQUIPMENT_CHANGED','UNIT_FLAGS','UNIT_TARGET','UNIT_NAME_UPDATE','UNIT_PORTRAIT_UPDATE','BAG_UPDATE_DELAYED','UNIT_INVENTORY_CHANGED','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED','UNIT_HEALTH','UNIT_MAXHEALTH','UNIT_PET','UNIT_AURA'}
+        'PLAYER_LEAVING_WORLD','PLAYER_DEAD','PLAYER_EQUIPMENT_CHANGED','UNIT_FLAGS','UNIT_TARGET','UNIT_NAME_UPDATE','UNIT_PORTRAIT_UPDATE','BAG_UPDATE_DELAYED','UNIT_INVENTORY_CHANGED','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED','UNIT_HEALTH','UNIT_MAXHEALTH','UNIT_PET','UNIT_AURA','UNIT_HAPPINESS'}
     local function Refresh()
         frame:SetScript('OnUpdate',nil)
         frame:SetShown(db.enabled)
@@ -322,7 +343,7 @@ function Range.Create(host, db)
             for _,event in ipairs(rangeEvents) do frame:RegisterEvent(event) end
             active=true;Discover()
         end
-        UpdateAmmo();UpdateAspect()
+        UpdateAmmo();UpdateAspect();UpdateHappiness()
         local hasTarget=Call(UnitExists,'target')==true
         local inCombat=Call(UnitAffectingCombat,'player')==true
         frame:SetAlpha((db.fadeOutOfCombat==false or inCombat) and 1 or (hasTarget and 0.6 or 0.2))
@@ -341,6 +362,7 @@ function Range.Create(host, db)
     end
     frame:SetScript('OnEvent',function(_,event,unit)
         if not db.enabled then return end
+        if event=='UNIT_HAPPINESS' and (not Core.IsReadable(unit) or unit~='pet') then return end
         if event=='UNIT_AURA' and (not Core.IsReadable(unit) or (unit~='target' and unit~='player')) then return end
         if (event=='UNIT_HEALTH' or event=='UNIT_MAXHEALTH') and
             (not Core.IsReadable(unit) or (unit~='pet' and unit~='targettarget')) then return end
@@ -349,9 +371,9 @@ function Range.Create(host, db)
         if event=='BAG_UPDATE_DELAYED' or event=='UNIT_INVENTORY_CHANGED' then UpdateAmmo();return end
         if event=='UNIT_TARGET' and (not Core.IsReadable(unit) or unit~='target') then return end
         if (event=='UNIT_NAME_UPDATE' or event=='UNIT_PORTRAIT_UPDATE') and (not Core.IsReadable(unit) or (unit~='target' and unit~='targettarget')) then return end
-        if event=='UNIT_FLAGS' and (not Core.IsReadable(unit) or unit~='target') then return end
+        if event=='UNIT_FLAGS' and (not Core.IsReadable(unit) or (unit~='target' and unit~='pet')) then return end
         if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then
-            frame:SetScript('OnUpdate',nil); aspectIcon:Hide();aspectBorder:Hide();ClearContext(); Paint('unknown','Range inactive'); return
+            frame:SetScript('OnUpdate',nil); aspectIcon:Hide();aspectBorder:Hide();mood:Hide();ClearContext(); Paint('unknown','Range inactive'); return
         end
         if event=='SPELLS_CHANGED' or event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_EQUIPMENT_CHANGED' then Discover() end
         Refresh()
