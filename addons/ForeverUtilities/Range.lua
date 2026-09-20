@@ -122,6 +122,8 @@ function Range.Create(host, db)
     portrait:SetSize(38,38);portrait:SetPoint('RIGHT',frame,'RIGHT',-24,0)
     portrait:Hide()
     frame.portrait=portrait;frame.petHighlight=petHighlight
+    local guide=NS.PetGuide.Create(frame)
+    frame.petGuideBadge=guide
     local mood=CreateFrame('Button',nil,frame)
     mood:SetSize(18,18);mood:Hide()
     local moodIcon=mood:CreateTexture(nil,'OVERLAY')
@@ -200,16 +202,18 @@ function Range.Create(host, db)
         end
         angleLabel:SetShown(db.showAngle~=false)
         if layout.pet then
+            guide:ClearAllPoints();guide:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.pet.x+3,-31)
             mood:ClearAllPoints();mood:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.pet.x+27,-31)
             portrait:ClearAllPoints();portrait:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.pet.x+5,-9)
             petHighlight:ClearAllPoints();petHighlight:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.pet.x+2,-6)
-        else portrait:Hide();petHighlight:Hide();mood:Hide() end
+        else portrait:Hide();petHighlight:Hide();mood:Hide();guide.Clear() end
     end
     local function ClearContext()
+        guide.Clear()
         markIcon:Hide();markBorder:Hide();petHighlight:Hide();portrait:Hide();portrait:SetTexture(nil);angleLabel:SetText('')
     end
     local function UpdateContext()
-        UpdateAspect();UpdateHappiness()
+        UpdateAspect();UpdateHappiness();guide.Update(db.petGuide~=false)
         -- Clear first: an absent/restricted new unit must never retain the old portrait.
         petHighlight:Hide();portrait:Hide();portrait:SetTexture(nil)
         if db.showTargetTarget~=false and Call(UnitExists,'targettarget')==true
@@ -335,6 +339,7 @@ function Range.Create(host, db)
         frame:SetShown(db.enabled)
         ContextLayout()
         if not db.enabled then
+            guide.Clear()
             if active then for _,event in ipairs(rangeEvents) do frame:UnregisterEvent(event) end end
             active=false;lastStatus='Distance checker disabled'
             return

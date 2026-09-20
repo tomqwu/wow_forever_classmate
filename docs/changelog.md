@@ -1,3 +1,15 @@
+## 0.16.0
+
+- Added an offline target pet guide with 19 family profiles and 21 named beasts.
+- A small paw badge sits beside pet happiness in the existing pet block. Hover for family, useful family abilities, suggested role, level, and live rare/elite status; known beasts also show their watch-list location.
+- Gold highlights named or special targets; red flags targets above your level. Ordinary family hints use blue. Weapon/range colors are unchanged.
+- The guide has its own toggle and works with range or target-of-target displays disabled. The bar remains 400 × 56.
+- Target changes, death, disable, and leaving the world clear the badge and its tooltip. Restricted or unavailable eligibility stays quiet.
+- Documented beta data sources and limits: these are family recommendations, not guaranteed innate skills, skill ranks, tameability, or a universal DPS ranking.
+- Settings now size their two columns and footer to fit the available options.
+
+Use `/reload`, then `/fhunter` → Target pet guide / notable beasts.
+
 ## 0.15.0
 
 - Added an optional pet mood badge: red for unhappy, yellow for content, hidden when happy.

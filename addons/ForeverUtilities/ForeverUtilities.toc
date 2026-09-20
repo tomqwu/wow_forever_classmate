@@ -1,12 +1,14 @@
 ## Interface: 16001
 ## Title: Forever - Hunter's Friend
-## Notes: Hunter range, ammo count, target-of-target portrait, and facing angle for WoW Forever.
+## Notes: Hunter range, ammo, pet care, target awareness, and pet guide for WoW Forever.
 ## IconTexture: Interface\AddOns\ForeverUtilities\Textures\HuntersFriend
 ## Author: Codex
-## Version: 0.15.0
+## Version: 0.16.0
 ## SavedVariables: ForeverUtilitiesDB
 Core.lua
 TargetContext.lua
+PetDatabase.lua
+PetGuide.lua
 Layout.lua
 Range.lua
 Distance.lua

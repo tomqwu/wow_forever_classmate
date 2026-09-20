@@ -67,11 +67,20 @@ slash('off');check(not db.enabled and not named.ForeverUtilitiesDistanceFrame.sh
 slash('unlock');check(db.enabled and not db.locked,'unlock enables dragging')
 slash('lock');check(db.locked,'lock command')
 slash('reset');check(db.scale==1 and db.locked,'reset defaults')
-for _,key in ipairs({'petHappinessWarning','aspectWarning','showRange','showAmmo','lowAmmoWarning','petMendWarning','markWarning','fadeOutOfCombat','showTargetTarget','showAngle'}) do
+for _,key in ipairs({'petGuide','petHappinessWarning','aspectWarning','showRange','showAmmo','lowAmmoWarning','petMendWarning','markWarning','fadeOutOfCombat','showTargetTarget','showAngle'}) do
  local control=panel.controls[key]
  check(control~=nil,'feature has checkbox: '..key)
  control:SetChecked(false);control.scripts.OnClick(control)
  check(db[key]==false,'checkbox saves: '..key)
+end
+local lowest=0
+for _,control in pairs(panel.controls) do
+ if type(control.y)=='number' then lowest=math.min(lowest,control.y) end
+end
+for _,button in ipairs(frames) do
+ if button.text=='Close' or button.text=='Reset settings' then
+  check(button.y+28<lowest and -button.y+26<panel.height,'settings footer stays below all options and within panel')
+ end
 end
 local mini=named.ForeverHunterFriendMinimap
 check(mini and mini.shown,'minimap button available even when bar disabled')

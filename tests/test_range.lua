@@ -4,6 +4,8 @@ issecretvalue=function(v) return rawequal(v,secret) end
 assert(loadfile('addons/ForeverUtilities/Core.lua'))('ForeverUtilities',NS)
 assert(loadfile('addons/ForeverUtilities/Range.lua'))('ForeverUtilities',NS)
 assert(loadfile('addons/ForeverUtilities/TargetContext.lua'))('ForeverUtilities',NS)
+assert(loadfile('addons/ForeverUtilities/PetDatabase.lua'))('ForeverUtilities',NS)
+assert(loadfile('addons/ForeverUtilities/PetGuide.lua'))('ForeverUtilities',NS)
 assert(loadfile('addons/ForeverUtilities/Layout.lua'))('ForeverUtilities',NS)
 local count=0
 local function check(ok,msg) assert(ok,msg);count=count+1 end
@@ -311,4 +313,45 @@ check(not f.moodBadge.shown,'pet dismissal clears warning')
 UnitExists=function(unit) return unit=='pet' end;db.petHappinessWarning=false;f.Refresh()
 check(not f.moodBadge.shown,'mood warning toggle independent of portrait')
 db.enabled=false;f.Refresh();check(not f.events.UNIT_HAPPINESS,'disable removes happiness listener')
+-- Pet guide uses the same lifecycle and leaves existing pet care independent.
+db.enabled=true;db.petGuide=true;db.showRange=false;db.showTargetTarget=false
+db.petHappinessWarning=true;happiness=1
+local hasBeast=true
+UnitExists=function(unit) return unit=='pet' or (unit=='target' and hasBeast) end
+UnitIsPlayer=function() return false end;UnitPlayerControlled=function() return false end
+UnitCreatureFamily=function() return 'Wolf',1 end
+UnitCreatureID=function() return 1132 end
+UnitName=function() return 'Timber' end;UnitClassification=function() return 'rare' end
+UnitLevel=function() return 10 end
+f.Refresh()
+check(f.petGuideBadge.shown and f.moodBadge.shown and not portrait.shown,'guide and mood coexist independently of range and portrait')
+check(f.petGuideBadge.info.notable.name=='Timber','target produces exact watch-list match')
+GameTooltip={SetOwner=function(self,owner) self.owner=owner end,
+ IsOwned=function(self,owner) return self.owner==owner end,
+ SetText=function(self,text) self.text=text;self.lines={} end,
+ AddLine=function(self,line) table.insert(self.lines,line) end,
+ Show=function(self) self.shown=true end,Hide=function(self) self.shown=false end}
+f.petGuideBadge.scripts.OnEnter()
+check(GameTooltip.shown and GameTooltip.text:find('Timber',1,true),'hover shows target pet guide')
+UnitCreatureID=function() return 999999 end;UnitName=function() return 'Forest Spider' end
+UnitCreatureFamily=function() return 'Spider',3 end;f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
+check(not f.petGuideBadge.info.notable and GameTooltip.text:find('Forest Spider',1,true),'target swap updates hovered tooltip without stale named pet')
+check(table.concat(GameTooltip.lines,' '):find('Web',1,true),'family guide includes signature ability')
+UnitCreatureFamily=function() return 'Humanoid',0 end;f.scripts.OnUpdate(f,0.15)
+check(not f.petGuideBadge.shown and not GameTooltip.shown,'nonmatching target clears badge and tooltip')
+UnitCreatureFamily=function() return 'Wolf',1 end;f.Refresh()
+f.petGuideBadge.scripts.OnEnter()
+db.petGuide=false;f.Refresh()
+check(not f.petGuideBadge.shown and not GameTooltip.shown and f.moodBadge.shown,'guide toggle clears tooltip but keeps happiness warning')
+db.petGuide=true;f.Refresh();f.petGuideBadge.scripts.OnEnter()
+hasBeast=false;f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
+check(not f.petGuideBadge.shown and not GameTooltip.shown and not f.scripts.OnUpdate,'target loss clears guide and stops polling')
+hasBeast=true;f.Refresh();f.petGuideBadge.scripts.OnEnter()
+UnitIsDead=function(unit) return unit=='target' end;f.scripts.OnUpdate(f,0.15)
+check(not f.petGuideBadge.shown and not GameTooltip.shown and not f.scripts.OnUpdate,'dead target clears guide and tooltip')
+UnitIsDead=function() return false end;f.Refresh();f.petGuideBadge.scripts.OnEnter()
+f.scripts.OnEvent(f,'PLAYER_LEAVING_WORLD')
+check(not f.petGuideBadge.shown and not GameTooltip.shown and not f.scripts.OnUpdate,'leaving world clears guide')
+f.Refresh();f.petGuideBadge.scripts.OnEnter();db.enabled=false;f.Refresh()
+check(not f.petGuideBadge.shown and not GameTooltip.shown and not next(f.events),'disable clears guide and all event listeners')
 print('PASS: '..count..' distance checks')

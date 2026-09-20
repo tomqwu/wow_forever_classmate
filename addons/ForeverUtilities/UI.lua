@@ -33,7 +33,9 @@ end
 local function OpenPanel()
     if not panel then
         panel=CreateFrame('Frame','ForeverHunterFriendOptions',UIParent)
-        panel:SetSize(760,482);panel:SetPoint('CENTER');panel:SetFrameStrata('DIALOG')
+        local rows=math.ceil(#Hunter.options/2)
+        local footerY=-138-rows*42
+        panel:SetSize(760,-footerY+50);panel:SetPoint('CENTER');panel:SetFrameStrata('DIALOG')
         panel:SetClampedToScreen(true);panel:EnableMouse(true)
         panel:SetMovable(true);panel:RegisterForDrag('LeftButton')
         panel:SetScript('OnDragStart',function(self) self:StartMoving() end)
@@ -47,8 +49,8 @@ local function OpenPanel()
         local y=-120
         for index,option in ipairs(Hunter.options) do
             local key=option.key
-            local x=index<=7 and 20 or 390
-            y=-120-((index-1)%7)*42
+            local x=index<=rows and 20 or 390
+            y=-120-((index-1)%rows)*42
             if option.kind=='toggle' then
                 panel.controls[key]=Check(panel,option.label,x,y,function(value)
                     Hunter.db[key]=value;Hunter.Apply()
@@ -65,8 +67,8 @@ local function OpenPanel()
             end
             y=y-42
         end
-        Button(panel,'Reset settings',20,-432,150,function() Hunter.Reset() end)
-        Button(panel,'Close',660,-432,80,function() panel:Hide() end)
+        Button(panel,'Reset settings',20,footerY,150,function() Hunter.Reset() end)
+        Button(panel,'Close',660,footerY,80,function() panel:Hide() end)
         if UISpecialFrames then table.insert(UISpecialFrames,'ForeverHunterFriendOptions') end
     end
     panel:Show();RefreshPanel()
@@ -164,7 +166,7 @@ SlashCmdList.FOREVERUTILITIES=function(message)
         db.scale=value;Hunter.Apply()
     elseif command=='reset' then Hunter.Reset()
     elseif command=='status' then
-        Say('v0.15.0 | '..(db.enabled and 'Enabled' or 'Disabled'))
+        Say('v0.16.0 | '..(db.enabled and 'Enabled' or 'Disabled'))
         if db.enabled and Hunter.instance then Say(Hunter.instance.Status()) end
     else Say('/fhunter: unlock | lock | on | off | scale 0.5..2 | reset | status') end
 end

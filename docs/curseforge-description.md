@@ -1,6 +1,6 @@
 # Forever - Hunter's Friend
 
-**Your range, ammunition, and target awareness in one compact hunter bar.**
+**Range, ammunition, pet care, and beast discovery in one compact hunter bar.**
 
 Built for hunters in **World of Warcraft: Forever**, Hunter's Friend shows what
 you need at a glance without a toolbox or module selector.
@@ -10,6 +10,7 @@ you need at a glance without a toolbox or module selector.
 - **Target-of-target portrait:** a small portrait on the right shows who your target is targeting, without extra wording.
 - **Hunter's Mark reminder:** a highlighted spell icon appears only while you are in combat and your living enemy target has no readable Hunter's Mark debuff and you have learned the spell. It clears when marked, including by another hunter. Unavailable aura data stays quiet.
 - **Missing aspect reminder:** a highlighted aspect icon appears in combat if no learned aspect is active, even without a target. Any recognized aspect clears it. English spellbook names are currently supported; restricted readings stay quiet.
+- **Target pet guide:** an optional paw badge recognizes 19 pet families and 21 named beasts. Hover for family, useful abilities, suggested role, level, and live rare/elite status. Blue is a family hint, gold is a watch-list or special target, and red means above your level. This beta guide recommends family abilities; check Beast Lore for the individual beast’s tameability and actual skills.
 - **Pet happiness:** a small red/yellow mood badge reminds you when your pet is unhappy or merely content. It disappears when happy, works without a target, and has its own toggle. Hover for the feeding reminder.
 - **Mend Pet reminder:** the right-hand portrait gets a red border when it shows your own living pet at 30% health or below. The border clears when healed or the target changes. This is a visual reminder, not an automatic cast.
 - **Optional facing angle:** signed degrees relative to your character: positive left, negative right, zero ahead. Hidden when valid position data is unavailable.
@@ -47,7 +48,8 @@ Both buttons have visibility switches in settings. Locking never changes fading 
 
 Use the settings panel to enable the bar, lock its position,
 change scale, or independently toggle range, ammo count, low-ammo warnings, the
-portrait, pet-health highlight, facing angle, Hunter’s Mark icon, missing-aspect icon, and idle fading.
+portrait, pet-health highlight, pet happiness, target pet guide, facing angle,
+Hunter’s Mark icon, missing-aspect icon, and idle fading.
 Pet-health highlighting requires the portrait to be visible. The mark icon and
 angle can appear together. `/futils` remains an alias.
 
@@ -68,5 +70,6 @@ Designed for the Forever 1.60.1 beta client. API availability may limit numeric
 distance, angles, and ammo readings. Automated checks use mocked APIs; live
 in-game validation remains ongoing.
 
-[Source code](https://github.com/tomqwu/wow_forever_utilities) ·
-[Report an issue](https://github.com/tomqwu/wow_forever_utilities/issues)
+[Pet guide data and sources](https://github.com/tomqwu/wow_forever_hunters_friend/blob/main/docs/pet-guide-sources.md) ·
+[Source code](https://github.com/tomqwu/wow_forever_hunters_friend) ·
+[Report an issue](https://github.com/tomqwu/wow_forever_hunters_friend/issues)

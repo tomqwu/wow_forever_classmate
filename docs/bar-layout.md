@@ -9,14 +9,14 @@ visual groups inside one hunter addon, not a return to the generic module system
 | --- | --- | --- |
 | Range / supplies | 6–270 | Weapon icon; white one-line range; ammo directly underneath |
 | Combat | 270–326 | Highlighted Mark icon above signed facing angle |
-| Pet | 326–374 | Target-of-target portrait; red health border; small red/yellow mood badge |
+| Pet | 326–374 | Target-of-target portrait; red health border; small red/yellow mood badge; target pet-guide paw badge |
 | Control | 374–394 | Small lock button |
 
 Six pixels remain as outer padding. Subtle dividers mark block boundaries.
 Range text starts at x=66 and has 196 pixels with all blocks enabled. It uses
 16px type when possible, scaling to 12px for long readings without wrapping.
 Ammo stays 12px below it. Disabling range removes its icon and moves supplies
-left. Disabling combat, all pet displays (portrait and happiness), or lock returns that width to range/supplies.
+left. Disabling combat, all pet displays (portrait, happiness, and pet guide), or lock returns that width to range/supplies.
 
 Blocks are allocated from preferences, not transient warning state. Applying
 Hunter's Mark or changing targets never shifts other icons or text. Combat icons
@@ -35,6 +35,14 @@ whole bar, including its lock button.
 - New features require individual switches and should not expand the outer bar.
 - Do not claim future pet-care or cooldown tracking exists yet.
 
-Layout.lua centralizes the allocation rules. Tests exercise all 32 combinations
-of range, mark, angle, pet, and control settings for bounds and overlap. Live
+Layout.lua centralizes the allocation rules. Tests exercise all 256 combinations
+of range, mark, aspect, angle, portrait, happiness, pet guide, and control settings for bounds and overlap. Live
 in-game font appearance should still be checked after /reload.
+
+## Target pet guide
+
+An 18px paw badge overlays the bottom left of the pet portrait (pet block x+3,
+y=-31). The happiness badge stays bottom right (x+27), with a 6px gap. Neither
+replaces the health border. Details stay in the hover tooltip; the main bar keeps
+its original size and range text width. The pet block remains reserved whenever
+portrait, happiness, or the pet guide is enabled. See [data sources](pet-guide-sources.md).
