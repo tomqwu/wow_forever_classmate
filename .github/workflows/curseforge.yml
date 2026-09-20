@@ -1,4 +1,4 @@
-name: Publish Forever Utilities to CurseForge
+name: Publish Hunter's Friend to CurseForge
 on:
   workflow_call:
     inputs:
@@ -21,7 +21,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: curseforge-${{ inputs.tag }}
+  group: curseforge-project-1700438
   cancel-in-progress: false
 jobs:
   publish:

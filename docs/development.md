@@ -16,3 +16,6 @@ selector remains. Disabled and non-hunter characters do not create the bar.
 Run `python3 scripts/check.py`, `git diff --check`, and
 `python3 scripts/package.py`. Follow AGENTS.md for local installation, versioned
 GitHub releases, CurseForge receipts, and synchronized marketing descriptions.
+
+CurseForge publishing follows the [file retention policy](curseforge-retention.md).
+Cleanup currently requires the author dashboard; CI reports it as pending.

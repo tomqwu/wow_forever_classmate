@@ -73,6 +73,24 @@ def gh(*args):
     return subprocess.check_output(['gh', *args], text=True)
 
 
+def report_retention():
+    # The official upload API has no documented archive/delete operation.
+    # An upload receipt also does not establish moderation approval.
+    message = ('CurseForge cleanup requires the author dashboard: once the newest '
+               'version is approved and downloadable, archive older files in project '
+               '1700438. No old files were removed by this workflow.')
+    print(('::warning title=CurseForge cleanup pending::' if
+           os.environ.get('GITHUB_ACTIONS') == 'true' else '') + message)
+    summary = os.environ.get('GITHUB_STEP_SUMMARY')
+    if summary:
+        with open(summary, 'a') as handle:
+            handle.write('\n## CurseForge retention: manual cleanup pending\n\n' + message +
+                         '\n\nKeep the latest approved version available while uploads await review. '
+                         'GitHub release history is retained.\n\n'
+                         '[Archiving files](https://support.curseforge.com/support/solutions/articles/9000197242)'
+                         ' · [Upload API limitations](https://support.curseforge.com/support/solutions/articles/9000197321)\n')
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--tag', required=True)
@@ -111,6 +129,8 @@ def main():
         if receipt['sha256'] != digest or str(receipt['projectId']) != project:
             raise ValueError('Existing upload receipt does not match ZIP/project; manual review required')
         print(f'Already uploaded: CurseForge file {receipt["fileId"]}; skipped.')
+        if not args.dry_run:
+            report_retention()
         return
     version_id = select_version(api_request('/game/versions', token), name)
     print(f'Validated {asset_name}; CurseForge game version {name} = {version_id}.')
@@ -140,6 +160,7 @@ def main():
         with open(summary, 'a') as handle:
             handle.write(f'## CurseForge upload\nProject: {project}\n\nFile ID: {file_id}\n\n'
                          f'Release: {args.tag} (beta), WoW {name}\n\nAwait CurseForge approval if pending.\n')
+    report_retention()
 
 if __name__ == '__main__':
     try:

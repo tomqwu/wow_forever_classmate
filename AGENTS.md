@@ -37,6 +37,14 @@ ForeverUtilities ZIPs. Use CURSE_FORGE and CURSEFORGE_PROJECT_ID without reading
 or exposing token values. Verify both release jobs and the upload receipt.
 Never retry an uncertain upload POST before checking project Files.
 
+CurseForge retention (user request, 2026-09-20): keep only the newest approved
+version publicly available; archive older files after verifying the replacement
+is approved and downloadable. Preserve the latest approved file during review.
+Keep GitHub release history. The documented upload API has no archive/delete
+operation: CI reports manual cleanup pending, it does not remove old files.
+Use the author dashboard for cleanup; never claim an upload performed removal.
+See docs/curseforge-retention.md for the publishing limitation and procedure.
+
 Do not publish ignored addons.local.json entries or unrelated local files.
 
 ## Descriptions and release copy
