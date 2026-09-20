@@ -68,6 +68,8 @@ function methods:SetShown(v) self.shown=v end
 function methods:Show() self.shown=true end
 function methods:Hide() self.shown=false end
 function methods:SetAlpha(v) self.alpha=v end
+function methods:SetSize(w,h) self.width,self.height=w,h end
+function methods:SetPoint(_,parent,_,x,y) self.parent,self.x,self.y=parent,x,y end
 setmetatable(methods,{__index=function() return function() end end})
 CreateFrame=function() local f=setmetatable({scripts={},events={}},{__index=methods});frames[#frames+1]=f;return f end
 local class,target,dead,distance='HUNTER',true,false,20
@@ -281,7 +283,7 @@ f.Refresh();check(f.markIcon.shown,'missing mark icon visible')
 db.markWarning=false;f.Refresh();check(not f.markIcon.shown,'mark icon toggle hides reminder')
 db.showAmmo=false;db.lowAmmoWarning=false;f.Refresh()
 check(not f.labels[3].shown and f.labels[3].text=='','ammo display and warning can both be disabled')
-db.showRange=false;f.Refresh();check(not f.label.shown and f.Status()=='Range display disabled','range feature disabled independently')
+db.showRange=false;f.Refresh();check(not f.label.shown and f.Status():find('Range display disabled',1,true),'range feature disabled independently')
 db.fadeOutOfCombat=false;f.Refresh();check(f.alpha==1,'fading can be disabled')
 UnitIsUnit=function(unit,other) return unit=='targettarget' and other=='pet' end
 UnitHealth=function() return 10 end;UnitHealthMax=function() return 100 end
@@ -316,7 +318,7 @@ UnitExists=function(unit) return unit=='pet' end;db.petHappinessWarning=false;f.
 check(not f.moodBadge.shown,'mood warning toggle independent of portrait')
 db.enabled=false;f.Refresh();check(not f.events.UNIT_HAPPINESS,'disable removes happiness listener')
 -- Pet guide uses the same lifecycle and leaves existing pet care independent.
-db.enabled=true;db.petGuide=true;db.showRange=false;db.showTargetTarget=false
+db.enabled=true;db.petGuide=true;db.showRange=false;db.showTargetTarget=false;db.fadeOutOfCombat=true
 db.petHappinessWarning=true;happiness=1
 local hasBeast=true
 UnitExists=function(unit) return unit=='pet' or (unit=='target' and hasBeast) end
@@ -329,14 +331,25 @@ f.Refresh()
 check(f.petGuideBadge.shown and f.moodBadge.shown and not portrait.shown,'guide and mood coexist independently of range and portrait')
 check(f.petGuideBadge.info.notable.name=='Timber','target produces exact watch-list match')
 check(f.petGuideBadge.hintPanel.shown and f.petGuideBadge.hintTitle.text:find('Furious Howl',1,true),'matching target shows family ability without hovering')
-check(f.petGuideBadge.hintDetail.text:find('Rare',1,true),'automatic hint shows live rare status')
-check(moveHint.y==50,'drag instructions clear the automatic hint')
+check(f.petGuideBadge.hintTitle.text:find('Rare',1,true),'inline intel shows live rare status')
 UnitCreatureFamily=function() return 'Hyena',25 end
 UnitCreatureID=function() return 4127 end;UnitName=function() return 'Hecklefang Hyena' end
 UnitClassification=function() return 'normal' end;UnitLevel=function(unit) return unit=='player' and 17 or 16 end
 f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
-check(f.petGuideBadge.hintPanel.shown and f.petGuideBadge.hintTitle.text=='Family: Hyena — Tendon Rip','screenshot target displays automatic hyena hint')
-check(f.petGuideBadge.hintDetail.text=='Lv 16 · PvP control / kiting','screenshot target shows its level and suggested use')
+check(f.petGuideBadge.hintPanel.shown and f.petGuideBadge.hintTitle.text=='Hyena: Tendon Rip','screenshot target displays automatic hyena hint')
+check(f.petGuideBadge.hintTitle.shown,'recommendation text itself is explicitly visible')
+local intel=f.petGuideBadge.hintTitle
+check(intel.parent==f and intel.y==-23 and intel.height==16,'intel draws directly inside bar')
+check(f.labels[1].y==-3 and f.labels[1].height==20 and f.labels[3].y==-39,'range and ammo leave space for recommendation')
+check(-f.labels[3].y+f.labels[3].height<=56,'ammo remains inside original bar height')
+check(f.Status():find('Pet guide: inline — Hyena: Tendon Rip',1,true),'status reports loaded inline recommendation')
+for _,locked in ipairs({true,false}) do
+ db.locked=locked;f.Refresh()
+ check(intel.shown and f.alpha==0.6,'locked and movable modes both keep inline intel and fading')
+end
+combat=true;f.scripts.OnEvent(f,'PLAYER_REGEN_DISABLED')
+check(intel.shown and f.alpha==1,'inline intel remains visible in combat')
+combat=false;f.scripts.OnEvent(f,'PLAYER_REGEN_ENABLED')
 UnitCreatureFamily=function() return 'Wolf',1 end
 UnitCreatureID=function() return 1132 end;UnitName=function() return 'Timber' end
 f.Refresh()
@@ -351,13 +364,14 @@ UnitCreatureID=function() return 999999 end;UnitName=function() return 'Forest S
 UnitCreatureFamily=function() return 'Spider',3 end;f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
 check(not f.petGuideBadge.info.notable and GameTooltip.text:find('Forest Spider',1,true),'target swap updates hovered tooltip without stale named pet')
 check(table.concat(GameTooltip.lines,' '):find('Web',1,true),'family guide includes signature ability')
-check(f.petGuideBadge.hintTitle.text=='Family: Spider — Web','automatic hint changes with target')
+check(f.petGuideBadge.hintTitle.text=='Spider: Web','automatic hint changes with target')
 f.petGuideBadge.scripts.OnLeave()
 f.petGuideBadge.hintPanel.scripts.OnEnter()
 check(GameTooltip.shown and GameTooltip.owner==f.petGuideBadge.hintPanel,'automatic hint itself can be hovered for full guide')
 UnitCreatureFamily=function() return 'Humanoid',0 end;f.scripts.OnUpdate(f,0.15)
 check(not f.petGuideBadge.shown and not GameTooltip.shown,'nonmatching target clears badge and tooltip')
-check(not f.petGuideBadge.hintPanel.shown and f.petGuideBadge.hintTitle.text=='' and moveHint.y==4,'nonmatch clears automatic hint and restores drag label')
+check(not f.petGuideBadge.hintPanel.shown and f.petGuideBadge.hintTitle.text=='','nonmatch clears inline intel text')
+check(not intel.shown and f.labels[1].height==26 and f.labels[3].y==-33,'nonmatch restores original text layout')
 UnitCreatureFamily=function() return 'Wolf',1 end;f.Refresh()
 f.petGuideBadge.scripts.OnEnter()
 db.petGuide=false;f.Refresh()

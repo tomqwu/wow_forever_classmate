@@ -8,13 +8,14 @@ makes no network requests from the game and does not scan nearby units.
 
 The blue paw badge means the selected wild creature matches a supported family.
 Gold means a named watch-list match or a live rare/elite/boss classification.
-Red means the readable target level exceeds the player's level. A compact
-400 × 40 hint appears automatically 6px above the main bar for a supported
-wild target. It shows family abilities, suggested use, level, and special
-classification. Hover either the hint or badge for the full guide, including a
-watch-list location when available. The badge fits beside happiness in the
-existing pet block. Neither changes weapon/range colors. The hint inherits the
-bar's scale and fading, clears with its target, and uses the pet-guide toggle.
+Red means the readable target level exceeds the player's level. A gold family
+recommendation appears directly in the bar between range and ammo, for example
+`Hyena: Tendon Rip` or `Rare Wolf: Furious Howl`. It turns red above your level.
+Hover the text or badge for suggested use, level, classification, and a watch-list
+location when available. The badge fits beside happiness in the pet block.
+Neither changes weapon/range colors. The recommendation inherits the bar's
+scale and fading, clears with its target, and uses the pet-guide toggle.
+
 
 "Suggested use" is our recommendation from the ability's function, not a measured
 DPS ranking. A family ability is **not a claim that this creature already knows

@@ -19,3 +19,11 @@ function Layout.Compute(db)
     result.text.width=right-8-result.text.x
     return result
 end
+
+-- Text rows share the original bar footprint; only a matching target needs intel.
+function Layout.Rows(hasIntel)
+    if hasIntel then
+        return {range={y=-3,height=20},intel={y=-23,height=16},ammo={y=-39,height=14}}
+    end
+    return {range={y=-6,height=26},intel={y=-23,height=16},ammo={y=-33,height=14}}
+end

@@ -15,7 +15,7 @@ visual groups inside one hunter addon, not a return to the generic module system
 Six pixels remain as outer padding. Subtle dividers mark block boundaries.
 Range text starts at x=66 and has 196 pixels with all blocks enabled. It uses
 16px type when possible, scaling to 12px for long readings without wrapping.
-Ammo stays 12px below it. Disabling range removes its icon and moves supplies
+Ammo keeps its usual position unless a pet recommendation is shown. Disabling range removes its icon and moves supplies
 left. Disabling combat, all pet displays (portrait, happiness, and pet guide), or lock returns that width to range/supplies.
 
 Blocks are allocated from preferences, not transient warning state. Applying
@@ -41,13 +41,23 @@ in-game font appearance should still be checked after /reload.
 
 ## Target pet guide
 
-An 18px paw badge overlays the bottom left of the pet portrait (pet block x+3,
-y=-31). The happiness badge stays bottom right (x+27), with a 6px gap. Neither
-replaces the health border. A 400 × 40 two-line hint sits 6px above the bar only
-while a supported wild beast is selected. Family and family ability appear on
-the first line; level, special classification, and suggested use on the second.
-It uses the existing pet-guide switch and inherits parent scale and fading. Full
-details remain available by hovering either the hint or badge. Unlocked drag
-instructions move above the hint to prevent overlap. The main bar keeps its
-original size and range text width. The pet block remains reserved whenever
-portrait, happiness, or the pet guide is enabled. See [data sources](pet-guide-sources.md).
+The recommendation is a FontString on the main indicator, just like range and
+ammo. It does not depend on a floating panel or an off-frame child. On a matching
+wild target, the range/supplies block uses three rows:
+
+| Row | Top offset | Height |
+| --- | --- | --- |
+| Range | 3 | 20 |
+| Pet recommendation | 23 | 16 |
+| Ammo | 39 | 14 |
+
+All rows fit in 56px, and use the block's existing text width. The recommendation
+uses 11px gold text, shrinking down to 9px only for long family/ability names.
+Above-player-level targets use red text. Rare and elite classifications prefix
+the family. Full details, including role and named-beast locations, are in the
+hover tooltip. The original range and ammo positions return when no hint applies.
+
+The 18px guide badge stays at pet block x+3, y=-31 beside the happiness badge
+at x+27. The guide has one switch for text, badge, and hover areas. Everything
+inherits main-bar scale and fading, and the outside drag instructions remain
+unobstructed. See [data sources](pet-guide-sources.md).

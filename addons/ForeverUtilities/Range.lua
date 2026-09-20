@@ -122,8 +122,6 @@ function Range.Create(host, db)
     portrait:SetSize(38,38);portrait:SetPoint('RIGHT',frame,'RIGHT',-24,0)
     portrait:Hide()
     frame.portrait=portrait;frame.petHighlight=petHighlight
-    local guide=NS.PetGuide.Create(frame,host.hint)
-    frame.petGuideBadge=guide
     local mood=CreateFrame('Button',nil,frame)
     mood:SetSize(18,18);mood:Hide()
     local moodIcon=mood:CreateTexture(nil,'OVERLAY')
@@ -152,6 +150,8 @@ function Range.Create(host, db)
     local ammoLabel=frame:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall')
     ammoLabel:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',12,'OUTLINE')
     ammoLabel:SetJustifyH('LEFT');ammoLabel:SetWordWrap(false);ammoLabel:SetSize(110,14)
+    local guide=NS.PetGuide.Create(frame)
+    frame.petGuideBadge=guide
     local warnedLowAmmo=false
     local function UpdateAmmo()
         ammoLabel:SetShown(db.showAmmo~=false)
@@ -179,15 +179,20 @@ function Range.Create(host, db)
         separators[key]=line
     end
     local layout
+    local function ReadoutLayout()
+        local rows=NS.Layout.Rows(guide.hasMatch)
+        label:ClearAllPoints();label:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.text.x,rows.range.y)
+        label:SetSize(layout.text.width,rows.range.height)
+        ammoLabel:ClearAllPoints();ammoLabel:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.text.x,rows.ammo.y)
+        ammoLabel:SetSize(layout.text.width,rows.ammo.height)
+        guide.SetLayout(layout.text.x,rows.intel.y,layout.text.width,rows.intel.height)
+    end
     local function ContextLayout()
         layout=NS.Layout.Compute(db)
         frame:SetSize(layout.width,layout.height)
         label:SetShown(db.showRange~=false);icon:SetShown(db.showRange~=false)
         iconBorder:SetShown(db.showRange~=false);accent:SetShown(db.showRange~=false)
-        label:ClearAllPoints();label:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.text.x,-6)
-        label:SetSize(layout.text.width,26)
-        ammoLabel:ClearAllPoints();ammoLabel:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.text.x,-33)
-        ammoLabel:SetWidth(layout.text.width)
+        ReadoutLayout()
         for key,line in pairs(separators) do
             local block=layout[key]
             line:SetShown(block~=nil)
@@ -209,11 +214,11 @@ function Range.Create(host, db)
         else portrait:Hide();petHighlight:Hide();mood:Hide();guide.Clear() end
     end
     local function ClearContext()
-        guide.Clear()
+        guide.Clear();ReadoutLayout()
         markIcon:Hide();markBorder:Hide();petHighlight:Hide();portrait:Hide();portrait:SetTexture(nil);angleLabel:SetText('')
     end
     local function UpdateContext()
-        UpdateAspect();UpdateHappiness();guide.Update(db.petGuide~=false)
+        UpdateAspect();UpdateHappiness();guide.Update(db.petGuide~=false);ReadoutLayout()
         -- Clear first: an absent/restricted new unit must never retain the old portrait.
         petHighlight:Hide();portrait:Hide();portrait:SetTexture(nil)
         if db.showTargetTarget~=false and Call(UnitExists,'targettarget')==true
@@ -383,7 +388,7 @@ function Range.Create(host, db)
         if event=='SPELLS_CHANGED' or event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_EQUIPMENT_CHANGED' then Discover() end
         Refresh()
     end)
-    frame.Status=function() return lastStatus end
+    frame.Status=function() return lastStatus..'; Pet guide: '..(db.petGuide==false and 'off' or (guide.hasMatch and ('inline — '..NS.PetGuide.Summary(guide.info)) or 'no supported target')) end
     frame.Refresh=Refresh
     Refresh()
     return frame

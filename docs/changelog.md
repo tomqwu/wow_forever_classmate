@@ -1,3 +1,12 @@
+## 0.16.2
+
+- Moved the automatic pet recommendation directly into the main bar, using the same text-rendering path as range and ammo. The separate floating hint is removed.
+- Supported wild targets show a gold line such as “Hyena: Tendon Rip”; rare/elite classifications appear before the family. Hover the line or badge for role, level, and known-beast locations.
+- Range, pet intel, and ammo occupy three non-overlapping rows within the original 400 × 56 bar. Normal spacing returns when no hint applies.
+- Kept independent toggles, combat fading, movable mode, and target-loss/death cleanup. Added the current pet-guide match to `/fhunter status` diagnostics.
+
+Use `/reload`. The recommendation now appears between range and ammo, without hovering.
+
 ## 0.16.1
 
 - Pet matches now show a compact two-line hint automatically above the bar; you no longer need to discover and hover the small badge.
