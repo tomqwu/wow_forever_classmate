@@ -29,18 +29,29 @@ function Guide.ReadTarget()
     if not familyID then return nil end
     local family=DB.families[familyID]
     if not family then return nil end
+    local targetName=Plain(Call(UnitName,'target'))
     local controlled=Call(UnitPlayerControlled,'target')
     local wild=controlled==false
     -- Owned/controlled pets still get family advice, never wild spawn/taming claims.
     local id=wild and CreatureID() or nil
     local notable=Core.IsNumber(id) and DB.notable[id] or nil
     if notable and notable.family~=familyID then notable=nil end
+    local rare
+    local rareNameMatch=false
+    if wild and Core.IsNumber(id) then
+        rare=DB.rareByID[id]
+    elseif controlled==true and targetName then
+        rare=DB.rareByName[targetName]
+        rareNameMatch=rare~=nil
+    end
+    if rare and rare.family~=familyID then rare=nil;rareNameMatch=false end
     local classification=Call(UnitClassification,'target')
     local labels={normal='Normal',rare='Rare',elite='Elite',rareelite='Rare elite',worldboss='Boss',trivial='Trivial',minus='Minor'}
     local level=Call(UnitLevel,'target')
     local playerLevel=Call(UnitLevel,'player')
-    return {family=family,name=Plain(Call(UnitName,'target')) or (notable and notable.name) or family.name,
-        owned=controlled==true,wild=wild,notable=notable,classification=labels[classification],
+    return {family=family,name=targetName or (rare and rare.name) or (notable and notable.name) or family.name,
+        owned=controlled==true,wild=wild,notable=notable,rare=rare,rareNameMatch=rareNameMatch,
+        classification=labels[classification],
         special=classification=='rare' or classification=='elite' or classification=='rareelite' or classification=='worldboss',
         level=Core.IsNumber(level) and level>0 and math.floor(level) or nil,
         tooHigh=wild and Core.IsNumber(level) and Core.IsNumber(playerLevel) and level>0 and playerLevel>0 and level>playerLevel}
@@ -51,7 +62,16 @@ function Guide.Lines(info)
         'Suggested use: '..family.role,
         'Family ability: '..family.ability,
         family.effect}
-    if info.notable then lines[#lines+1]='Watch list: '..info.notable.name..' — '..info.notable.zone end
+    if info.rare then
+        local detail='Rare origin: '..info.rare.name..' — '..info.rare.zone
+        if info.rare.level then detail=detail..' | Wild level '..info.rare.level end
+        lines[#lines+1]=detail
+        if info.rareNameMatch then
+            lines[#lines+1]='Rare identity is an exact English name + family match; renamed pets cannot be identified.'
+        end
+    elseif info.notable then
+        lines[#lines+1]='Watch list: '..info.notable.name..' — '..info.notable.zone
+    end
     if info.tooHigh then lines[#lines+1]='Above your level — cannot tame yet.' end
     if info.owned then
         lines[#lines+1]='Player-controlled pet. Family advice, not a wild tame target or a list of its learned skills.'
@@ -64,6 +84,9 @@ function Guide.Lines(info)
     return lines
 end
 function Guide.Summary(info)
+    if info.rare then
+        return 'Rare '..info.rare.name..' | '..info.family.name..': '..info.family.ability
+    end
     local prefix=info.special and (info.classification..' ') or ''
     return prefix..info.family.name..': '..info.family.ability
 end
@@ -116,7 +139,7 @@ function Guide.Create(parent)
         badge.hasMatch=true
         local r,g,b=0.2,0.85,1
         if info.tooHigh then r,g,b=1,0.25,0.15
-        elseif info.special or info.notable then r,g,b=1,0.75,0.15 end
+        elseif info.special or info.notable or info.rare then r,g,b=1,0.75,0.15 end
         border:SetColorTexture(r,g,b,1)
         label:SetTextColor(1,info.tooHigh and 0.4 or 0.88,info.tooHigh and 0.3 or 0.55)
         label:SetText(Guide.Summary(info))

@@ -23,9 +23,10 @@ local info=NS.PetGuide.ReadTarget()
 check(info.notable.name=='Timber' and info.family.name=='Wolf','numeric NPC and family match')
 check(info.tooHigh and info.classification=='Rare' and info.special,'live level and rarity')
 local heading=NS.PetGuide.Summary(info)
-check(heading=='Rare Wolf: Furious Howl','inline summary includes family ability and rarity')
+check(heading=='Rare Timber | Wolf: Furious Howl','inline summary includes rare identity, family ability, and rarity')
 local lines=table.concat(NS.PetGuide.Lines(info),'\n')
 check(lines:find('Furious Howl',1,true) and lines:find('Above your level',1,true),'recommended family skill and level warning')
+check(lines:find('Rare origin: Timber',1,true) and lines:find('Wild level 10',1,true),'known rare includes origin location and wild level')
 check(lines:find('Family guide only',1,true) and lines:find('actual skills',1,true),'family recommendation not presented as known skill')
 UnitCreatureFamily=function() return '狼',1 end
 check(NS.PetGuide.ReadTarget().family.name=='Wolf','family ID works on non-English clients')
@@ -60,6 +61,18 @@ for _,api in ipairs({'UnitIsDead','UnitIsPlayer'}) do
  Reset();_G[api]=function() return true end
  check(not NS.PetGuide.ReadTarget(),'dead targets and players excluded')
 end
+-- Exact rare names restore origin details for controlled pets without reading an NPC ID.
+Reset();UnitPlayerControlled=function() return true end
+UnitCreatureFamily=function() return 'Cat',2 end
+UnitName=function() return 'The Rake' end
+UnitCreatureID=function() error('identity lookup should not run for an owned pet') end
+local rarePet=NS.PetGuide.ReadTarget()
+check(rarePet.owned and rarePet.rare and rarePet.rare.name=='The Rake' and rarePet.rareNameMatch,'owned rare pet matches exact name and family')
+check(NS.PetGuide.Summary(rarePet)=='Rare The Rake | Cat: Claw / Prowl','owned rare summary includes identity and family advice')
+local rareLines=table.concat(NS.PetGuide.Lines(rarePet),' ')
+check(rareLines:find('Mulgore',1,true) and rareLines:find('Wild level 10',1,true) and rareLines:find('exact English name',1,true),'owned rare tooltip explains origin and match limit')
+UnitCreatureFamily=function() return 'Wolf',1 end
+check(not NS.PetGuide.ReadTarget().rare,'wrong family rejects controlled rare-name match')
 -- Friendly/owned pets provide the same advice without wild-beast claims.
 Reset();UnitPlayerControlled=function() return true end
 UnitName=function() return 'My renamed pet' end
@@ -106,7 +119,7 @@ for _,level in ipairs({secret,-1,0,math.huge,0/0}) do
 end
 Reset();UnitLevel=function(unit) return unit=='player' and 20 or 10 end
 check(not NS.PetGuide.ReadTarget().tooHigh,'lower-level target no level warning')
-local families,notables=0,0
+local families,notables,rares=0,0,0
 for id,family in pairs(NS.PetDatabase.families) do
  families=families+1
  UnitCreatureFamily=function() return family.name,id end
@@ -117,5 +130,10 @@ for _,entry in pairs(NS.PetDatabase.notable) do
  notables=notables+1
  check(NS.PetDatabase.families[entry.family] and entry.zone~='','every notable has a family and location')
 end
-check(families==19 and notables==21,'curated database coverage')
+for name,entry in pairs(NS.PetDatabase.rareByName) do
+ rares=rares+1
+ check(name==entry.name and NS.PetDatabase.families[entry.family] and entry.zone~='' and entry.level,'every rare has identity, family, location, and wild level')
+ if entry.id then check(NS.PetDatabase.rareByID[entry.id]==entry,'numeric rare indexes share the same record') end
+end
+check(families==19 and notables==21 and rares==70,'curated database coverage')
 print('PASS: '..count..' pet guide checks')

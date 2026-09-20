@@ -373,17 +373,17 @@ db.showRange=true
 UnitCanAttack=function() return false end;UnitIsFriend=function() return true end
 UnitPlayerControlled=function() return true end
 UnitCreatureFamily=function() return 'Cat',2 end
-UnitCreatureID=function() return 5807 end;UnitName=function() return 'A hunter pet' end
+UnitCreatureID=function() return 5807 end;UnitName=function() return 'The Rake' end
 UnitLevel=function(unit) return unit=='player' and 17 or 60 end
 UnitDistanceSquared=function() return nil,false end
 f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
-check(f.label.text=='Friendly target' and intel.shown and intel.text=='Cat: Claw / Prowl','friendly pet has range text and inline recommendation together')
-check(f.petGuideBadge.info.owned and not f.petGuideBadge.info.notable and not f.petGuideBadge.info.tooHigh,'friendly pet suppresses wild NPC and tame-level claims')
-check(table.concat(GameTooltip.lines,' '):find('Player-controlled pet',1,true),'hovered guide changes to owned pet details')
+check(f.label.text=='Friendly target' and intel.shown and intel.text=='Rare The Rake | Cat: Claw / Prowl','friendly rare pet has identity and advice inline')
+check(f.petGuideBadge.info.owned and f.petGuideBadge.info.rare.name=='The Rake' and not f.petGuideBadge.info.notable and not f.petGuideBadge.info.tooHigh,'friendly rare pet uses name origin without wild tame claims')
+check(table.concat(GameTooltip.lines,' '):find('Mulgore',1,true) and table.concat(GameTooltip.lines,' '):find('Player-controlled pet',1,true),'hovered guide includes rare origin and owned-pet limit')
 UnitName=function() return 'My pet' end
 UnitIsUnit=function(unit,other) return unit=='target' and other=='pet' end
 f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
-check(intel.shown and f.petGuideBadge.info.owned,'own pet is also eligible')
+check(intel.shown and f.petGuideBadge.info.owned and not f.petGuideBadge.info.rare,'renamed own pet keeps family advice without a false rare match')
 UnitIsPlayer=function() return true end;f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
 check(not intel.shown and not GameTooltip.shown,'switching from pet to player clears guide')
 UnitIsPlayer=function() return false end;UnitPlayerControlled=function() return false end

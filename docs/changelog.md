@@ -1,3 +1,12 @@
+## 0.17.0
+
+- Expanded the offline guide to 70 rare pets from the Forever roster, including new Forever rares, with family, source zone, and wild-level details.
+- Friendly and owned pets now recover rare-origin information through an exact English name plus live-family match. The Rake now displays as “Rare The Rake | Cat: Claw / Prowl” instead of only “Cat.”
+- Hover details explain that controlled-pet identification is a name match, not proof of origin or current learned skills. Renamed pets safely fall back to family advice.
+- Wild rare matching continues to use numeric NPC IDs and live classification; restricted identity values are not bypassed.
+
+Use /reload, then target The Rake or another unrenamed rare pet.
+
 ## 0.16.3
 
 - Pet recommendations now include friendly targets, your own pet, and other players' pets. The player-controlled exclusion no longer hides their family guide.
