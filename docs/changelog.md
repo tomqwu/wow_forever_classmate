@@ -1,3 +1,13 @@
+## 0.16.1
+
+- Pet matches now show a compact two-line hint automatically above the bar; you no longer need to discover and hover the small badge.
+- The hint shows family, useful family abilities, suggested role, level, and live rare/elite status. For example, a Hecklefang Hyena shows Hyena — Tendon Rip.
+- Hover either the hint or badge for the full guide. These remain family recommendations, not a claim that the selected beast teaches that skill.
+- The main bar remains 400 × 56. The attached hint follows its scale and fading, clears on target loss/death/disable, and uses the existing pet-guide toggle.
+- Unlocked drag instructions move above the hint so they do not overlap.
+
+Use `/reload`, then select a wild beast. No hover is required for the summary.
+
 ## 0.16.0
 
 - Added an offline target pet guide with 19 family profiles and 21 named beasts.

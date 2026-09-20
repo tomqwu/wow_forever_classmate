@@ -122,7 +122,7 @@ function Range.Create(host, db)
     portrait:SetSize(38,38);portrait:SetPoint('RIGHT',frame,'RIGHT',-24,0)
     portrait:Hide()
     frame.portrait=portrait;frame.petHighlight=petHighlight
-    local guide=NS.PetGuide.Create(frame)
+    local guide=NS.PetGuide.Create(frame,host.hint)
     frame.petGuideBadge=guide
     local mood=CreateFrame('Button',nil,frame)
     mood:SetSize(18,18);mood:Hide()

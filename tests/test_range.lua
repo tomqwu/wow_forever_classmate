@@ -85,7 +85,9 @@ C_Spell={GetSpellInfo=function(id) return metadata[id-9000] end,
 IsRangedAutoAttackSpell=function(id) return id==9001 end,IsSpellHarmful=function() return true end,
 IsSpellInRange=function(id) local s=metadata[id-9000];return distance>=s.minRange and distance<=s.maxRange end}
 local db={enabled=true,locked=true}
-local f=NS.Range.Create({},db)
+local moveHint=setmetatable({}, {__index=methods})
+function moveHint:SetPoint(_,_,_,_,y) self.y=y end
+local f=NS.Range.Create({hint=moveHint},db)
 check(f.label.text:find('Shooting',1,true),'discovered auto shot')
 distance=6;f.scripts.OnUpdate(f,0.15)
 check(f.label.text:find('Too close',1,true),'updates without swing events')
@@ -130,7 +132,7 @@ C_SpellBook.IsSpellBookItemInRange=function(slot)
     local data=metadata[slot];return distance>=data.minRange and distance<=data.maxRange
 end
 distance=20
-f=NS.Range.Create({},db)
+f=NS.Range.Create({hint=moveHint},db)
 check(f.label.text:find('Shooting',1,true),'spellbook fallback classifies shooting')
 check(f.Status():find('nil/nil',1,true),'diagnostics report missing native checks')
 distance=50;f.scripts.OnUpdate(f,0.15)
@@ -141,7 +143,7 @@ C_SpellBook.GetSpellBookSkillLineInfo=function() return {itemIndexOffset=0,numSp
 C_Spell.IsRangedAutoAttackSpell=function() return false end
 C_SwingTimer.IsTargetWithinSwingRange=function() return false end
 distance=50
-f=NS.Range.Create({},db)
+f=NS.Range.Create({hint=moveHint},db)
 check(f.label.text:find('Out of range | ~35-100 yd',1,true),'negative attack check overrides blue bracket')
 check(f.textures[2].color[1]==1 and f.textures[2].color[2]==0.15,'out-of-range accent is actually red')
 check(f.textures[3].color[1]==1 and f.textures[3].color[2]==0.15,'out-of-range icon border is actually red')
@@ -172,7 +174,7 @@ check(f.label.text=='Range unavailable','restricted friendliness does not invent
 UnitCanAttack=function() return true end
 UnitDistanceSquared=nil
 class='HUNTER';C_Spell=nil;C_SpellBook=nil
-f=NS.Range.Create({},db)
+f=NS.Range.Create({hint=moveHint},db)
 check(f.label.text:find('Range unavailable',1,true),'missing APIs degrade safely')
 -- Portrait and numeric angle share the module lifecycle.
 UnitExists=function() return target end
@@ -326,6 +328,18 @@ UnitLevel=function() return 10 end
 f.Refresh()
 check(f.petGuideBadge.shown and f.moodBadge.shown and not portrait.shown,'guide and mood coexist independently of range and portrait')
 check(f.petGuideBadge.info.notable.name=='Timber','target produces exact watch-list match')
+check(f.petGuideBadge.hintPanel.shown and f.petGuideBadge.hintTitle.text:find('Furious Howl',1,true),'matching target shows family ability without hovering')
+check(f.petGuideBadge.hintDetail.text:find('Rare',1,true),'automatic hint shows live rare status')
+check(moveHint.y==50,'drag instructions clear the automatic hint')
+UnitCreatureFamily=function() return 'Hyena',25 end
+UnitCreatureID=function() return 4127 end;UnitName=function() return 'Hecklefang Hyena' end
+UnitClassification=function() return 'normal' end;UnitLevel=function(unit) return unit=='player' and 17 or 16 end
+f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
+check(f.petGuideBadge.hintPanel.shown and f.petGuideBadge.hintTitle.text=='Family: Hyena — Tendon Rip','screenshot target displays automatic hyena hint')
+check(f.petGuideBadge.hintDetail.text=='Lv 16 · PvP control / kiting','screenshot target shows its level and suggested use')
+UnitCreatureFamily=function() return 'Wolf',1 end
+UnitCreatureID=function() return 1132 end;UnitName=function() return 'Timber' end
+f.Refresh()
 GameTooltip={SetOwner=function(self,owner) self.owner=owner end,
  IsOwned=function(self,owner) return self.owner==owner end,
  SetText=function(self,text) self.text=text;self.lines={} end,
@@ -337,21 +351,26 @@ UnitCreatureID=function() return 999999 end;UnitName=function() return 'Forest S
 UnitCreatureFamily=function() return 'Spider',3 end;f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
 check(not f.petGuideBadge.info.notable and GameTooltip.text:find('Forest Spider',1,true),'target swap updates hovered tooltip without stale named pet')
 check(table.concat(GameTooltip.lines,' '):find('Web',1,true),'family guide includes signature ability')
+check(f.petGuideBadge.hintTitle.text=='Family: Spider — Web','automatic hint changes with target')
+f.petGuideBadge.scripts.OnLeave()
+f.petGuideBadge.hintPanel.scripts.OnEnter()
+check(GameTooltip.shown and GameTooltip.owner==f.petGuideBadge.hintPanel,'automatic hint itself can be hovered for full guide')
 UnitCreatureFamily=function() return 'Humanoid',0 end;f.scripts.OnUpdate(f,0.15)
 check(not f.petGuideBadge.shown and not GameTooltip.shown,'nonmatching target clears badge and tooltip')
+check(not f.petGuideBadge.hintPanel.shown and f.petGuideBadge.hintTitle.text=='' and moveHint.y==4,'nonmatch clears automatic hint and restores drag label')
 UnitCreatureFamily=function() return 'Wolf',1 end;f.Refresh()
 f.petGuideBadge.scripts.OnEnter()
 db.petGuide=false;f.Refresh()
-check(not f.petGuideBadge.shown and not GameTooltip.shown and f.moodBadge.shown,'guide toggle clears tooltip but keeps happiness warning')
+check(not f.petGuideBadge.hintPanel.shown and not f.petGuideBadge.shown and not GameTooltip.shown and f.moodBadge.shown,'guide toggle clears tooltip but keeps happiness warning')
 db.petGuide=true;f.Refresh();f.petGuideBadge.scripts.OnEnter()
 hasBeast=false;f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
-check(not f.petGuideBadge.shown and not GameTooltip.shown and not f.scripts.OnUpdate,'target loss clears guide and stops polling')
+check(not f.petGuideBadge.hintPanel.shown and not f.petGuideBadge.shown and not GameTooltip.shown and not f.scripts.OnUpdate,'target loss clears guide and stops polling')
 hasBeast=true;f.Refresh();f.petGuideBadge.scripts.OnEnter()
 UnitIsDead=function(unit) return unit=='target' end;f.scripts.OnUpdate(f,0.15)
-check(not f.petGuideBadge.shown and not GameTooltip.shown and not f.scripts.OnUpdate,'dead target clears guide and tooltip')
+check(not f.petGuideBadge.hintPanel.shown and not f.petGuideBadge.shown and not GameTooltip.shown and not f.scripts.OnUpdate,'dead target clears guide and tooltip')
 UnitIsDead=function() return false end;f.Refresh();f.petGuideBadge.scripts.OnEnter()
 f.scripts.OnEvent(f,'PLAYER_LEAVING_WORLD')
-check(not f.petGuideBadge.shown and not GameTooltip.shown and not f.scripts.OnUpdate,'leaving world clears guide')
+check(not f.petGuideBadge.hintPanel.shown and not f.petGuideBadge.shown and not GameTooltip.shown and not f.scripts.OnUpdate,'leaving world clears guide')
 f.Refresh();f.petGuideBadge.scripts.OnEnter();db.enabled=false;f.Refresh()
-check(not f.petGuideBadge.shown and not GameTooltip.shown and not next(f.events),'disable clears guide and all event listeners')
+check(not f.petGuideBadge.hintPanel.shown and not f.petGuideBadge.shown and not GameTooltip.shown and not next(f.events),'disable clears guide and all event listeners')
 print('PASS: '..count..' distance checks')

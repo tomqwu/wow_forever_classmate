@@ -43,6 +43,11 @@ in-game font appearance should still be checked after /reload.
 
 An 18px paw badge overlays the bottom left of the pet portrait (pet block x+3,
 y=-31). The happiness badge stays bottom right (x+27), with a 6px gap. Neither
-replaces the health border. Details stay in the hover tooltip; the main bar keeps
-its original size and range text width. The pet block remains reserved whenever
+replaces the health border. A 400 × 40 two-line hint sits 6px above the bar only
+while a supported wild beast is selected. Family and family ability appear on
+the first line; level, special classification, and suggested use on the second.
+It uses the existing pet-guide switch and inherits parent scale and fading. Full
+details remain available by hovering either the hint or badge. Unlocked drag
+instructions move above the hint to prevent overlap. The main bar keeps its
+original size and range text width. The pet block remains reserved whenever
 portrait, happiness, or the pet guide is enabled. See [data sources](pet-guide-sources.md).

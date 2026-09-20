@@ -54,39 +54,78 @@ function Guide.Lines(info)
     lines[#lines+1]='Beta guide '..DB.reviewed..'; skill availability may change.'
     return lines
 end
-function Guide.Create(parent)
+function Guide.Summary(info)
+    local details={}
+    if info.tooHigh then details[#details+1]='Above your level' end
+    if info.classification and info.classification~='Normal' then details[#details+1]=info.classification end
+    if info.level then details[#details+1]='Lv '..info.level end
+    if info.notable then details[#details+1]='Watch list' end
+    details[#details+1]=info.family.role
+    return 'Family: '..info.family.name..' — '..info.family.ability,table.concat(details,' · ')
+end
+function Guide.Create(parent,moveHint)
     local badge=CreateFrame('Button',nil,parent)
     badge:SetSize(18,18);badge:EnableMouse(true);badge:Hide()
     local border=badge:CreateTexture(nil,'BACKGROUND')
     border:SetAllPoints();border:SetColorTexture(0.2,0.85,1,1)
     local icon=badge:CreateTexture(nil,'ARTWORK')
     icon:SetSize(14,14);icon:SetPoint('CENTER');icon:SetTexture('Interface\\Icons\\Ability_Physical_Taunt')
-    local hovered=false
+    -- A target match must be visible without discovering the tiny hover badge.
+    local panel=CreateFrame('Button',nil,parent)
+    panel:SetSize(400,40);panel:SetPoint('BOTTOMLEFT',parent,'TOPLEFT',0,6)
+    panel:EnableMouse(true);panel:SetClampedToScreen(true);panel:Hide()
+    local background=panel:CreateTexture(nil,'BACKGROUND')
+    background:SetAllPoints();background:SetColorTexture(0.015,0.02,0.03,0.96)
+    local accent=panel:CreateTexture(nil,'ARTWORK')
+    accent:SetWidth(3);accent:SetPoint('TOPLEFT');accent:SetPoint('BOTTOMLEFT')
+    local function Text(y,size)
+        local text=panel:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall')
+        text:SetPoint('TOPLEFT',panel,'TOPLEFT',9,y);text:SetSize(382,16)
+        text:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',size,'OUTLINE')
+        text:SetJustifyH('LEFT');text:SetWordWrap(false)
+        return text
+    end
+    local title,detail=Text(-3,13),Text(-21,11)
+    title:SetTextColor(1,0.9,0.6);detail:SetTextColor(0.95,0.97,1)
+    badge.hintPanel=panel;badge.hintTitle=title;badge.hintDetail=detail
+    local function PositionMoveHint(visible)
+        if moveHint then
+            moveHint:ClearAllPoints()
+            moveHint:SetPoint('BOTTOM',parent,'TOP',0,visible and 50 or 4)
+        end
+    end
+    local hoverOwner
     local function HideTooltip()
-        if hovered and GameTooltip and GameTooltip:IsOwned(badge) then GameTooltip:Hide() end
-        hovered=false
+        if hoverOwner and GameTooltip and GameTooltip:IsOwned(hoverOwner) then GameTooltip:Hide() end
+        hoverOwner=nil
     end
     local function ShowTooltip()
-        if not hovered or not badge.info or not GameTooltip then return end
-        GameTooltip:SetOwner(badge,'ANCHOR_TOP')
+        if not hoverOwner or not badge.info or not GameTooltip then return end
+        GameTooltip:SetOwner(hoverOwner,'ANCHOR_TOP')
         GameTooltip:SetText('Pet guide: '..badge.info.name)
         for _,line in ipairs(Guide.Lines(badge.info)) do GameTooltip:AddLine(line,1,1,1,true) end
         GameTooltip:Show()
     end
-    badge:SetScript('OnEnter',function() hovered=true;ShowTooltip() end)
-    badge:SetScript('OnLeave',HideTooltip)
-    badge:SetScript('OnHide',HideTooltip)
+    for _,surface in ipairs({badge,panel}) do
+        surface:SetScript('OnEnter',function() hoverOwner=surface;ShowTooltip() end)
+        surface:SetScript('OnLeave',HideTooltip)
+        surface:SetScript('OnHide',HideTooltip)
+    end
     function badge.Clear()
-        badge.info=nil;HideTooltip();badge:Hide()
+        badge.info=nil;HideTooltip();badge:Hide();panel:Hide()
+        title:SetText('');detail:SetText('');PositionMoveHint(false)
     end
     function badge.Update(enabled)
         local info=enabled and Guide.ReadTarget() or nil
         badge.info=info
         if not info then badge.Clear();return end
-        if badge.info.tooHigh then border:SetColorTexture(1,0.25,0.15,1)
-        elseif badge.info.special or badge.info.notable then border:SetColorTexture(1,0.75,0.15,1)
-        else border:SetColorTexture(0.2,0.85,1,1) end
-        badge:Show();ShowTooltip()
+        local r,g,b=0.2,0.85,1
+        if info.tooHigh then r,g,b=1,0.25,0.15
+        elseif info.special or info.notable then r,g,b=1,0.75,0.15 end
+        border:SetColorTexture(r,g,b,1);accent:SetColorTexture(r,g,b,1)
+        local heading,summary=Guide.Summary(info)
+        title:SetText(heading);detail:SetText(summary)
+        badge:Show();panel:Show();PositionMoveHint(true);ShowTooltip()
     end
     return badge
 end
