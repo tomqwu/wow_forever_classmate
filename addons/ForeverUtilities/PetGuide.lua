@@ -20,7 +20,7 @@ local function CreatureID()
 end
 function Guide.ReadTarget()
     if Call(UnitExists,'target')~=true or Call(UnitIsDead,'target')~=false
-        or Call(UnitIsPlayer,'target')~=false or Call(UnitPlayerControlled,'target')~=false then return nil end
+        or Call(UnitIsPlayer,'target')~=false then return nil end
     -- Family IDs/names are returned together on Forever; both can be restricted.
     if type(UnitCreatureFamily)~='function' then return nil end
     local ok,name,familyID=pcall(UnitCreatureFamily,'target')
@@ -29,7 +29,10 @@ function Guide.ReadTarget()
     if not familyID then return nil end
     local family=DB.families[familyID]
     if not family then return nil end
-    local id=CreatureID()
+    local controlled=Call(UnitPlayerControlled,'target')
+    local wild=controlled==false
+    -- Owned/controlled pets still get family advice, never wild spawn/taming claims.
+    local id=wild and CreatureID() or nil
     local notable=Core.IsNumber(id) and DB.notable[id] or nil
     if notable and notable.family~=familyID then notable=nil end
     local classification=Call(UnitClassification,'target')
@@ -37,10 +40,10 @@ function Guide.ReadTarget()
     local level=Call(UnitLevel,'target')
     local playerLevel=Call(UnitLevel,'player')
     return {family=family,name=Plain(Call(UnitName,'target')) or (notable and notable.name) or family.name,
-        notable=notable,classification=labels[classification],
+        owned=controlled==true,wild=wild,notable=notable,classification=labels[classification],
         special=classification=='rare' or classification=='elite' or classification=='rareelite' or classification=='worldboss',
         level=Core.IsNumber(level) and level>0 and math.floor(level) or nil,
-        tooHigh=Core.IsNumber(level) and Core.IsNumber(playerLevel) and level>0 and playerLevel>0 and level>playerLevel}
+        tooHigh=wild and Core.IsNumber(level) and Core.IsNumber(playerLevel) and level>0 and playerLevel>0 and level>playerLevel}
 end
 function Guide.Lines(info)
     local family=info.family
@@ -50,7 +53,13 @@ function Guide.Lines(info)
         family.effect}
     if info.notable then lines[#lines+1]='Watch list: '..info.notable.name..' — '..info.notable.zone end
     if info.tooHigh then lines[#lines+1]='Above your level — cannot tame yet.' end
-    lines[#lines+1]='Family guide only. Use Beast Lore to check tameability and actual skills.'
+    if info.owned then
+        lines[#lines+1]='Player-controlled pet. Family advice, not a wild tame target or a list of its learned skills.'
+    elseif info.wild then
+        lines[#lines+1]='Family guide only. Use Beast Lore to check tameability and actual skills.'
+    else
+        lines[#lines+1]='Family guide only. Ownership, tameability, and learned skills are not confirmed.'
+    end
     lines[#lines+1]='Beta guide '..DB.reviewed..'; skill availability may change.'
     return lines
 end

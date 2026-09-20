@@ -3,7 +3,7 @@
 ## Notes: Hunter range, ammo, pet care, target awareness, and pet guide for WoW Forever.
 ## IconTexture: Interface\AddOns\ForeverUtilities\Textures\HuntersFriend
 ## Author: Codex
-## Version: 0.16.2
+## Version: 0.16.3
 ## SavedVariables: ForeverUtilitiesDB
 Core.lua
 TargetContext.lua

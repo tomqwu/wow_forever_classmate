@@ -43,7 +43,7 @@ in-game font appearance should still be checked after /reload.
 
 The recommendation is a FontString on the main indicator, just like range and
 ammo. It does not depend on a floating panel or an off-frame child. On a matching
-wild target, the range/supplies block uses three rows:
+beast or player-owned pet, the range/supplies block uses three rows:
 
 | Row | Top offset | Height |
 | --- | --- | --- |
@@ -53,7 +53,7 @@ wild target, the range/supplies block uses three rows:
 
 All rows fit in 56px, and use the block's existing text width. The recommendation
 uses 11px gold text, shrinking down to 9px only for long family/ability names.
-Above-player-level targets use red text. Rare and elite classifications prefix
+Wild targets above player level use red text. Rare and elite classifications prefix
 the family. Full details, including role and named-beast locations, are in the
 hover tooltip. The original range and ammo positions return when no hint applies.
 

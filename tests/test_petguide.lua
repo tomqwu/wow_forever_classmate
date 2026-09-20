@@ -47,7 +47,7 @@ for _,guid in ipairs({'Pet-0-1234-0-5678-1132-0000ABC123','Player-1234-1132','br
 end
 Reset();UnitCreatureID=function() return secret end
 check(not NS.PetGuide.ReadTarget().notable,'restricted creature ID never falls back around restriction')
-for _,api in ipairs({'UnitExists','UnitIsDead','UnitIsPlayer','UnitPlayerControlled','UnitCreatureFamily'}) do
+for _,api in ipairs({'UnitExists','UnitIsDead','UnitIsPlayer','UnitCreatureFamily'}) do
  for _,mode in ipairs({'secret','error','nil','absent'}) do
   Reset()
   _G[api]=mode~='absent' and function()
@@ -56,10 +56,35 @@ for _,api in ipairs({'UnitExists','UnitIsDead','UnitIsPlayer','UnitPlayerControl
   check(not NS.PetGuide.ReadTarget(),'missing or restricted target eligibility stays quiet: '..api..' '..mode)
  end
 end
-for _,api in ipairs({'UnitIsDead','UnitIsPlayer','UnitPlayerControlled'}) do
+for _,api in ipairs({'UnitIsDead','UnitIsPlayer'}) do
  Reset();_G[api]=function() return true end
- check(not NS.PetGuide.ReadTarget(),'dead, player, or controlled targets excluded')
+ check(not NS.PetGuide.ReadTarget(),'dead targets and players excluded')
 end
+-- Friendly/owned pets provide the same advice without wild-beast claims.
+Reset();UnitPlayerControlled=function() return true end
+UnitName=function() return 'My renamed pet' end
+UnitIsFriend=function() return true end
+local pet=NS.PetGuide.ReadTarget()
+check(pet and pet.owned and not pet.wild,'another player pet is eligible')
+check(pet.family.name=='Wolf' and NS.PetGuide.Summary(pet):find('Furious Howl',1,true),'owned pet keeps family recommendation')
+check(not pet.notable and not pet.tooHigh,'owned pet ID and level never imply a tame opportunity')
+local petLines=table.concat(NS.PetGuide.Lines(pet),' ')
+check(petLines:find('Player-controlled pet',1,true) and not petLines:find('Beast Lore',1,true) and not petLines:find('Watch list',1,true),'owned pet tooltip distinguishes advice from spawn intel')
+UnitCreatureID=function() error('identity lookup should not run for an owned pet') end
+check(NS.PetGuide.ReadTarget().owned,'owned advice does not need an NPC ID')
+UnitIsFriend=function() return false end
+check(NS.PetGuide.ReadTarget().owned,'enemy-owned pet also gets family advice')
+for _,mode in ipairs({'secret','error','nil','absent'}) do
+ Reset()
+ UnitPlayerControlled=mode~='absent' and function()
+  if mode=='secret' then return secret elseif mode=='error' then error('restricted') end
+ end or nil
+ local result=NS.PetGuide.ReadTarget()
+ check(result and not result.owned and not result.wild,'unavailable ownership preserves readable family advice')
+ check(not result.notable and not result.tooHigh,'unavailable ownership never implies a wild tame target')
+end
+Reset();UnitIsFriend=function() return true end
+check(NS.PetGuide.ReadTarget().wild,'friendly wild beasts remain eligible')
 Reset();UnitCreatureFamily=function() return 'Wolf',secret end
 check(not NS.PetGuide.ReadTarget(),'secret family ID not bypassed through name')
 Reset();UnitName=function() return '|cffff0000Test\nName' end

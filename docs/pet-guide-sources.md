@@ -6,13 +6,14 @@ makes no network requests from the game and does not scan nearby units.
 
 ## What a hint means
 
-The blue paw badge means the selected wild creature matches a supported family.
+The blue paw badge means the selected beast or pet matches a supported family.
 Gold means a named watch-list match or a live rare/elite/boss classification.
-Red means the readable target level exceeds the player's level. A gold family
+Red means a wild target's readable level exceeds the player's level. A gold family
 recommendation appears directly in the bar between range and ammo, for example
 `Hyena: Tendon Rip` or `Rare Wolf: Furious Howl`. It turns red above your level.
 Hover the text or badge for suggested use, level, classification, and a watch-list
 location when available. The badge fits beside happiness in the pet block.
+Owned pets, including friendly pets belonging to other players, get family advice without spawn-location or taming-level claims.
 Neither changes weapon/range colors. The recommendation inherits the bar's
 scale and fading, clears with its target, and uses the pet-guide toggle.
 
@@ -68,8 +69,10 @@ Verified API signatures come from Blizzard's UI source mirror at
 - UnitCreatureFamily returns name and family ID; both may be secret.
 - UnitCreatureID is used when available. Only an absent API permits parsing a
   readable Creature GUID; a restricted result is never bypassed.
-- UnitExists, UnitIsDead, UnitIsPlayer, and UnitPlayerControlled must explicitly
-  identify a living, uncontrolled non-player target.
+- UnitExists, UnitIsDead, and UnitIsPlayer must explicitly identify a living
+  non-player target. UnitPlayerControlled distinguishes wild beasts from owned
+  pets; both can receive family advice. Missing or restricted ownership does
+  not suppress readable family advice, but never enables spawn/taming claims.
 - UnitName, UnitLevel, and UnitClassification are optional, guarded details.
 
 Add new facts only with a Forever-specific source and review date. Verify an

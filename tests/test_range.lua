@@ -368,6 +368,26 @@ check(f.petGuideBadge.hintTitle.text=='Spider: Web','automatic hint changes with
 f.petGuideBadge.scripts.OnLeave()
 f.petGuideBadge.hintPanel.scripts.OnEnter()
 check(GameTooltip.shown and GameTooltip.owner==f.petGuideBadge.hintPanel,'automatic hint itself can be hovered for full guide')
+-- Recommendations remain visible even when the range readout is a friendly target.
+db.showRange=true
+UnitCanAttack=function() return false end;UnitIsFriend=function() return true end
+UnitPlayerControlled=function() return true end
+UnitCreatureFamily=function() return 'Cat',2 end
+UnitCreatureID=function() return 5807 end;UnitName=function() return 'A hunter pet' end
+UnitLevel=function(unit) return unit=='player' and 17 or 60 end
+UnitDistanceSquared=function() return nil,false end
+f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
+check(f.label.text=='Friendly target' and intel.shown and intel.text=='Cat: Claw / Prowl','friendly pet has range text and inline recommendation together')
+check(f.petGuideBadge.info.owned and not f.petGuideBadge.info.notable and not f.petGuideBadge.info.tooHigh,'friendly pet suppresses wild NPC and tame-level claims')
+check(table.concat(GameTooltip.lines,' '):find('Player-controlled pet',1,true),'hovered guide changes to owned pet details')
+UnitName=function() return 'My pet' end
+UnitIsUnit=function(unit,other) return unit=='target' and other=='pet' end
+f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
+check(intel.shown and f.petGuideBadge.info.owned,'own pet is also eligible')
+UnitIsPlayer=function() return true end;f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
+check(not intel.shown and not GameTooltip.shown,'switching from pet to player clears guide')
+UnitIsPlayer=function() return false end;UnitPlayerControlled=function() return false end
+UnitCanAttack=function() return true end;UnitIsFriend=function() return false end
 UnitCreatureFamily=function() return 'Humanoid',0 end;f.scripts.OnUpdate(f,0.15)
 check(not f.petGuideBadge.shown and not GameTooltip.shown,'nonmatching target clears badge and tooltip')
 check(not f.petGuideBadge.hintPanel.shown and f.petGuideBadge.hintTitle.text=='','nonmatch clears inline intel text')

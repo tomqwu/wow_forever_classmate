@@ -1,3 +1,12 @@
+## 0.16.3
+
+- Pet recommendations now include friendly targets, your own pet, and other players' pets. The player-controlled exclusion no longer hides their family guide.
+- The recommendation remains visible between range and ammo even when the range readout says “Friendly target.”
+- Owned pets receive family/ability advice without wild-spawn locations, watch-list matches, or above-level taming warnings. The tooltip identifies a player-controlled pet.
+- Missing or restricted ownership information still permits readable family advice without inferring tameability. Players, dead targets, and unsupported families stay excluded.
+
+Use `/reload`, then select a friendly hunter pet.
+
 ## 0.16.2
 
 - Moved the automatic pet recommendation directly into the main bar, using the same text-rendering path as range and ammo. The separate floating hint is removed.
