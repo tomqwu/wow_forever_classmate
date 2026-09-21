@@ -2,7 +2,7 @@ local addon, NS = ...
 local Hunter=NS.Hunter
 local events=CreateFrame('Frame')
 local panel
-local function Say(text) DEFAULT_CHAT_FRAME:AddMessage("|cff66ff88Hunter's Friend:|r "..text) end
+local function Say(text) DEFAULT_CHAT_FRAME:AddMessage("|cff66ff88Forever Classmate:|r "..text) end
 local function Text(parent,text,x,y,font)
     local label=parent:CreateFontString(nil,'OVERLAY',font or 'GameFontHighlight')
     label:SetPoint('TOPLEFT',parent,'TOPLEFT',x,y);label:SetText(text)
@@ -42,7 +42,7 @@ local function OpenPanel()
         panel:SetScript('OnDragStop',function(self) self:StopMovingOrSizing() end)
         panel:SetScript('OnHide',function(self) self:StopMovingOrSizing() end)
         local bg=panel:CreateTexture(nil,'BACKGROUND');bg:SetAllPoints();bg:SetColorTexture(0.025,0.03,0.045,0.98)
-        Text(panel,"Forever - Hunter's Friend",20,-18,'GameFontNormalLarge')
+        Text(panel,"Forever Classmate — Hunter",20,-18,'GameFontNormalLarge')
         Text(panel,'Drag this window to move it.',20,-48,'GameFontHighlightSmall')
         panel.enabled=Check(panel,'Enable hunter bar',20,-78,function(value) Hunter.SetEnabled(value) end)
         panel.controls={}
@@ -127,11 +127,11 @@ local function RefreshMinimap()
         Circle(26,'BORDER'):SetColorTexture(0.72,0.57,0.25,1)
         Circle(22,'ARTWORK'):SetColorTexture(0.025,0.035,0.025,1)
         local icon=Circle(19,'OVERLAY')
-        icon:SetTexture('Interface\\AddOns\\ForeverUtilities\\Textures\\HuntersFriend');icon:SetTexCoord(0,1,0,1)
+        icon:SetTexture('Interface\\AddOns\\ForeverUtilities\\Textures\\ForeverClassmate');icon:SetTexCoord(0,1,0,1)
         local highlight=Circle(24,'HIGHLIGHT');highlight:SetColorTexture(1,0.85,0.4,0.22)
         minimapButton:SetScript('OnEnter',function(self)
             if GameTooltip then
-                GameTooltip:SetOwner(self,'ANCHOR_LEFT');GameTooltip:SetText("Hunter's Friend")
+                GameTooltip:SetOwner(self,'ANCHOR_LEFT');GameTooltip:SetText("Forever Classmate")
                 GameTooltip:AddLine('Click: settings | Drag: move around minimap',1,1,1);GameTooltip:Show()
             end
         end)

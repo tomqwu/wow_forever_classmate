@@ -1,26 +1,26 @@
-# Forever - Hunter's Friend
+# Forever Classmate
 
-<p align="center"><img src="assets/branding/hunters-friend-logo.png" width="256" alt="Hunter’s Friend — golden lynx and emerald bow"></p>
+<p align="center"><img src="assets/branding/forever-classmate-logo.png" width="256" alt="Forever Classmate — golden compass crest with nine class-colored gems"></p>
 
-**Range, ammunition, pet care, and beast discovery in one compact hunter bar.**
+**Your class-aware companion for World of Warcraft: Forever.**
 
-Built for hunters in **World of Warcraft: Forever**, Hunter's Friend shows what
-you need at a glance without a toolbox or module selector.
+Forever Classmate is growing into a modular helper that detects your class and
+shows the reminders, resources, and target context that class needs. The current
+release includes the complete **Hunter companion**; Paladin and the remaining
+Forever classes will arrive as their beta mechanics and addon APIs are validated.
+
+## Available now: Hunter
 
 - **Range at a glance:** a colored weapon icon and readable range text.
-- **Ammo below the range text:** a small count of your selected ammunition carried in bags, excluding banks. Inventory changes update it even without a target. At 200 or fewer, the count turns red and a one-time low-ammo warning appears. Restocking above 200 rearms the warning. An empty hunter ammo slot shows zero.
-- **Target-of-target portrait:** a small portrait on the right shows who your target is targeting, without extra wording.
-- **Hunter's Mark reminder:** a highlighted spell icon appears only while you are in combat and your living enemy target has no readable Hunter's Mark debuff and you have learned the spell. It clears when marked, including by another hunter. Unavailable aura data stays quiet.
-- **Missing aspect reminder:** a highlighted aspect icon appears in combat if no learned aspect is active, even without a target. Any recognized aspect clears it. English spellbook names are currently supported; restricted readings stay quiet.
-- **Target pet guide:** a gold recommendation line appears directly inside the bar between range and ammo for supported beasts and pets—including friendly pets owned by other players. It covers 19 families, 70 rare-pet origins, and a 21-creature notable watch list. Exact named pets show details such as “Rare The Rake | Cat: Claw / Prowl”; hover for the source zone, wild level, suggested role, and match limits. Renamed pets retain family advice but cannot be identified as a specific rare. Blue is a family hint, gold is a rare/notable or live special target, and red means above your level. This beta guide recommends family abilities; check Beast Lore for an individual wild beast’s tameability and actual skills.
-- **Pet happiness:** a small red/yellow mood badge reminds you when your pet is unhappy or merely content. It disappears when happy, works without a target, and has its own toggle. Hover for the feeding reminder.
-- **Mend Pet reminder:** the right-hand portrait gets a red border when it shows your own living pet at 30% health or below. The border clears when healed or the target changes. This is a visual reminder, not an automatic cast.
-- **Optional facing angle:** signed degrees relative to your character: positive left, negative right, zero ahead. Hidden when valid position data is unavailable.
-- **Organized blocks:** range and ammo on the left, Mark and angle in a small combat block, pet portrait next, and a lock control at the edge. Subtle dividers keep information distinct. Disabled blocks return space to the range text.
-- **Compact and movable:** the bar stays 400 × 56, with adjustable scale and position.
-- **Quiet while idle:** full opacity in combat, 60% with a target outside combat, and 20% without a target. Unlocking only enables dragging and keeps these visibility rules; disabled means no bar updates or event listeners.
+- **Ammunition tracking:** live carried-ammo count with a one-time warning at 200 or fewer.
+- **Target context:** a target-of-target portrait and an optional facing angle.
+- **Combat upkeep:** Hunter's Mark and missing-aspect reminders appear only when useful.
+- **Pet care:** happiness state plus a red Mend Pet highlight at 30% health or below.
+- **Pet discovery:** family guidance, rare origins, notable beasts, recommended abilities, zones, levels, and match limits for supported targets—including friendly pets.
+- **Compact layout:** a movable 400 × 56 bar with independently toggleable information blocks.
+- **Quiet while idle:** full opacity in combat, 60% with a target outside combat, and 20% without a target.
 
-## Range colors
+### Range colors
 
 | Color | Meaning |
 | --- | --- |
@@ -33,47 +33,42 @@ you need at a glance without a toolbox or module selector.
 
 Readings such as `~8–35 yd` are approximate spell-based brackets. Decimal yards
 appear only when the client supplies validated numeric distance. Restricted
-readings are never guessed. Range and facing do not guarantee line of sight or
-that an attack can fire. No combat actions are automated.
+readings are hidden instead of guessed. Range and facing do not guarantee line
+of sight or that an attack can fire. No combat actions are automated.
 
-## Setup
+## Hunter setup
 
 Install the `ForeverUtilities` folder into `_classic_beta_/Interface/AddOns/`.
-The folder name is retained for seamless upgrades; the addon appears in WoW as
-**Forever - Hunter's Friend**. Restart for first installation, or use `/reload`
-for updates. The bar runs only on hunter characters.
+The internal folder and `ForeverUtilitiesDB` name remain stable so existing
+Hunter's Friend settings migrate without being reset. The addon appears in WoW
+as **Forever Classmate**. Restart for first installation, or use `/reload` after
+an update.
 
-Click the round minimap button or use `/fhunter` to open settings. Left-drag
-the icon around the minimap edge; its position is saved between sessions.
-The small padlock at the right edge of the bar toggles dragging; unlocked is green.
-Both buttons have visibility switches in settings. Locking never changes fading or live updates.
-
-Use the settings panel to enable the bar, lock its position,
-change scale, or independently toggle range, ammo count, low-ammo warnings, the
-portrait, pet-health highlight, pet happiness, target pet guide, facing angle,
-Hunter’s Mark icon, missing-aspect icon, and idle fading.
-Pet-health highlighting requires the portrait to be visible. The mark icon and
-angle can appear together. `/futils` remains an alias.
+Click the round minimap button or use `/fhunter` to open the current Hunter
+settings. Drag the minimap icon around the map edge. The padlock at the right of
+the bar toggles dragging without changing fading or live updates.
 
 | Command | Action |
 | --- | --- |
-| `/fhunter` | Open settings |
+| `/fhunter` | Open Hunter settings |
 | `/fhunter unlock` / `lock` | Move or lock the bar |
-| `/fhunter scale 1.2` | Adjust size (0.5–2) |
-| `/fhunter on` / `off` | Enable or disable |
-| `/fhunter reset` | Restore defaults |
-| `/fhunter status` | Version and range diagnostics |
+| `/fhunter scale 1.2` | Adjust size from 0.5 to 2 |
+| `/fhunter on` / `off` | Enable or disable the Hunter companion |
+| `/fhunter reset` | Restore Hunter defaults |
+| `/fhunter status` | Show version and diagnostics |
 
-Existing Forever Utilities position, scale, and display settings migrate
-automatically. This is a dedicated hunter addon; the modular toolbox and swing
-bar are no longer included. No other addons are required.
+`/futils` remains an alias. Every Hunter feature can be enabled independently.
+The current runtime activates only on Hunter characters. Future class modules
+will reuse the same addon installation and settings database.
 
-Designed for the Forever 1.60.1 beta client. API availability may limit numeric
-distance, angles, and ammo readings. Automated checks use mocked APIs; live
-in-game validation remains ongoing.
+## Class roadmap
 
-[Pet guide data and sources](https://github.com/tomqwu/wow_forever_hunters_friend/blob/main/docs/pet-guide-sources.md) ·
-[Source code](https://github.com/tomqwu/wow_forever_hunters_friend) ·
-[Report an issue](https://github.com/tomqwu/wow_forever_hunters_friend/issues)
+Paladin is the next planned module, centered on seals, aura and blessing upkeep,
+mana, facing, and melee range. Warrior, Rogue, Shaman, Druid, Mage, Priest, and
+Warlock modules will follow. Features that depend on restricted or changing beta
+data will stay hidden until their readings are reliable.
 
-[Developer guide](docs/development.md) · [Release history](docs/changelog.md)
+Designed for the Forever 1.60.1 beta client. Automated checks use mocked APIs;
+live in-game validation remains ongoing.
+
+[Project copy](docs/project-copy.md) · [Pet guide data and sources](docs/pet-guide-sources.md) · [Developer guide](docs/development.md) · [Release history](docs/changelog.md)

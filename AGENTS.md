@@ -1,6 +1,6 @@
-# Forever - Hunter's Friend workflow
+# Forever Classmate workflow
 
-Dedicated hunter addon, not a modular toolbox. Active code stays in addons/ForeverUtilities/ for upgrade compatibility. Do not restore module selection or the swing bar.
+Class-aware companion with independently maintained class modules. Active code stays in addons/ForeverUtilities/ for upgrade compatibility. The current production module is Hunter; preserve it while extracting shared services. Do not restore the retired swing bar.
 
 Use verified Forever 1.60.x APIs. Respect secret values and missing APIs; never
 present fabricated exact yards. Spell checks supply approximate brackets. A
@@ -31,7 +31,7 @@ for first addon discovery, or /reload for updates to an existing installation.
 
 The user explicitly requested reusing CurseForge project 1700438 for Forever
 Utilities on 2026-09-18, superseding the earlier separate-project restriction.
-Keep GitHub and CurseForge descriptions aligned with the hunter scope. The
+Keep GitHub and CurseForge descriptions aligned with the shipped class modules and roadmap; never advertise an unfinished module as available. The
 restored uploader accepts only ForeverUtilities-vX.Y.Z tags and standalone
 ForeverUtilities ZIPs. Use CURSE_FORGE and CURSEFORGE_PROJECT_ID without reading
 or exposing token values. Verify both release jobs and the upload receipt.
@@ -61,9 +61,9 @@ and true and the squared value is finite/nonnegative. Never fabricate a midpoint
 or use coordinates to bypass restrictions. Friendly targets may provide numeric
 distance; enemy numeric readings are not guaranteed. Clear stale values promptly.
 
-## Dedicated hunter runtime
+## Current Hunter runtime and class migration
 
-Distance.lua owns NS.Hunter, lazy bar creation, class gating, and settings.
+Distance.lua currently owns NS.Hunter, lazy bar creation, class gating, and settings. Migrate this behavior behind a class registry without changing the Hunter experience before adding other classes.
 UI.lua exposes one settings panel through /fhunter, with /futils as an alias.
 ForeverUtilitiesDB.hunter is migrated once from modules.distance or legacy flat
 settings. Keep the installation folder, saved-variable name, and release prefix

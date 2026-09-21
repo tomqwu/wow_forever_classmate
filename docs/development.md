@@ -1,8 +1,8 @@
-# Hunter's Friend development
+# Forever Classmate development
 
 Active source: `addons/ForeverUtilities/`. The existing folder, TOC filename,
 saved-variable name, and release tag prefix remain for upgrade compatibility.
-The visible addon name is Forever - Hunter's Friend.
+The visible addon name is Forever Classmate. The current runtime module is Hunter; the stable package identifiers are retained for upgrades.
 
 Core.lua guards API values. TargetContext.lua supplies facing and ammo readings.
 Range.lua owns the compact display and its event/update lifecycle. Distance.lua

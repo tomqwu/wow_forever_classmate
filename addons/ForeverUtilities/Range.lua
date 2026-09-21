@@ -164,7 +164,7 @@ function Range.Create(host, db)
         if count and count>200 then warnedLowAmmo=false end
         if low and not warnedLowAmmo then
             warnedLowAmmo=true
-            local message="Hunter's Friend: Low ammo — "..count.." remaining!"
+            local message="Forever Classmate: Low ammo — "..count.." remaining!"
             if UIErrorsFrame and type(UIErrorsFrame.AddMessage)=='function' then
                 pcall(UIErrorsFrame.AddMessage,UIErrorsFrame,message,1,0.25,0.2,1)
             elseif DEFAULT_CHAT_FRAME and type(DEFAULT_CHAT_FRAME.AddMessage)=='function' then

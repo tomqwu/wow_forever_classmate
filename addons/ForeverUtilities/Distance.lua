@@ -9,8 +9,8 @@ local function Normalize(db)
     db.scale=math.max(0.5,math.min(2,db.scale))
 end
 NS.Hunter = {
-    name="Forever - Hunter's Friend",
-    description='Hunter range, ammunition, and target awareness.',
+    name="Forever Classmate — Hunter",
+    description='Hunter range, ammunition, pet care, and target awareness.',
     defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showTargetTarget=true,showAngle=true,showRange=true,showAmmo=true,lowAmmoWarning=true,petMendWarning=true,petHappinessWarning=true,petGuide=true,markWarning=true,aspectWarning=true,fadeOutOfCombat=true,showMinimap=true,showLockButton=true,minimapAngle=35}, normalize=Normalize,
     options={
         {key='showMinimap',label='Show minimap settings button',kind='toggle'},

@@ -1,3 +1,12 @@
+## 0.18.0
+
+- Rebranded the addon as **Forever Classmate**, the class-aware home for the current Hunter companion and future class modules.
+- Added a new original compass-and-nine-gems logo for GitHub, CurseForge, the WoW addon list, and the movable minimap button.
+- Updated the in-game title, settings heading, chat prefix, release copy, project summary, and publishing labels while retaining the `ForeverUtilities` folder, saved variables, tags, and existing Hunter settings.
+- Reframed the project pages around what is available now: the complete Hunter toolkit. Paladin and other class modules are presented as a roadmap rather than shipped features.
+
+Use `/reload` to load the new name and artwork. Hunter features and settings are unchanged.
+
 ## 0.17.0
 
 - Expanded the offline guide to 70 rare pets from the Forever roster, including new Forever rares, with family, source zone, and wild-level details.

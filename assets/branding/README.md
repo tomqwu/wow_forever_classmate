@@ -1,7 +1,13 @@
-# Hunter's Friend logo
+# Forever Classmate logo
 
-Original generated PNG for CurseForge project artwork and the GitHub README. Golden lynx, emerald bow, and arrow; no lettering so the symbol can work at small sizes.
+The master PNG is `forever-classmate-logo.png`. It is the project artwork for
+GitHub and CurseForge: a golden compass-star surrounded by nine colored gems,
+representing one adaptive companion for the nine current Forever classes.
 
-This source asset is outside the addon package and does not require an addon release. Upload hunters-friend-logo.png in CurseForge project settings to replace the project avatar.
+The design uses no lettering so it remains recognizable as a small minimap icon.
+The transparent master is exported as an uncompressed 256 × 256 RGBA TGA at
+`addons/ForeverUtilities/Textures/ForeverClassmate.tga` for the minimap button
+and WoW addon list.
 
-The same artwork is exported as an uncompressed 256 × 256 RGBA TGA at addons/ForeverUtilities/Textures/HuntersFriend.tga for the minimap button and addon-list icon. It retains the full logo without cropping.
+The previous Hunter's Friend artwork remains in source history, but new pages and
+packages should use the Forever Classmate assets.
