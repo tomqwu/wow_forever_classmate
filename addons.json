@@ -8,7 +8,9 @@
       "tests/test_layout.lua",
       "tests/test_petguide.lua",
       "tests/test_shaman.lua",
-      "tests/test_shaman_ui.lua"
+      "tests/test_shaman_ui.lua",
+      "tests/test_class_context.lua",
+      "tests/test_standard_classes.lua"
     ],
     "releaseTagPrefix": "ForeverUtilities-v"
   }

@@ -6,15 +6,15 @@ Forever Classmate
 
 ## Short summary
 
-Class-aware Hunter and Shaman companions with compact, reliable reminders for WoW Forever.
+Compact class-aware companion bars for every WoW Forever class, with learned abilities and racials.
 
 ## GitHub description
 
-Class-aware WoW Forever helpers: Hunter range, ammo and pet intelligence; Shaman totems, imbues, shields and spec cues.
+Class-aware WoW Forever companions for all nine classes: live resources, upkeep, target cues, learned abilities, and racials.
 
 ## CurseForge summary
 
-Compact Hunter and Shaman companions for WoW Forever—range, pets, totems, imbues, shields, mana, and spec-aware cues.
+Compact helpers for all nine WoW Forever classes—resources, upkeep, target effects, learned abilities, pets, totems, and racials.
 
 ## One-line pitch
 
@@ -22,8 +22,8 @@ Forever Classmate detects your class and shows the compact information that clas
 
 ## Current release position
 
-Hunter includes range and facing feedback, ammunition, combat reminders, target context, pet care, and rare-beast guidance. Shaman includes live four-element totem timers, main-hand imbue and elemental-shield upkeep, mana, Totemic Recall guidance, and learned-spec cues for Maelstrom Weapon, Lava Burst with Flame Shock, or Riptide. Paladin is planned next.
+Hunter includes range, ammo, target context, pet care, and rare-beast guidance. Shaman includes live totems, imbue and shield upkeep, mana, recall, and learned-spec cues. Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock add compact resource, upkeep, target/proc, ability, and active-racial blocks driven by the live spellbook and current client state.
 
 ## Keywords
 
-WoW Forever, class helper, Hunter, Shaman, range, ammo, pets, totems, weapon imbue, elemental shield, Maelstrom Weapon, Flame Shock, Riptide
+WoW Forever, class helper, Hunter, Shaman, Paladin, Warrior, Rogue, Druid, Mage, Priest, Warlock, racials, cooldowns, resources, pets, totems

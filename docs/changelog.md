@@ -1,3 +1,14 @@
+## 0.20.0
+
+- Added production Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock companions, completing support for all nine Forever classes while preserving the existing Hunter and Shaman modules.
+- Added a shared 400 × 56 class layout for live resources, form/stance/combo context, class upkeep, target auras and procs, learned ability readiness, and active racial state. Every information block has its own setting.
+- Added spellbook-discovered Forever mechanics including Twist of Light, Bloodthrill, Venom, Eclipse, Hot Streak, Fingers of Frost, Shadow Word: Death, Wrack, Banes, and other learned spec abilities without inferring a talent build.
+- Added active racial discovery for the seven new class bars, including new Forever racials and all twelve race-specific Priest spells. Cooldown and usability come from the client; “Context” is shown when a learned off-cooldown ability is not currently usable.
+- Added secret-safe shared readers for auras, resources, health, forms, combo points, dual weapon coatings, Soul Shards, spell cooldowns, and usability. Unavailable states are hidden instead of guessed, and the addon never performs an action.
+- Added per-class databases and commands: `/fpaladin`, `/fwarrior`, `/frogue`, `/fdruid`, `/fmage`, `/fpriest`, and `/fwarlock`.
+
+Use `/reload`, then `/fclassmate` or the active class command. Live validation is still needed on each class in the changing 1.60.1 beta.
+
 ## 0.19.0
 
 - Added the Shaman companion: four live Earth/Fire/Water/Air totem icons with real remaining time, main-hand imbue state, elemental-shield state and stacks, mana, and a post-combat Totemic Recall hint.

@@ -1,4 +1,4 @@
-# Compact hunter bar layout
+# Compact class bar layouts
 
 The bar remains 400 × 56 UI pixels before the user's saved scale. These are
 visual groups inside one hunter addon, not a return to the generic module system.
@@ -61,3 +61,17 @@ The 18px guide badge stays at pet block x+3, y=-31 beside the happiness badge
 at x+27. The guide has one switch for text, badge, and hover areas. Everything
 inherits main-bar scale and fading, and the outside drag instructions remain
 unobstructed. See [data sources](pet-guide-sources.md).
+
+## Standard class layout
+
+Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock use four fixed blocks before the shared lock control:
+
+| Block | Bounds | Contents |
+| --- | --- | --- |
+| Resource | 7–98 | Current/max power plus stance, form, combo points, health, or Soul Shards |
+| Upkeep | 98–200 | Player buff, Rogue weapon coatings, or Warlock armor and demon state |
+| Target / ability | 200–305 | Own target aura, current proc, and one learned ability's real readiness |
+| Racial | 305–372 | Learned active racial or Priest racial with current readiness |
+| Control | 374–394 | Shared lock button |
+
+Disabling a standard block hides it without moving the neighboring blocks. This keeps class information in stable places during combat. Transient warnings change icon emphasis and text color without changing bounds.

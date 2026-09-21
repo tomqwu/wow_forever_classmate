@@ -133,6 +133,13 @@ SLASH_FOREVERUTILITIES1='/fclassmate'
 SLASH_FOREVERUTILITIES2='/futils'
 SLASH_FOREVERUTILITIES3='/fhunter'
 SLASH_FOREVERUTILITIES4='/fshaman'
+SLASH_FOREVERUTILITIES5='/fpaladin'
+SLASH_FOREVERUTILITIES6='/fwarrior'
+SLASH_FOREVERUTILITIES7='/frogue'
+SLASH_FOREVERUTILITIES8='/fdruid'
+SLASH_FOREVERUTILITIES9='/fmage'
+SLASH_FOREVERUTILITIES10='/fpriest'
+SLASH_FOREVERUTILITIES11='/fwarlock'
 SlashCmdList.FOREVERUTILITIES=function(message)
     local module=Active()
     if not module or not module.db then Say('No helper is available for this class yet.');return end
