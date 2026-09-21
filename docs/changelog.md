@@ -1,3 +1,14 @@
+## 0.20.1
+
+- Fixed Druid startup when the current-power API is unavailable and updated form detection for the current shapeshift API signature.
+- Kept restricted aura, cooldown, and usability reads explicitly unknown instead of showing false missing or context warnings.
+- Reworked upkeep into independent groups so Druid Mark/Thorns, Priest self buffs, and Rogue coatings plus Slice and Dice/Venom cannot hide one another.
+- Made target-effect and learned-ability displays truly independent, and removed persistent Shadowform from temporary proc selection.
+- Made racial selection state-aware so a ready active racial can replace one on cooldown; Priest racials still remain ahead of base racials and hover details list every learned racial.
+- Compacted permanent block labels and moved full spell names and exact values into tooltips, preserving the 400 × 56 bar without clipped long names.
+
+Use `/reload` after updating. Automated checks cover the reported failure paths; live validation is still needed on the Forever 1.60.1 beta client.
+
 ## 0.20.0
 
 - Added production Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock companions, completing support for all nine Forever classes while preserving the existing Hunter and Shaman modules.

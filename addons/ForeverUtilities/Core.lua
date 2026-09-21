@@ -1,7 +1,7 @@
 local _, NS = ...
 local Core = {}
 NS.Core = Core
-NS.Version = '0.20.0'
+NS.Version = '0.20.1'
 NS.Classes = {}
 
 function Core.IsReadable(value)

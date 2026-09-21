@@ -1,15 +1,15 @@
 # Standard class modules
 
-Version 0.20.0 adds Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock to the existing Hunter and Shaman companions. The new modules share `ClassContext.lua` and `StandardClasses.lua`, but each has an independent `ForeverUtilitiesDB.<class>` table and command.
+Version 0.20.1 supports Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock alongside the existing Hunter and Shaman companions. The standard modules share `ClassContext.lua` and `StandardClasses.lua`, but each has an independent `ForeverUtilitiesDB.<class>` table and command.
 
 ## Display model
 
 Each new class uses four fixed blocks inside the existing 400 × 56 footprint:
 
-1. **Resource:** real current/max power plus stance, form, combo points, health, or Soul Shards where relevant.
-2. **Upkeep:** an active class buff, Rogue weapon coatings, or Warlock armor and demon presence.
-3. **Target and ability:** the player's readable aura on the current hostile target, a current proc aura, and one learned ability's real readiness or cooldown.
-4. **Racial:** the first relevant learned active racial, including Priest racial spells.
+1. **Resource:** a compact power percentage plus stance, form, combo points, health, or Soul Shards where relevant; hover shows exact values and names.
+2. **Upkeep:** independently evaluated buff families, Rogue weapon coatings and finisher buffs, or Warlock armor and demon presence.
+3. **Target and ability:** independently toggleable target effects and learned ability/proc state. Restricted aura data stays unknown instead of becoming a false warning.
+4. **Racial:** the most useful learned active racial now, with all learned racial states in the tooltip. Priest racials remain ahead of base racials.
 
 The bar does not select a specialization from a talent guess. It discovers learned spells and shows only states the client exposes. “Ready” uses the cooldown and usability APIs; “Context” means the ability is learned and off cooldown but the client currently reports it unusable. The addon does not explain an unavailable condition unless the API exposes it.
 

@@ -129,9 +129,11 @@ end
 function Context.Form()
     local index=Call(GetShapeshiftForm)
     if not Core.IsNumber(index) or index<=0 then return nil end
-    local texture,name,active=Call(GetShapeshiftFormInfo,index)
-    if active~=true or not Core.IsReadable(name) or type(name)~='string' then return nil end
-    return {name=name,icon=Core.IsReadable(texture) and texture or nil}
+    local texture,active,_,spellID=Call(GetShapeshiftFormInfo,index)
+    if active~=true then return nil end
+    local info=Core.IsNumber(spellID) and Call(C_Spell and C_Spell.GetSpellInfo,spellID) or nil
+    local name=type(info)=='table' and Core.IsReadable(info.name) and info.name or nil
+    return {name=type(name)=='string' and name or 'Active form',icon=Core.IsReadable(texture) and texture or nil,spellID=spellID}
 end
 
 function Context.WeaponCoatings()
@@ -184,8 +186,11 @@ function Context.SpellState(spell)
     if usable~=nil and type(usable)~='boolean' then usable=nil end
     if noResource~=nil and type(noResource)~='boolean' then noResource=nil end
     local left=cooldown and cooldown.left or nil
-    return {spell=spell,usable=usable,noResource=noResource,left=left,
-        ready=cooldown~=nil and left==0 and usable==true}
+    local status='unknown'
+    if Core.IsNumber(left) and left>0 then status='cooldown'
+    elseif left==0 and usable==true then status='ready'
+    elseif left==0 and usable==false then status='context' end
+    return {spell=spell,usable=usable,noResource=noResource,left=left,status=status,ready=status=='ready'}
 end
 
 function Context.BestCue(spells,keys)
@@ -235,17 +240,31 @@ local racialCatalog={
 }
 Context.RacialCatalog=racialCatalog
 
-function Context.Racial(spells,classToken)
-    local candidates={}
+function Context.RacialStates(spells,classToken)
+    local states={}
     for _,entry in ipairs(racialCatalog) do
         local spell=spells and spells[entry.key]
-        if spell and (entry.kind=='racial' or classToken=='PRIEST') then candidates[#candidates+1]=spell end
+        if spell and (entry.kind=='racial' or classToken=='PRIEST') then
+            local state=Context.SpellState(spell)
+            if state then states[#states+1]=state end
+        end
     end
-    table.sort(candidates,function(a,b)
-        local ap=(classToken=='PRIEST' and a.kind=='priestRacial' and 0 or 10)+(a.priority or 100)
-        local bp=(classToken=='PRIEST' and b.kind=='priestRacial' and 0 or 10)+(b.priority or 100)
-        return ap<bp
+    local rank={ready=0,cooldown=1,context=2,unknown=3}
+    table.sort(states,function(a,b)
+        if classToken=='PRIEST' and a.spell.kind~=b.spell.kind then
+            return a.spell.kind=='priestRacial'
+        end
+        local ar,br=rank[a.status] or 4,rank[b.status] or 4
+        if ar~=br then return ar<br end
+        if ar==1 and a.left~=b.left then return a.left<b.left end
+        local ap=a.spell.priority or 100
+        local bp=b.spell.priority or 100
+        if ap~=bp then return ap<bp end
+        return (a.spell.name or '')<(b.spell.name or '')
     end)
-    if not candidates[1] then return nil end
-    return Context.SpellState(candidates[1])
+    return states
+end
+
+function Context.Racial(spells,classToken)
+    return Context.RacialStates(spells,classToken)[1]
 end

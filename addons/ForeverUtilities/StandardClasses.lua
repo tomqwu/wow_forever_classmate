@@ -18,19 +18,13 @@ local function Normalize(db)
     db.x=math.max(-5000,math.min(5000,db.x));db.y=math.max(-5000,math.min(5000,db.y))
     db.scale=math.max(0.5,math.min(2,db.scale))
 end
-local function Short(text,max)
-    if type(text)~='string' then return '' end
-    if #text<=max then return text end
-    return text:sub(1,max-1)..'…'
-end
 local function FirstSpell(spells,keys)
     for _,key in ipairs(keys or {}) do if spells[key] then return spells[key] end end
 end
-local function AuraText(aura)
-    if type(aura)~='table' then return '' end
-    local suffix=Context.FormatTime(aura.left)
-    local stacks=aura.applications and aura.applications>1 and (' ×'..aura.applications) or ''
-    return Short(aura.name,15)..stacks..(suffix and (' '..suffix) or '')
+local function AuraStatus(aura,prefix)
+    local suffix=Context.FormatTime(aura and aura.left)
+    local stacks=aura and aura.applications and aura.applications>1 and (' ×'..aura.applications) or ''
+    return prefix..stacks..(suffix and (' '..suffix) or '')
 end
 
 local sharedRacials={}
@@ -46,14 +40,14 @@ local configs={
             Spell('judgementCrusader','Judgement of the Crusader','target'),Spell('judgementWisdom','Judgement of Wisdom','target'),
             Spell('judgementLight','Judgement of Light','target'),Spell('judgementJustice','Judgement of Justice','target'),
             Spell('holyStrike','Holy Strike','cue'),Spell('holyShock','Holy Shock','cue'),Spell('consecration','Consecration','cue'),
-        },upkeepLabel='Seal',targetLabel='Judgment',powerType=0,powerLabel='Mana'},
+        },upkeepLabel='Seal',upkeepGroups={{label='Seal',keys={'sealCommand','sealRighteousness','sealCrusader','sealWisdom','sealLight'}}},targetLabel='Judgment',powerType=0,powerLabel='Mana'},
     WARRIOR={key='warrior',label='Warrior',command='/fwarrior',color={0.78,0.61,0.43},icon='Interface\\Icons\\Ability_Warrior_BattleShout',
         description='Rage, stance, shout upkeep, target effects, reactive abilities, and racial cooldowns.',
         catalog={
             Spell('battleShout','Battle Shout','upkeep'),Spell('commandingShout','Commanding Shout','upkeep'),
             Spell('rend','Rend','target'),Spell('deepWounds','Deep Wounds','target',true),Spell('bloodthrill','Bloodthrill','proc',true),
             Spell('overpower','Overpower','cue'),Spell('execute','Execute','cue'),Spell('victoryRush','Victory Rush','cue'),Spell('bloodthirst','Bloodthirst','cue'),
-        },upkeepLabel='Shout',targetLabel='Target effect',powerType=1,powerLabel='Rage',showForm=true},
+        },upkeepLabel='Shout',upkeepGroups={{label='Shout',keys={'battleShout','commandingShout'}}},targetLabel='Target effect',powerType=1,powerLabel='Rage',showForm=true},
     ROGUE={key='rogue',label='Rogue',command='/frogue',color={1,0.96,0.41},icon='Interface\\Icons\\Ability_Rogue_SliceDice',
         description='Energy, combo points, weapon coatings, finishers, target effects, and racial cooldowns.',
         catalog={
@@ -61,7 +55,7 @@ local configs={
             Spell('rupture','Rupture','target'),Spell('deadlyPoison','Deadly Poison','target'),Spell('hemorrhage','Hemorrhage','target'),
             Spell('thousandCuts','Thousand Cuts','proc',true),Spell('cutthroat','Cutthroat','proc',true),
             Spell('riposte','Riposte','cue'),Spell('ambush','Ambush','cue'),Spell('bladeFlurry','Blade Flurry','cue'),Spell('coldBlood','Cold Blood','cue'),
-        },upkeepLabel='Coatings',targetLabel='Finisher / poison',powerType=3,powerLabel='Energy',weaponCoatings=true,showCombo=true},
+        },upkeepLabel='Coatings / buffs',upkeepGroups={{label='Finisher buff',keys={'sliceDice','venom'}}},targetLabel='Finisher / poison',powerType=3,powerLabel='Energy',weaponCoatings=true,showCombo=true},
     DRUID={key='druid',label='Druid',command='/fdruid',color={1,0.49,0.04},icon='Interface\\Icons\\Ability_Druid_CatForm',
         description='Current form and power, buff upkeep, target effects, learned spec cues, and racial cooldowns.',
         catalog={
@@ -69,7 +63,7 @@ local configs={
             Spell('moonfire','Moonfire','target'),Spell('insectSwarm','Insect Swarm','target'),Spell('faerieFire','Faerie Fire','target'),Spell('rip','Rip','target'),
             Spell('eclipse','Eclipse','proc',true),Spell('naturesGrace',"Nature's Grace",'proc',true),Spell('omenClarity','Omen of Clarity','proc',true),
             Spell('tigersFury',"Tiger's Fury",'cue'),Spell('berserk','Berserk','cue'),Spell('innervate','Innervate','cue'),Spell('swiftmend','Swiftmend','cue'),
-        },upkeepLabel='Nature buff',targetLabel='Target effect',currentPower=true,showForm=true},
+        },upkeepLabel='Nature buffs',upkeepGroups={{label='Mark of the Wild',keys={'markWild'}},{label='Thorns',keys={'thorns'}}},targetLabel='Target effect',currentPower=true,showForm=true},
     MAGE={key='mage',label='Mage',command='/fmage',color={0.25,0.78,0.92},icon='Interface\\Icons\\Spell_Frost_FrostArmor02',
         description='Mana, armor upkeep, personal damage effects, spec procs, and racial cooldowns.',
         catalog={
@@ -77,15 +71,15 @@ local configs={
             Spell('improvedScorch','Improved Scorch','target',true),Spell('pyroblast','Pyroblast','target'),
             Spell('hotStreak','Hot Streak','proc',true),Spell('fingersFrost','Fingers of Frost','proc',true),Spell('arcaneBlast','Arcane Blast','proc'),
             Spell('iceLance','Ice Lance','cue'),Spell('fireBlast','Fire Blast','cue'),Spell('presenceMind','Presence of Mind','cue'),Spell('coldSnap','Cold Snap','cue'),
-        },upkeepLabel='Armor',targetLabel='Damage setup',powerType=0,powerLabel='Mana'},
+        },upkeepLabel='Armor',upkeepGroups={{label='Armor',keys={'mageArmor','iceArmor','frostArmor','moltenArmor'}}},targetLabel='Damage setup',powerType=0,powerLabel='Mana'},
     PRIEST={key='priest',label='Priest',command='/fpriest',color={0.92,0.92,0.92},icon='Interface\\Icons\\Spell_Holy_WordFortitude',
         description='Mana, self-buff upkeep, target effects, healing or Shadow cues, and Priest racials.',
         catalog={
             Spell('innerFire','Inner Fire','upkeep'),Spell('fortitude','Power Word: Fortitude','upkeep'),Spell('divineSpirit','Divine Spirit','upkeep'),
             Spell('shadowPain','Shadow Word: Pain','target'),Spell('devouringPlague','Devouring Plague','target'),Spell('vampiricEmbrace','Vampiric Embrace','target'),
-            Spell('shadowform','Shadowform','proc'),Spell('surgeLight','Surge of Light','proc',true),
+            Spell('shadowform','Shadowform','form'),Spell('surgeLight','Surge of Light','proc',true),
             Spell('shadowDeath','Shadow Word: Death','cue'),Spell('prayerMending','Prayer of Mending','cue'),Spell('powerInfusion','Power Infusion','cue'),
-        },upkeepLabel='Self buff',targetLabel='Target / healing',powerType=0,powerLabel='Mana'},
+        },upkeepLabel='Self buffs',upkeepGroups={{label='Inner Fire',keys={'innerFire'}},{label='Fortitude',keys={'fortitude'}},{label='Divine Spirit',keys={'divineSpirit'}}},targetLabel='Target / healing',powerType=0,powerLabel='Mana',showForm=true},
     WARLOCK={key='warlock',label='Warlock',command='/fwarlock',color={0.53,0.53,0.93},icon='Interface\\Icons\\Spell_Shadow_Metamorphosis',
         description='Mana and health, armor and demon state, DoT or Bane upkeep, abilities, and racial cooldowns.',
         catalog={
@@ -94,16 +88,16 @@ local configs={
             Spell('baneAgony','Bane of Agony','target'),Spell('curseAgony','Curse of Agony','target'),
             Spell('nightfall','Nightfall','proc',true),Spell('backlash','Backlash','proc',true),
             Spell('conflagrate','Conflagrate','cue'),Spell('shadowburn','Shadowburn','cue'),Spell('lifeTap','Life Tap','cue'),Spell('demonicEmpowerment','Demonic Empowerment','cue'),
-        },upkeepLabel='Armor / demon',targetLabel='DoT / Bane',powerType=0,powerLabel='Mana',showPet=true,showHealth=true,showShards=true},
+        },upkeepLabel='Armor / demon',upkeepGroups={{label='Armor',keys={'demonArmor','demonSkin','felArmor'}}},targetLabel='DoT / Bane',powerType=0,powerLabel='Mana',showPet=true,showHealth=true,showShards=true},
 }
 
 local function MakeCell(frame,x,width)
     local cell=CreateFrame('Button',nil,frame);cell:SetSize(width,48);cell:SetPoint('TOPLEFT',frame,'TOPLEFT',x,-4)
-    local icon=cell:CreateTexture(nil,'ARTWORK');icon:SetSize(30,30);icon:SetPoint('LEFT',cell,'LEFT',4,0)
-    local top=cell:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');top:SetPoint('TOPLEFT',cell,'TOPLEFT',39,-7)
-    top:SetWidth(width-42);top:SetJustifyH('LEFT');top:SetWordWrap(false);top:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',11,'OUTLINE')
-    local bottom=cell:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');bottom:SetPoint('TOPLEFT',cell,'TOPLEFT',39,-26)
-    bottom:SetWidth(width-42);bottom:SetJustifyH('LEFT');bottom:SetWordWrap(false);bottom:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',10,'OUTLINE')
+    local icon=cell:CreateTexture(nil,'ARTWORK');icon:SetSize(24,24);icon:SetPoint('LEFT',cell,'LEFT',3,0)
+    local top=cell:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');top:SetPoint('TOPLEFT',cell,'TOPLEFT',31,-8)
+    top:SetWidth(width-34);top:SetJustifyH('LEFT');top:SetWordWrap(false);top:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',10,'OUTLINE')
+    local bottom=cell:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');bottom:SetPoint('TOPLEFT',cell,'TOPLEFT',31,-26)
+    bottom:SetWidth(width-34);bottom:SetJustifyH('LEFT');bottom:SetWordWrap(false);bottom:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',9,'OUTLINE')
     local line=frame:CreateTexture(nil,'ARTWORK');line:SetSize(1,36);line:SetPoint('RIGHT',cell,'RIGHT',0,0);line:SetColorTexture(0.6,0.7,0.85,0.18)
     cell.icon,cell.top,cell.bottom,cell.line=icon,top,bottom,line
     return cell
@@ -119,7 +113,7 @@ local function CreateIndicator(module,config,host,db)
     local background=frame:CreateTexture(nil,'BACKGROUND');background:SetAllPoints(frame);background:SetColorTexture(0.012,0.02,0.035,0.94)
     local accent=frame:CreateTexture(nil,'ARTWORK');accent:SetPoint('TOPLEFT');accent:SetPoint('BOTTOMLEFT');accent:SetWidth(4);accent:SetColorTexture(unpack(config.color))
     local resource=MakeCell(frame,7,91);local upkeep=MakeCell(frame,98,102);local target=MakeCell(frame,200,105);local racial=MakeCell(frame,305,67)
-    racial.top:SetWidth(27);racial.bottom:SetWidth(27)
+    frame.cells={resource=resource,upkeep=upkeep,target=target,racial=racial}
     local lastStatus='Not checked';local elapsed=0;local active=false
 
     local function Discover()
@@ -131,8 +125,12 @@ local function CreateIndicator(module,config,host,db)
     local function Tooltip(cell,title,detail)
         cell:SetScript('OnEnter',function(self)
             if not GameTooltip then return end
-            GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(title())
-            local line=detail and detail();if line and line~='' then GameTooltip:AddLine(line,1,1,1,true) end
+            GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(self.tooltipTitle or title())
+            if type(self.tooltipLines)=='table' then
+                for _,line in ipairs(self.tooltipLines) do if line and line~='' then GameTooltip:AddLine(line,1,1,1,true) end end
+            else
+                local line=detail and detail();if line and line~='' then GameTooltip:AddLine(line,1,1,1,true) end
+            end
             GameTooltip:Show()
         end)
         cell:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
@@ -148,75 +146,136 @@ local function CreateIndicator(module,config,host,db)
         local inCombat=Core.Call(UnitAffectingCombat,'player')==true
         local hasTarget=Core.Call(UnitExists,'target')==true
         local hostile=hasTarget and Core.Call(UnitCanAttack,'player','target')==true and Core.Call(UnitIsDead,'target')==false
-        local power=config.currentPower and Context.CurrentPower() or Context.Power(config.powerType,config.powerLabel)
-        local resourceTop=power and (power.label..' '..math.floor(power.current+0.5)..'/'..math.floor(power.maximum+0.5)) or 'Resource unavailable'
+        local power
+        if config.currentPower then power=Context.CurrentPower() else power=Context.Power(config.powerType,config.powerLabel) end
+        local resourceTop=power and ((power.label or 'Power')..' '..power.percent..'%') or 'Resource ?'
         local resourceBottom=''
-        if config.showCombo then local cp=Context.ComboPoints();resourceBottom=cp and ('Combo '..cp..'/5') or ''
-        elseif config.showForm then local form=Context.Form();resourceBottom=form and Short(form.name,14) or 'No stance / form'
-        elseif config.showHealth then local hp=Context.HealthPercent('player');resourceBottom=hp and ('Health '..hp..'%') or '' end
+        local resourceLines={}
+        if power then resourceLines[#resourceLines+1]=(power.label or 'Power')..': '..math.floor(power.current+0.5)..' / '..math.floor(power.maximum+0.5)
+        else resourceLines[#resourceLines+1]='The client did not expose a readable resource value.' end
+        if config.showCombo then
+            local cp=Context.ComboPoints();resourceBottom=cp and ('CP '..cp..'/5') or ''
+            if cp then resourceLines[#resourceLines+1]='Combo points: '..cp..' / 5' end
+        elseif config.showForm then
+            local form=Context.Form();resourceBottom=form and 'Form active' or 'Base form'
+            if form then resourceLines[#resourceLines+1]='Form or stance: '..form.name end
+        elseif config.showHealth then
+            local hp=Context.HealthPercent('player');resourceBottom=hp and ('HP '..hp..'%') or ''
+            if hp then resourceLines[#resourceLines+1]='Health: '..hp..'%' end
+        end
+        if config.showShards then
+            local shards=Context.ItemCount('Soul Shard')
+            if shards then resourceBottom=(resourceBottom~='' and (resourceBottom..' ') or '')..'S'..shards;resourceLines[#resourceLines+1]='Soul Shards: '..shards end
+        end
+        resource.tooltipTitle=config.label..' resources';resource.tooltipLines=resourceLines
         Paint(resource,config.icon,resourceTop,resourceBottom,config.color,power==nil);resource:SetShown(db.showResource~=false)
 
-        local upkeepAura,upkeepSpell,upkeepTop,upkeepBottom,upkeepWarn
+        local upkeepTotal,upkeepActive,upkeepMissing,upkeepUnknown=0,0,0,0
+        local upkeepLines={};local upkeepIcon;local upkeepDim=false
         if config.weaponCoatings then
-            local coatings=Context.WeaponCoatings();upkeepTop=config.upkeepLabel
+            local coatings=Context.WeaponCoatings()
             if coatings then
-                upkeepBottom=coatings.equipped>0 and (coatings.active..'/'..coatings.equipped..' active') or 'No weapons'
-                upkeepWarn=inCombat and coatings.equipped>0 and coatings.active<coatings.equipped
-            else upkeepBottom='Unavailable' end
-        else
-            upkeepSpell=FirstSpell(module.spells,module.upkeepKeys)
-            upkeepAura=Context.Aura('player','HELPFUL',Context.Names(module.spells,module.upkeepKeys),false)
-            upkeepTop=type(upkeepAura)=='table' and Short(upkeepAura.name,15) or config.upkeepLabel
-            upkeepBottom=type(upkeepAura)=='table' and (Context.FormatTime(upkeepAura.left) or 'Active') or (upkeepSpell and 'Missing' or 'No learned spell')
-            upkeepWarn=inCombat and upkeepSpell~=nil and upkeepAura==false
-            if config.showPet then
-                local pet=Core.Call(UnitExists,'pet')==true and Core.Call(UnitIsDead,'pet')==false
-                upkeepBottom=(upkeepBottom or '')..' · '..(pet and 'Demon active' or 'No demon')
-                upkeepWarn=upkeepWarn or (inCombat and not pet)
+                if coatings.equipped>0 then
+                    upkeepTotal=upkeepTotal+1
+                    if coatings.active>=coatings.equipped then upkeepActive=upkeepActive+1 else upkeepMissing=upkeepMissing+1;upkeepDim=true end
+                    upkeepLines[#upkeepLines+1]='Weapon coatings: '..coatings.active..' / '..coatings.equipped..' active'
+                else upkeepLines[#upkeepLines+1]='Weapon coatings: no equipped weapons' end
+            else upkeepTotal=upkeepTotal+1;upkeepUnknown=upkeepUnknown+1;upkeepLines[#upkeepLines+1]='Weapon coatings: unavailable' end
+        end
+        for _,group in ipairs(config.upkeepGroups or {{label=config.upkeepLabel,keys=module.upkeepKeys}}) do
+            local learned=FirstSpell(module.spells,group.keys)
+            if learned then
+                upkeepTotal=upkeepTotal+1
+                local aura=Context.Aura('player','HELPFUL',Context.Names(module.spells,group.keys),false)
+                if type(aura)=='table' then
+                    upkeepActive=upkeepActive+1;upkeepIcon=upkeepIcon or aura.icon or learned.icon
+                    local remaining=Context.FormatTime(aura.left)
+                    upkeepLines[#upkeepLines+1]=group.label..': '..aura.name..(remaining and (' '..remaining) or ' active')
+                elseif aura==false then
+                    upkeepMissing=upkeepMissing+1;upkeepIcon=upkeepIcon or learned.icon;upkeepDim=true
+                    upkeepLines[#upkeepLines+1]=group.label..': missing'
+                else
+                    upkeepUnknown=upkeepUnknown+1;upkeepIcon=upkeepIcon or learned.icon
+                    upkeepLines[#upkeepLines+1]=group.label..': unavailable'
+                end
             end
         end
-        local upkeepIcon=type(upkeepAura)=='table' and upkeepAura.icon or (upkeepSpell and upkeepSpell.icon) or config.icon
-        Paint(upkeep,upkeepIcon,upkeepTop,upkeepBottom,upkeepWarn and {1,0.25,0.18} or config.color,upkeepAura==false)
+        if config.showPet then
+            upkeepTotal=upkeepTotal+1
+            local petExists=Core.Call(UnitExists,'pet')
+            local petDead;if petExists==true then petDead=Core.Call(UnitIsDead,'pet') end
+            if petExists==true and petDead==false then upkeepActive=upkeepActive+1;upkeepLines[#upkeepLines+1]='Demon: active'
+            elseif petExists==false or petDead==true then upkeepMissing=upkeepMissing+1;upkeepDim=true;upkeepLines[#upkeepLines+1]='Demon: missing'
+            else upkeepUnknown=upkeepUnknown+1;upkeepLines[#upkeepLines+1]='Demon: unavailable' end
+        end
+        local upkeepTop=upkeepTotal>0 and ('Upkeep '..upkeepActive..'/'..upkeepTotal) or 'No upkeep'
+        local upkeepBottom=upkeepMissing>0 and (upkeepMissing..' missing') or (upkeepUnknown>0 and 'Unavailable' or (upkeepTotal>0 and 'All active' or ''))
+        local upkeepWarn=inCombat and upkeepMissing>0
+        upkeep.tooltipTitle=config.upkeepLabel;upkeep.tooltipLines=upkeepLines
+        Paint(upkeep,upkeepIcon or config.icon,upkeepTop,upkeepBottom,upkeepWarn and {1,0.25,0.18} or config.color,upkeepDim)
         upkeep:SetShown(db.showUpkeep~=false)
 
-        local proc=Context.Aura('player','HELPFUL',Context.Names(module.spells,module.procKeys),false)
-        local targetAura=hostile and Context.Aura('target','HARMFUL',Context.Names(module.spells,module.targetKeys),true) or false
-        local cue=db.showAbilities~=false and Context.BestCue(module.spells,module.cueKeys) or nil
-        local targetTop,targetBottom,targetIcon,targetColor,targetDim
-        if type(proc)=='table' then
-            targetTop=AuraText(proc);targetIcon=proc.icon;targetColor={0.3,1,0.48}
-        elseif type(targetAura)=='table' then
-            targetTop=AuraText(targetAura);targetIcon=targetAura.icon;targetColor=config.color
-        elseif hostile then
+        local showTarget=db.showTarget~=false;local showAbilities=db.showAbilities~=false
+        local proc;if showAbilities then proc=Context.Aura('player','HELPFUL',Context.Names(module.spells,module.procKeys),false) end
+        local targetAura
+        if showTarget and hostile then targetAura=Context.Aura('target','HARMFUL',Context.Names(module.spells,module.targetKeys),true)
+        elseif showTarget then targetAura=false end
+        local cue=showAbilities and Context.BestCue(module.spells,module.cueKeys) or nil
+        local targetText,abilityText,targetIcon,abilityIcon,targetColor,targetDim
+        local targetLines={}
+        if showTarget and type(targetAura)=='table' then
+            targetText=AuraStatus(targetAura,'Effect');targetIcon=targetAura.icon;targetColor=config.color
+            local remaining=Context.FormatTime(targetAura.left)
+            targetLines[#targetLines+1]=targetAura.name..(remaining and (' — '..remaining) or ' — active')
+        elseif showTarget and hostile then
             local targetSpell=FirstSpell(module.spells,module.targetKeys)
-            targetTop=targetSpell and ('No '..Short(targetSpell.name,12)) or 'Hostile target';targetIcon=targetSpell and targetSpell.icon or config.icon
-            targetColor={1,0.72,0.28};targetDim=true
-        else targetTop=hasTarget and 'Non-hostile target' or 'No target';targetIcon=config.icon;targetDim=true end
-        if cue then
-            if cue.ready then targetBottom=Short(cue.spell.name,13)..' ready';targetColor={0.3,1,0.48}
-            elseif Core.IsNumber(cue.left) and cue.left>0 then targetBottom=Short(cue.spell.name,10)..' '..(Context.FormatTime(cue.left) or '')
-            else targetBottom=Short(cue.spell.name,13)..' context' end
-            if not targetIcon then targetIcon=cue.spell.icon end
+            if targetSpell and targetAura==false then targetText='Effect missing';targetColor={1,0.72,0.28};targetDim=true;targetLines[#targetLines+1]=targetSpell.name..': missing'
+            elseif targetSpell and targetAura==nil then targetText='Effect ?';targetLines[#targetLines+1]='Target effects: unavailable'
+            else targetText='Hostile target' end
+            targetIcon=targetSpell and targetSpell.icon or config.icon
+        elseif showTarget then targetText=hasTarget and 'Friendly target' or 'No target';targetIcon=config.icon;targetDim=true end
+        if showAbilities and type(proc)=='table' then
+            abilityText=AuraStatus(proc,'Proc');abilityIcon=proc.icon;targetColor={0.3,1,0.48}
+            local remaining=Context.FormatTime(proc.left)
+            targetLines[#targetLines+1]=proc.name..(remaining and (' — '..remaining) or ' — active')
+        elseif showAbilities and cue then
+            abilityIcon=cue.spell.icon
+            if cue.status=='ready' then abilityText='Ability ready';targetColor={0.3,1,0.48}
+            elseif cue.status=='cooldown' then abilityText='Ability '..(Context.FormatTime(cue.left) or '')
+            elseif cue.status=='context' then abilityText='Needs context'
+            else abilityText='Ability ?' end
+            local detail=cue.status=='cooldown' and (Context.FormatTime(cue.left) or 'cooldown') or cue.status
+            targetLines[#targetLines+1]=cue.spell.name..': '..detail
         end
-        Paint(target,targetIcon or config.icon,targetTop,targetBottom,targetColor,targetDim);target:SetShown(db.showTarget~=false or db.showAbilities~=false)
+        local targetTop,targetBottom
+        if showTarget and showAbilities then targetTop,targetBottom=targetText,abilityText
+        elseif showTarget then targetTop=targetText
+        else targetTop=abilityText end
+        target.tooltipTitle=config.targetLabel..' / abilities';target.tooltipLines=targetLines
+        Paint(target,abilityIcon or targetIcon or config.icon,targetTop,targetBottom,targetColor,targetDim);target:SetShown(showTarget or showAbilities)
 
-        local racialState=Context.Racial(module.spells,module.classToken);racial.state=racialState
+        local racialStates=Context.RacialStates(module.spells,module.classToken);local racialState=racialStates[1];racial.state=racialState
         if racialState then
             local status,color
-            if racialState.ready then status='Ready';color={0.3,1,0.48}
-            elseif Core.IsNumber(racialState.left) and racialState.left>0 then status=Context.FormatTime(racialState.left);color={1,0.72,0.28}
-            else status='Context';color={0.65,0.7,0.78} end
-            Paint(racial,racialState.spell.icon,Short(racialState.spell.name,8),status,color,not racialState.ready)
-        else Paint(racial,config.icon,'Racial','None found',{0.55,0.6,0.68},true) end
+            if racialState.status=='ready' then status='Ready';color={0.3,1,0.48}
+            elseif racialState.status=='cooldown' then status=Context.FormatTime(racialState.left);color={1,0.72,0.28}
+            elseif racialState.status=='context' then status='Context';color={0.65,0.7,0.78}
+            else status='Unknown';color={0.55,0.6,0.68} end
+            racial.tooltipTitle=racialState.spell.name;racial.tooltipLines={}
+            for _,state in ipairs(racialStates) do
+                local stateText=state.status=='cooldown' and (Context.FormatTime(state.left) or 'cooldown') or state.status
+                racial.tooltipLines[#racial.tooltipLines+1]=state.spell.name..': '..stateText
+            end
+            Paint(racial,racialState.spell.icon,'Racial',status,color,not racialState.ready)
+        else
+            racial.tooltipTitle='Racial ability';racial.tooltipLines={'No learned active racial was found.'}
+            Paint(racial,config.icon,'Racial','None',{0.55,0.6,0.68},true)
+        end
         racial:SetShown(db.showRacial~=false)
 
-        if config.showShards and db.showResource~=false then
-            local shards=Context.ItemCount('Soul Shard')
-            if shards then resource.bottom:SetText((resourceBottom~='' and (resourceBottom..' · ') or '')..'Shards '..shards) end
-        end
         frame:SetAlpha((db.fadeOutOfCombat==false or inCombat) and 1 or (hasTarget and 0.6 or 0.2))
         lastStatus=string.format('%s; upkeep %s; target %s; racial %s',resourceTop,upkeepBottom or 'off',targetTop or 'off',
-            racialState and (racialState.spell.name..' '..(racialState.ready and 'ready' or (Context.FormatTime(racialState.left) or 'context'))) or 'unavailable')
+            racialState and (racialState.spell.name..' '..(racialState.status=='cooldown' and (Context.FormatTime(racialState.left) or 'cooldown') or racialState.status)) or 'unavailable')
     end
 
     local events={'PLAYER_ENTERING_WORLD','PLAYER_LEAVING_WORLD','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED','PLAYER_TARGET_CHANGED',
@@ -243,7 +302,7 @@ local function CreateIndicator(module,config,host,db)
         if event=='SPELLS_CHANGED' or event=='LEARNED_SPELL_IN_TAB' or event=='PLAYER_ENTERING_WORLD' then Discover() end
         if event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_ALIVE' or event=='PLAYER_UNGHOST' then Refresh() else Update() end
     end)
-    frame.Refresh=Refresh;frame.Status=function() return lastStatus end
+    frame.Refresh=Refresh;frame.Update=Update;frame.Status=function() return lastStatus end
     Refresh();return frame
 end
 

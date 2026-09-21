@@ -50,8 +50,9 @@ check(C.Cooldown(spells.willToSurvive)==nil,'secret cooldown hidden')
 C_Spell.GetSpellCooldown=function() return {startTime=0,duration=0,isEnabled=true} end
 C_Spell.IsSpellUsable=function() return false,false end
 racial=C.Racial(spells,'WARRIOR');check(not racial.ready and racial.left==0,'context restriction retained')
+check(racial.status=='context','off-cooldown unusable spell is identified as context restricted')
 C_Spell.GetSpellCooldown=nil;C_Spell.IsSpellUsable=nil
-racial=C.Racial(spells,'WARRIOR');check(not racial.ready and racial.left==nil,'missing readiness APIs do not invent ready state')
+racial=C.Racial(spells,'WARRIOR');check(not racial.ready and racial.left==nil and racial.status=='unknown','missing readiness APIs stay unknown')
 C_Spell.GetSpellCooldown=function() return {startTime=0,duration=0,isEnabled=true} end
 C_Spell.IsSpellUsable=function() return true,false end
 
@@ -85,10 +86,26 @@ spells.desperatePrayer={id=2001,name='Desperate Prayer',icon=20,kind='priestRaci
 C_Spell.GetSpellCooldown=function() return {startTime=0,duration=0,isEnabled=true} end
 C_Spell.IsSpellUsable=function() return true,false end
 check(C.Racial(spells,'PRIEST').spell.name=='Desperate Prayer','Priest racial takes priority on Priest')
+spells.chastise={id=2002,name='Chastise',icon=21,kind='priestRacial',priority=2}
+C_Spell.GetSpellCooldown=function(id)
+    if id==2001 then return {startTime=90,duration=30,isEnabled=true} end
+    return {startTime=0,duration=0,isEnabled=true}
+end
+check(C.Racial(spells,'PRIEST').spell.name=='Chastise','ready secondary Priest racial supersedes one on cooldown')
+
+spells.bloodFury={id=3001,name='Blood Fury',icon=30,kind='racial',priority=1}
+spells.shatterCurse={id=3002,name='Shatter Curse',icon=31,kind='racial',priority=2}
+C_Spell.GetSpellCooldown=function(id)
+    if id==3002 then return {startTime=0,duration=0,isEnabled=true} end
+    return {startTime=90,duration=30,isEnabled=true}
+end
+C_Spell.IsSpellUsable=function() return true,false end
+check(C.Racial(spells,'WARRIOR').spell.name=='Shatter Curse','ready racial supersedes higher-priority racial on cooldown')
 
 UnitHealth=function() return 75 end;UnitHealthMax=function() return 100 end
 check(C.HealthPercent('player')==75,'health percentage')
 GetShapeshiftForm=function() return 2 end
-GetShapeshiftFormInfo=function() return 777,'Bear Form',true,true end
-local form=C.Form();check(form.name=='Bear Form' and form.icon==777,'active form')
+GetShapeshiftFormInfo=function() return 777,true,true,4001 end
+C_Spell.GetSpellInfo=function(id) if id==4001 then return {name='Bear Form',iconID=777} end end
+local form=C.Form();check(form.name=='Bear Form' and form.icon==777 and form.spellID==4001,'active form uses current API signature')
 print('PASS: '..count..' shared class context checks')

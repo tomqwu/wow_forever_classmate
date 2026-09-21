@@ -10,6 +10,7 @@ function methods:CreateFontString() return object() end
 function methods:CreateTexture() return object() end
 function methods:CreateMaskTexture() return object() end
 function methods:SetSize(w,h) self.width,self.height=w,h end
+function methods:SetWidth(w) self.width=w end
 function methods:GetWidth() return self.width end
 function methods:GetHeight() return self.height end
 function methods:SetText(v) self.text=v end
@@ -93,6 +94,7 @@ check(NS.Paladin.spells.sealRighteousness and NS.Paladin.spells.judgementCrusade
 local host=named.ForeverClassmatePaladinFrame;local indicator=named.ForeverClassmatePaladinIndicator
 check(host and host.width==400 and host.height==56 and host.shown,'standard class bar has fixed footprint')
 check(indicator and indicator.scripts.OnUpdate~=nil,'enabled helper polls live state')
+check(indicator.cells.resource.icon.width==24 and indicator.cells.resource.top.width==57,'compact cells reserve more width for status text')
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')
 NS.Paladin.SetEnabled(false);check(not host.shown and indicator.scripts.OnUpdate==nil,'disable hides helper and stops polling')
@@ -104,4 +106,44 @@ for _,entry in ipairs({{'WARRIOR',NS.Warrior},{'ROGUE',NS.Rogue},{'DRUID',NS.Dru
     check(entry[2].instance~=nil,entry[1]..' creates its own helper when active')
     check(named[entry[2].frameName] and named[entry[2].indicatorName],entry[1]..' uses its own named frames')
 end
+
+local originalAuras=C_UnitAuras.GetAuraDataByIndex
+C_UnitAuras.GetAuraDataByIndex=function() error('restricted aura') end
+indicator.Update()
+check(indicator.cells.upkeep.bottom.text=='Unavailable','restricted upkeep aura is not reported as missing')
+check(indicator.cells.target.top.text=='Effect ?','restricted target aura is not reported as missing: '..tostring(indicator.cells.target.top.text))
+
+local targetReads=0
+C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
+    if unit=='target' and filter=='HARMFUL' then targetReads=targetReads+1 end
+    return originalAuras(unit,index,filter)
+end
+NS.Paladin.db.showTarget=false;indicator.Update()
+check(targetReads==0,'disabled target block does not read target auras')
+check(indicator.cells.target.top.text=='Ability ready' and indicator.cells.target.bottom.text=='','ability display remains independent of target display')
+NS.Paladin.db.showTarget=true
+
+local rogueIndicator=named.ForeverClassmateRogueIndicator
+NS.Rogue.spells={sliceDice={id=2001,name='Slice and Dice',icon=61,kind='upkeep'}}
+C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
+    if unit=='player' and filter=='HELPFUL' and index==1 then return {name='Slice and Dice',icon=61,expirationTime=130,sourceUnit='player'} end
+end
+rogueIndicator.Update()
+check(rogueIndicator.cells.upkeep.top.text=='Upkeep 1/1','Rogue finisher buff is checked alongside weapon coatings')
+check(rogueIndicator.cells.upkeep.tooltipLines[2] and rogueIndicator.cells.upkeep.tooltipLines[2]:find('Slice and Dice',1,true),'Rogue upkeep details name the active finisher buff')
+
+local druidIndicator=named.ForeverClassmateDruidIndicator
+NS.Druid.spells={markWild={id=2101,name='Mark of the Wild',icon=62,kind='upkeep'},thorns={id=2102,name='Thorns',icon=63,kind='upkeep'}}
+C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
+    if unit=='player' and filter=='HELPFUL' and index==1 then return {name='Thorns',icon=63,expirationTime=130,sourceUnit='player'} end
+end
+local savedPowerType=UnitPowerType;UnitPowerType=nil
+local ok=pcall(druidIndicator.Update)
+check(ok and druidIndicator.cells.resource.top.text=='Resource ?','Druid survives an unavailable current-power API')
+check(druidIndicator.cells.upkeep.top.text=='Upkeep 1/2' and druidIndicator.cells.upkeep.bottom.text=='1 missing','Druid tracks Mark and Thorns as independent upkeep')
+UnitPowerType=savedPowerType
+
+local shadowProc=false
+for _,key in ipairs(NS.Priest.procKeys) do if key=='shadowform' then shadowProc=true end end
+check(not shadowProc,'persistent Shadowform is excluded from temporary proc selection')
 print('PASS: '..count..' standard class runtime checks')
