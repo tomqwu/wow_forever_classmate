@@ -1,4 +1,4 @@
-name: Check toolbox
+name: Check Forever Classmate
 on:
   push:
     branches: [main]
