@@ -6,7 +6,9 @@
       "tests/test_ui.lua",
       "tests/test_targetcontext.lua",
       "tests/test_layout.lua",
-      "tests/test_petguide.lua"
+      "tests/test_petguide.lua",
+      "tests/test_shaman.lua",
+      "tests/test_shaman_ui.lua"
     ],
     "releaseTagPrefix": "ForeverUtilities-v"
   }

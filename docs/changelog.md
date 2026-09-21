@@ -1,3 +1,13 @@
+## 0.19.0
+
+- Added the Shaman companion: four live Earth/Fire/Water/Air totem icons with real remaining time, main-hand imbue state, elemental-shield state and stacks, mana, and a post-combat Totemic Recall hint.
+- Added learned-spec cues: Maelstrom Weapon stacks up to five, Flame Shock timing when Lava Burst is learned, and the player's Riptide duration on a friendly target.
+- Refactored movement, lock, scale, minimap, settings, commands, and class selection into shared services while preserving the Hunter bar, preferences, layout, and behavior.
+- Every Shaman information block can be disabled independently. Inactive classes create no frames or polling; disabling every live Shaman block stops its timer polling.
+- Guarded all new totem, enchant, aura, mana, spellbook, and target readings against unavailable or secret client values. No actions are automated.
+
+Use `/reload`, then `/fshaman` on a Shaman. `/fhunter` continues to open the unchanged Hunter module on a Hunter.
+
 ## 0.18.0
 
 - Rebranded the addon as **Forever Classmate**, the class-aware home for the current Hunter companion and future class modules.

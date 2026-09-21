@@ -1,15 +1,14 @@
 # Forever Classmate workflow
 
-Class-aware companion with independently maintained class modules. Active code stays in addons/ForeverUtilities/ for upgrade compatibility. The current production module is Hunter; preserve it while extracting shared services. Do not restore the retired swing bar.
+Class-aware companion with independently maintained class modules. Active code stays in addons/ForeverUtilities/ for upgrade compatibility. Production modules are Hunter and Shaman; preserve both while adding future classes. Do not restore the retired swing bar.
 
 Use verified Forever 1.60.x APIs. Respect secret values and missing APIs; never
 present fabricated exact yards. Spell checks supply approximate brackets. A
 failed minimum-range check can mean too close OR too far. Avoid hardcoded Classic
-spell IDs and scan learned spells. Poll only while enabled with a living
-target, stopping on target loss, death, disable, and leaving the world.
+spell IDs and scan learned spells. Poll only while the matching class module is enabled and a live widget needs updates. Target-dependent widgets stop on target loss; timers stop on death, disable, and leaving the world.
 
 Runtime modules use the addon's namespace, independent frame names,
-ForeverUtilitiesDB, and /futils commands. Preserve hunter settings and the disabled lifecycle. No dependency on ForeverSwing or ForeverHunterRange.
+ForeverUtilitiesDB, and /futils commands. Preserve Hunter and Shaman settings and their disabled lifecycles. No dependency on ForeverSwing or ForeverHunterRange.
 
 ## Delivery
 
@@ -61,15 +60,14 @@ and true and the squared value is finite/nonnegative. Never fabricate a midpoint
 or use coordinates to bypass restrictions. Friendly targets may provide numeric
 distance; enemy numeric readings are not guaranteed. Clear stale values promptly.
 
-## Current Hunter runtime and class migration
+## Current class runtime and migration
 
-Distance.lua currently owns NS.Hunter, lazy bar creation, class gating, and settings. Migrate this behavior behind a class registry without changing the Hunter experience before adding other classes.
-UI.lua exposes one settings panel through /fhunter, with /futils as an alias.
-ForeverUtilitiesDB.hunter is migrated once from modules.distance or legacy flat
-settings. Keep the installation folder, saved-variable name, and release prefix
-for compatibility. No runtime Modules registry remains. Non-hunters must not
-create the bar. Ammo sits below the white range text; keep the 400 × 56 layout.
+Core.lua owns the class registry; ClassHost.lua owns shared movement, lock, scale, and position; UI.lua selects the active module and exposes `/fclassmate`, `/futils`, `/fhunter`, and `/fshaman`. Only the matching class may create a bar or poll.
+
+Distance.lua owns Hunter defaults, migration, and lazy creation. `ForeverUtilitiesDB.hunter` migrates once from `modules.distance` or legacy flat settings. Ammo stays below the white range text in the 400 × 56 Hunter layout.
+
+ShamanContext.lua owns secret-safe totem, temporary-enchant, aura, and mana reads. Shaman.lua owns spellbook discovery, defaults, event lifecycle, and its fixed 400 × 56 blocks. `ForeverUtilitiesDB.shaman` is independent. Track Earth/Fire/Water/Air totems, main-hand imbue, an elemental shield, mana, recall, and the learned Maelstrom/Lava Burst/Riptide cue. Never turn these cues into automated actions or unverified rotation claims.
 
 ## Bar layout
 
-Layout.lua owns visual block allocation inside the fixed 400 × 56 bar. Keep range/ammo, combat reminders, pet portrait, and control separate. Blocks do not shift with transient warning state; only feature preferences redistribute width. See docs/bar-layout.md before adding information.
+Layout.lua owns Hunter visual block allocation inside its fixed 400 × 56 bar. Shaman.lua owns the Shaman block allocation in the same outer footprint. Keep range/ammo, combat reminders, pet portrait, and control separate. Blocks do not shift with transient warning state; only feature preferences redistribute width. See docs/bar-layout.md before adding information.

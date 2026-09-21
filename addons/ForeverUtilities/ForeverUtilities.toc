@@ -1,15 +1,18 @@
 ## Interface: 16001
 ## Title: Forever Classmate
-## Notes: Class-aware utilities for WoW Forever. Currently featuring the complete Hunter companion.
+## Notes: Class-aware utilities for WoW Forever. Featuring complete Hunter and Shaman companions.
 ## IconTexture: Interface\AddOns\ForeverUtilities\Textures\ForeverClassmate
 ## Author: Codex
-## Version: 0.18.0
+## Version: 0.19.0
 ## SavedVariables: ForeverUtilitiesDB
 Core.lua
+ClassHost.lua
 TargetContext.lua
 PetDatabase.lua
 PetGuide.lua
 Layout.lua
 Range.lua
 Distance.lua
+ShamanContext.lua
+Shaman.lua
 UI.lua

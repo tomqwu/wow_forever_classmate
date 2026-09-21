@@ -11,6 +11,9 @@ end
 NS.Hunter = {
     name="Forever Classmate — Hunter",
     description='Hunter range, ammunition, pet care, and target awareness.',
+    command='/fhunter',enableLabel='Enable hunter bar',width=400,height=function(db) return NS.TargetContext.Height(db) end,
+    frameName='ForeverUtilitiesDistanceFrame',lockName='ForeverHunterFriendLock',
+    panelName='ForeverHunterFriendOptions',minimapName='ForeverHunterFriendMinimap',
     defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showTargetTarget=true,showAngle=true,showRange=true,showAmmo=true,lowAmmoWarning=true,petMendWarning=true,petHappinessWarning=true,petGuide=true,markWarning=true,aspectWarning=true,fadeOutOfCombat=true,showMinimap=true,showLockButton=true,minimapAngle=35}, normalize=Normalize,
     options={
         {key='showMinimap',label='Show minimap settings button',kind='toggle'},
@@ -29,61 +32,13 @@ NS.Hunter = {
         {key='markWarning',label="Hunter's Mark reminder icon",kind='toggle'},
         {key='fadeOutOfCombat',label='Dim outside combat',kind='toggle'},
     },
-    create=function(db)
-        local host=CreateFrame('Frame','ForeverUtilitiesDistanceFrame',UIParent)
-        host:SetSize(400,NS.TargetContext.Height(db));host:SetFrameStrata('MEDIUM')
-        host:SetMovable(true);host:SetClampedToScreen(true);host:RegisterForDrag('LeftButton')
-        host.hint=host:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall')
-        host.hint:SetPoint('BOTTOM',host,'TOP',0,4)
-        local indicator=NS.Range.Create(host,db)
-        local lock=CreateFrame('Button','ForeverHunterFriendLock',indicator)
-        lock:SetSize(18,24);lock:SetPoint('RIGHT',host,'RIGHT',-7,0)
-        lock:EnableMouse(true)
-        local function Block(width,height,x,y)
-            local texture=lock:CreateTexture(nil,'OVERLAY')
-            texture:SetSize(width,height);texture:SetPoint('TOPLEFT',lock,'TOPLEFT',x,y)
-            return texture
-        end
-        local body=Block(12,9,3,-11)
-        local left=Block(2,7,5,-4)
-        local top=Block(8,2,5,-4)
-        local right=Block(2,7,11,-4)
-        lock:SetScript('OnClick',function() db.locked=not db.locked;NS.Hunter.Apply() end)
-        lock:SetScript('OnEnter',function(self)
-            if GameTooltip then
-                GameTooltip:SetOwner(self,'ANCHOR_TOP')
-                GameTooltip:SetText(db.locked and 'Unlock bar to move' or 'Lock bar position');GameTooltip:Show()
-            end
-        end)
-        lock:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
-        local function Apply()
-            host:SetShown(db.enabled)
-            host:SetSize(400,NS.TargetContext.Height(db))
-            host:SetScale(db.scale);host:ClearAllPoints()
-            host:SetPoint('CENTER',UIParent,'CENTER',db.x,db.y)
-            host:EnableMouse(db.enabled and not db.locked)
-            host.hint:SetText(db.locked and '' or 'Drag to move | /fhunter lock')
-            lock:SetShown(db.showLockButton~=false)
-            right:SetShown(db.locked)
-            for _,texture in ipairs({body,left,top,right}) do
-                if db.locked then texture:SetColorTexture(0.8,0.85,0.9,1)
-                else texture:SetColorTexture(0.3,1,0.5,1) end
-            end
-            indicator.Refresh()
-        end
-        host:SetScript('OnDragStart',function(self) if db.enabled and not db.locked then self:StartMoving() end end)
-        host:SetScript('OnDragStop',function(self)
-            self:StopMovingOrSizing()
-            local x,y=self:GetCenter();local cx,cy=UIParent:GetCenter()
-            local ratio=self:GetEffectiveScale()/UIParent:GetEffectiveScale()
-            db.x,db.y=x-cx/ratio,y-cy/ratio
-            Apply()
-        end)
-        return {Apply=Apply,Status=indicator.Status}
-    end,
+
 }
 
 local Hunter=NS.Hunter
+function Hunter.create(db)
+    return NS.ClassHost.Create(Hunter,db,function(host) return NS.Range.Create(host,db) end)
+end
 function Hunter.Initialize(saved)
     local old=type(saved.modules)=='table' and saved.modules.distance or saved
     if type(saved.hunter)~='table' then
@@ -96,7 +51,7 @@ function Hunter.Initialize(saved)
     for key,value in pairs(Hunter.defaults) do
         if type(Hunter.db[key])~=type(value) then Hunter.db[key]=value end
     end
-    saved.schemaVersion=2
+    saved.schemaVersion=3
     Hunter.Apply()
 end
 function Hunter.IsHunter()
@@ -119,3 +74,4 @@ function Hunter.Reset()
     for key,value in pairs(Hunter.defaults) do Hunter.db[key]=value end
     Hunter.Apply()
 end
+NS.RegisterClass('HUNTER',Hunter)

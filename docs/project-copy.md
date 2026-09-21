@@ -6,24 +6,24 @@ Forever Classmate
 
 ## Short summary
 
-Class-aware reminders, resources, target context, and companion tools for WoW Forever.
+Class-aware Hunter and Shaman companions with compact, reliable reminders for WoW Forever.
 
 ## GitHub description
 
-A class-aware companion for WoW Forever. The current Hunter module combines range, ammo, pet care, target awareness, and beast discovery in one compact bar.
+Class-aware WoW Forever helpers: Hunter range, ammo and pet intelligence; Shaman totems, imbues, shields and spec cues.
 
 ## CurseForge summary
 
-Your class-aware companion for WoW Forever—currently featuring a complete Hunter toolkit, with more class modules on the way.
+Compact Hunter and Shaman companions for WoW Forever—range, pets, totems, imbues, shields, mana, and spec-aware cues.
 
 ## One-line pitch
 
-Forever Classmate detects your class and gives you the compact information that class needs.
+Forever Classmate detects your class and shows the compact information that class needs.
 
 ## Current release position
 
-The Hunter module is available today. It includes range and facing feedback, ammunition tracking, combat reminders, target-of-target context, pet health and happiness warnings, and a rare-pet guide. Paladin is planned as the next class module, followed by the other Forever classes as their beta APIs and mechanics are validated.
+Hunter includes range and facing feedback, ammunition, combat reminders, target context, pet care, and rare-beast guidance. Shaman includes live four-element totem timers, main-hand imbue and elemental-shield upkeep, mana, Totemic Recall guidance, and learned-spec cues for Maelstrom Weapon, Lava Burst with Flame Shock, or Riptide. Paladin is planned next.
 
 ## Keywords
 
-WoW Forever, class helper, Hunter, range, ammo, pet guide, target awareness, class utilities
+WoW Forever, class helper, Hunter, Shaman, range, ammo, pets, totems, weapon imbue, elemental shield, Maelstrom Weapon, Flame Shock, Riptide

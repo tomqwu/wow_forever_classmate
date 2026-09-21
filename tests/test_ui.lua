@@ -1,6 +1,7 @@
 local NS={}
 local root='addons/ForeverUtilities/'
 assert(loadfile(root..'Core.lua'))('ForeverUtilities',NS)
+assert(loadfile(root..'ClassHost.lua'))('ForeverUtilities',NS)
 assert(loadfile('addons/ForeverUtilities/TargetContext.lua'))('ForeverUtilities',NS)
 assert(loadfile('addons/ForeverUtilities/Layout.lua'))('ForeverUtilities',NS)
 local count=0
