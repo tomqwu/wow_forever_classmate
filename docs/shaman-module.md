@@ -36,8 +36,8 @@ The bar uses Forever's 426-pixel rendered desktop swing-bar width and remains 56
 
 | Block | Contents |
 | --- | --- |
-| Totems | Four aligned 38px element cells with readable timers |
-| Upkeep | Main-hand imbue and elemental-shield cells |
+| Totems | Four aligned 38px dark cells; colored element letters and narrow stripes identify inactive slots, while active totems show an icon and readable timer |
+| Upkeep | Dark main-hand imbue and elemental-shield cells with narrow status-colored stripes |
 | Helper | Maelstrom, Flame Shock/Lava Burst, Riptide, or recall cue; mana below |
 | Control | Shared lock toggle |
 

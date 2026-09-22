@@ -53,13 +53,15 @@ local function CreateIndicator(host,db)
     local totemCells={}
     local function MakeCell(size)
         local button=CreateFrame('Button',nil,frame);button:SetSize(size,size)
-        local border=button:CreateTexture(nil,'ARTWORK');border:SetAllPoints();border:SetColorTexture(0.3,0.45,0.6,0.7)
-        local icon=button:CreateTexture(nil,'ARTWORK');icon:SetPoint('TOPLEFT',button,'TOPLEFT',2,-2);icon:SetPoint('BOTTOMRIGHT',button,'BOTTOMRIGHT',-2,2)
+        local background=button:CreateTexture(nil,'ARTWORK');background:SetAllPoints();background:SetColorTexture(0.09,0.09,0.11,0.95)
+        local stripe=button:CreateTexture(nil,'ARTWORK',nil,1);stripe:SetPoint('TOPLEFT',button,'TOPLEFT',0,0)
+        stripe:SetPoint('BOTTOMLEFT',button,'BOTTOMLEFT',0,0);stripe:SetWidth(3)
+        local icon=button:CreateTexture(nil,'ARTWORK');icon:SetPoint('TOPLEFT',button,'TOPLEFT',5,-2);icon:SetPoint('BOTTOMRIGHT',button,'BOTTOMRIGHT',-2,2)
         local timer=button:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');timer:SetPoint('BOTTOM',button,'BOTTOM',0,2)
         timer:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',10,'OUTLINE')
         local badge=button:CreateFontString(nil,'OVERLAY','GameFontNormalSmall');badge:SetPoint('TOPLEFT',button,'TOPLEFT',3,-2)
         badge:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',9,'OUTLINE')
-        return {button=button,border=border,icon=icon,timer=timer,badge=badge}
+        return {button=button,background=background,stripe=stripe,icon=icon,timer=timer,badge=badge}
     end
     for i,info in ipairs(elementInfo) do
         local cell=MakeCell(38);cell.info=info;totemCells[i]=cell
@@ -178,14 +180,14 @@ local function CreateIndicator(host,db)
             local state=Context.Totem(cell.info.slot);cell.state=state
             cell.button:SetShown(db.showTotems~=false)
             if state and state.active then
-                activeTotems=activeTotems+1;cell.icon:SetTexture(state.icon or cell.info.fallback);cell.icon:SetVertexColor(1,1,1,1)
-                cell.border:SetColorTexture(unpack(cell.info.color));cell.timer:SetText(Context.FormatTime(state.left) or '')
+                activeTotems=activeTotems+1;cell.icon:SetTexture(state.icon or cell.info.fallback);cell.icon:SetVertexColor(1,1,1,1);cell.icon:Show()
+                cell.stripe:SetColorTexture(unpack(cell.info.color));cell.timer:SetText(Context.FormatTime(state.left) or '')
                 cell.badge:SetText(cell.info.label);cell.placeholder:Hide()
             else
                 local c=cell.info.color
-                cell.icon:SetTexture(cell.info.fallback);cell.icon:SetVertexColor(state==nil and 0.32 or 0.45,state==nil and 0.32 or 0.45,state==nil and 0.34 or 0.48,1)
+                cell.icon:SetTexture(cell.info.fallback);cell.icon:Hide()
                 local strength=state==nil and 0.42 or 0.62
-                cell.border:SetColorTexture(c[1]*strength,c[2]*strength,c[3]*strength,1)
+                cell.stripe:SetColorTexture(c[1]*strength,c[2]*strength,c[3]*strength,1)
                 cell.timer:SetText('');cell.badge:SetText('');cell.placeholder:Show()
             end
         end
@@ -196,7 +198,7 @@ local function CreateIndicator(host,db)
             weapon.icon:SetVertexColor(imbue.active and 1 or 0.45,imbue.active and 1 or 0.45,imbue.active and 1 or 0.45,1)
             weapon.timer:SetText(imbue.active and (Context.FormatTime(imbue.left) or '') or '')
             local warn=next(imbueNames)~=nil and not imbue.active
-            weapon.border:SetColorTexture(warn and 1 or 0.25,warn and 0.15 or 0.75,warn and 0.1 or 1,1)
+            weapon.stripe:SetColorTexture(warn and 1 or 0.25,warn and 0.15 or 0.75,warn and 0.1 or 1,1)
         end
         local missingShield,aura=Context.MissingShield(shieldNames);shield.state=aura
         shield.button:SetShown(db.showShield~=false and next(shieldNames)~=nil and missingShield~=nil)
@@ -207,7 +209,7 @@ local function CreateIndicator(host,db)
             local count=type(aura)=='table' and aura.applications or 0
             shield.badge:SetText(count and count>0 and tostring(count) or 'S')
             shield.timer:SetText(type(aura)=='table' and (Context.FormatTime(aura.left) or '') or '')
-            shield.border:SetColorTexture(missingShield and 1 or 0.25,missingShield and 0.15 or 0.75,missingShield and 0.1 or 1,1)
+            shield.stripe:SetColorTexture(missingShield and 1 or 0.25,missingShield and 0.15 or 0.75,missingShield and 0.1 or 1,1)
         end
         local inCombat=Core.Call(UnitAffectingCombat,'player')==true
         local hasTarget=Core.Call(UnitExists,'target')==true

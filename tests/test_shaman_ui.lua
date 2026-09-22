@@ -18,6 +18,7 @@ function methods:SetText(v) self.text=v end
 function methods:SetFont(_,size) self.fontSize=size end
 function methods:GetStringWidth() return #(self.text or '')*(self.fontSize or 12)*(rawget(self,'measureFactor') or 0.6) end
 function methods:SetTexture(v) self.texture=v end
+function methods:SetColorTexture(r,g,b,a) self.color={r,g,b,a} end
 function methods:SetMovable(v) self.movable=v end
 function methods:StartMoving() self.moving=true end
 function methods:StopMovingOrSizing() self.moving=false end
@@ -96,14 +97,16 @@ check(indicator.totemCells[1].button.width==38 and indicator.totemCells[1].butto
 check(indicator.weaponCell.button.width==38 and indicator.weaponCell.button.y==-9 and indicator.shieldCell.button.y==-9,'totem and upkeep cells share one top edge')
 check(indicator.helperIcon.y==-14 and indicator.helperIcon.y-indicator.helperIcon.height/2==-28,'helper icon shares the cell centerline')
 for _,cell in ipairs(indicator.totemCells) do
-    check(cell.button.shown and cell.icon.texture==cell.info.fallback and cell.badge.text=='' and cell.placeholder.shown and cell.placeholder.text==cell.info.label,'inactive element marker remains visible')
+    check(cell.button.shown and not cell.icon.shown and cell.badge.text=='' and cell.placeholder.shown and cell.placeholder.text==cell.info.label,'inactive element marker remains visible without dim fallback art')
+    check(cell.background.color[1]==0.09 and cell.stripe.width==3 and cell.stripe.color[1]<cell.info.color[1],'inactive totem stays dark with a narrow dim element stripe')
 end
 GetTotemInfo=function() return nil end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 for _,cell in ipairs(indicator.totemCells) do check(cell.button.shown and cell.placeholder.shown,'unavailable element state does not leave a blank reserved group') end
 GetTotemInfo=function(slot) if slot==2 then return true,'Strength of Earth',90,30,777 end return false,'',0,0,0 end
 GetTotemTimeLeft=function(slot) return slot==2 and 20 or 0 end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 local earth=indicator.totemCells[1]
-check(not earth.placeholder.shown and earth.badge.text=='E' and earth.icon.texture==777 and earth.timer.text=='20s','active totem replaces marker with live icon and timer')
+check(not earth.placeholder.shown and earth.icon.shown and earth.badge.text=='E' and earth.icon.texture==777 and earth.timer.text=='20s','active totem replaces marker with live icon and timer')
+check(earth.background.color[1]==0.09 and earth.stripe.color[1]==earth.info.color[1],'active totem keeps dark cell and bright element stripe')
 check(indicator.helperText.text=='Recall 1 totem' and indicator.helperText:GetStringWidth()<=indicator.helperText.width,'recall hint fits without clipping')
 indicator.helperText.measureFactor=1;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 check(indicator.helperText.text=='Recall 1' and indicator.helperText:GetStringWidth()<=indicator.helperText.width,'recall hint shortens when the full label will not fit')

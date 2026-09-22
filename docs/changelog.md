@@ -1,3 +1,10 @@
+## 0.21.6
+
+- Replaced solid-colored Shaman totem, weapon-imbue, and shield tiles with dark cells and narrow status-colored stripes.
+- Inactive totems now show a clear element letter without dim fallback art. Active totems still show their live icon and timer.
+
+Use `/reload` after updating.
+
 ## 0.21.5
 
 - Fit the Shaman helper text to its available width so the Totemic Recall hint stays readable beside the lock.
