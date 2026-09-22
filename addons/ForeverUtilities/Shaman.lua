@@ -38,11 +38,11 @@ local function CreateIndicator(host,db)
     local frame=CreateFrame('Frame','ForeverClassmateShamanIndicator',host)
     frame:SetSize(NS.ClassBarWidth,NS.ClassBarHeight);frame:SetPoint('TOPLEFT',host,'TOPLEFT',0,0)
     local background=frame:CreateTexture(nil,'BACKGROUND');background:SetAllPoints(frame)
-    background:SetColorTexture(0.012,0.025,0.04,0.94)
+    background:SetColorTexture(0.018,0.018,0.02,0.94)
     local accent=frame:CreateTexture(nil,'ARTWORK');accent:SetPoint('TOPLEFT');accent:SetPoint('BOTTOMLEFT')
     accent:SetWidth(4);accent:SetColorTexture(0.2,0.65,1,1)
     local separators={}
-    for i=1,2 do local line=frame:CreateTexture(nil,'ARTWORK');line:SetSize(1,36);line:SetColorTexture(0.5,0.75,1,0.2);separators[i]=line end
+    for i=1,2 do local line=frame:CreateTexture(nil,'ARTWORK');line:SetSize(1,36);line:SetColorTexture(0.7,0.7,0.72,0.22);separators[i]=line end
 
     local elementInfo={
         {slot=2,label='E',color={0.72,0.55,0.3},fallback='Interface\\Icons\\Spell_Nature_StoneClawTotem'},
@@ -63,6 +63,11 @@ local function CreateIndicator(host,db)
     end
     for i,info in ipairs(elementInfo) do
         local cell=MakeCell(34);cell.info=info;totemCells[i]=cell
+        local placeholder=cell.button:CreateFontString(nil,'OVERLAY','GameFontNormal')
+        placeholder:SetPoint('CENTER',cell.button,'CENTER',0,0)
+        placeholder:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',15,'OUTLINE')
+        placeholder:SetText(info.label);placeholder:SetTextColor(unpack(info.color));placeholder:Hide()
+        cell.placeholder=placeholder
         cell.button:SetScript('OnEnter',function(self)
             if not GameTooltip then return end
             GameTooltip:SetOwner(self,'ANCHOR_TOP')
@@ -173,12 +178,13 @@ local function CreateIndicator(host,db)
             if state and state.active then
                 activeTotems=activeTotems+1;cell.icon:SetTexture(state.icon or cell.info.fallback);cell.icon:SetVertexColor(1,1,1,1)
                 cell.border:SetColorTexture(unpack(cell.info.color));cell.timer:SetText(Context.FormatTime(state.left) or '')
-                cell.badge:SetText(cell.info.label)
+                cell.badge:SetText(cell.info.label);cell.placeholder:Hide()
             else
-                cell.icon:SetTexture(cell.info.fallback);cell.icon:SetVertexColor(0.25,0.25,0.28,1)
-                if state==nil then cell.icon:SetVertexColor(0.14,0.14,0.16,1);cell.border:SetColorTexture(0.12,0.15,0.2,0.7)
-                else cell.border:SetColorTexture(0.18,0.23,0.3,0.8) end
-                cell.timer:SetText('');cell.badge:SetText(cell.info.label)
+                local c=cell.info.color
+                cell.icon:SetTexture(cell.info.fallback);cell.icon:SetVertexColor(state==nil and 0.32 or 0.45,state==nil and 0.32 or 0.45,state==nil and 0.34 or 0.48,1)
+                local strength=state==nil and 0.42 or 0.62
+                cell.border:SetColorTexture(c[1]*strength,c[2]*strength,c[3]*strength,1)
+                cell.timer:SetText('');cell.badge:SetText('');cell.placeholder:Show()
             end
         end
         local imbue=Context.WeaponImbue();weapon.state=imbue

@@ -1,3 +1,11 @@
+## 0.21.3
+
+- Replaced the Shaman bar's navy background and blue separators with a neutral dark surface so blue is no longer the only prominent visual.
+- Added large element-colored E/F/W/A markers over inactive or unavailable totem slots, with brighter fallback art and distinct element borders.
+- Active totems still replace their marker with the live icon and readable remaining time.
+
+Use `/reload` after updating. The four element slots should remain recognizable even when Forever exposes no active totem state.
+
 ## 0.21.2
 
 - Kept all four Shaman element cells visible as dim placeholders when no totem is active or Forever withholds the current slot state.

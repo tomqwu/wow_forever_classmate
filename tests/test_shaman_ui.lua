@@ -89,11 +89,15 @@ local indicator=named.ForeverClassmateShamanIndicator
 check(host and host.width==426 and host.height==56 and host.shown,'rendered native-width shaman bar created')
 check(indicator and indicator.scripts.OnUpdate~=nil,'enabled info polls for live timers')
 for _,cell in ipairs(indicator.totemCells) do
-    check(cell.button.shown and cell.icon.texture==cell.info.fallback and cell.badge.text==cell.info.label,'inactive element placeholder remains visible')
+    check(cell.button.shown and cell.icon.texture==cell.info.fallback and cell.badge.text=='' and cell.placeholder.shown and cell.placeholder.text==cell.info.label,'inactive element marker remains visible')
 end
-GetTotemInfo=function() return nil end;indicator.Update()
-for _,cell in ipairs(indicator.totemCells) do check(cell.button.shown,'unavailable element state does not leave a blank reserved group') end
-GetTotemInfo=function() return false,'',0,0,0 end;indicator.Update()
+GetTotemInfo=function() return nil end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
+for _,cell in ipairs(indicator.totemCells) do check(cell.button.shown and cell.placeholder.shown,'unavailable element state does not leave a blank reserved group') end
+GetTotemInfo=function(slot) if slot==2 then return true,'Strength of Earth',90,30,777 end return false,'',0,0,0 end
+GetTotemTimeLeft=function(slot) return slot==2 and 20 or 0 end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
+local earth=indicator.totemCells[1]
+check(not earth.placeholder.shown and earth.badge.text=='E' and earth.icon.texture==777 and earth.timer.text=='20s','active totem replaces marker with live icon and timer')
+GetTotemInfo=function() return false,'',0,0,0 end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')
 local slash=SlashCmdList.FOREVERUTILITIES
