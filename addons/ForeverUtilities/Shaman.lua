@@ -88,7 +88,7 @@ local function CreateIndicator(host,db)
     manaText:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',11,'OUTLINE');manaText:SetJustifyH('LEFT')
     local shieldNames,imbueNames={},{}
     local lastStatus='Not checked'
-    frame.weaponCell=weapon;frame.shieldCell=shield;frame.helperIcon=helperIcon
+    frame.weaponCell=weapon;frame.shieldCell=shield;frame.helperIcon=helperIcon;frame.helperText=helperText
 
     local catalog={
         lightningShield={'Lightning Shield','shield'},waterShield={'Water Shield','shield'},
@@ -167,8 +167,9 @@ local function CreateIndicator(host,db)
         separators[2]:SetShown(upkeep and (db.showSpecHelper~=false or db.showMana~=false or db.totemRecallHint~=false))
         if upkeep then x=x+10 end
         helperIcon:ClearAllPoints();helperIcon:SetPoint('TOPLEFT',frame,'TOPLEFT',x,-14)
-        helperText:ClearAllPoints();helperText:SetPoint('TOPLEFT',frame,'TOPLEFT',x+34,-7);helperText:SetWidth(math.max(20,392-x-34))
-        manaText:ClearAllPoints();manaText:SetPoint('TOPLEFT',frame,'TOPLEFT',x+34,-31);manaText:SetWidth(math.max(20,392-x-34))
+        local textWidth=math.max(20,400-x-34-4)
+        helperText:ClearAllPoints();helperText:SetPoint('TOPLEFT',frame,'TOPLEFT',x+34,-7);helperText:SetWidth(textWidth)
+        manaText:ClearAllPoints();manaText:SetPoint('TOPLEFT',frame,'TOPLEFT',x+34,-31);manaText:SetWidth(textWidth)
     end
 
     local function Update()
@@ -234,7 +235,23 @@ local function CreateIndicator(host,db)
             helper=activeTotems..'/4 totems';icon='Interface\\Icons\\Spell_Nature_StoneClawTotem'
         end
         helperIcon:SetShown(helper~='');helperIcon:SetTexture(icon or 'Interface\\Icons\\Spell_Nature_Lightning')
-        helperText:SetText(helper);helperText:SetTextColor(unpack(color));helperText:SetShown(helper~='')
+        helperText:SetText(helper)
+        -- The default layout leaves a narrow helper slot beside the lock.
+        -- Fit the measured text, then shorten only when the client font still
+        -- cannot draw the full cue inside that slot.
+        for size=12,9,-1 do
+            helperText:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',size,'OUTLINE')
+            local width=helperText:GetStringWidth()
+            if Core.IsNumber(width) and width<=helperText:GetWidth() then break end
+        end
+        local width=helperText:GetStringWidth()
+        if Core.IsNumber(width) and width>helperText:GetWidth() then
+            local compact=helper:match('^Recall (%d+) totems?$')
+            if compact then helperText:SetText('Recall '..compact)
+            elseif helper:match('^Maelstrom ') then helperText:SetText((helper:gsub('^Maelstrom ', 'MW ')))
+            elseif helper=='Riptide ready' then helperText:SetText('Riptide') end
+        end
+        helperText:SetTextColor(unpack(color));helperText:SetShown(helper~='')
         local mana=db.showMana~=false and Context.ManaPercent() or nil
         manaText:SetText(mana and ('Mana '..mana..'%') or '');manaText:SetShown(mana~=nil)
         frame:SetAlpha((db.fadeOutOfCombat==false or inCombat) and 1 or (hasTarget and 0.6 or 0.2))

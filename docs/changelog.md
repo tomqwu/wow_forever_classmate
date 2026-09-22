@@ -1,3 +1,10 @@
+## 0.21.5
+
+- Fit the Shaman helper text to its available width so the Totemic Recall hint stays readable beside the lock.
+- Shorten the on-bar cue only when even the smaller font does not fit. The complete status remains available through `/fshaman status`.
+
+Use `/reload` after updating.
+
 ## 0.21.4
 
 - Aligned the Shaman totem and weapon/shield cells to the same 38-pixel size and top edge.

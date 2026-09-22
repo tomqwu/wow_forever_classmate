@@ -10,9 +10,13 @@ function methods:CreateFontString() return object() end
 function methods:CreateTexture() return object() end
 function methods:CreateMaskTexture() return object() end
 function methods:SetSize(w,h) self.width,self.height=w,h end
+function methods:SetWidth(w) self.width=w end
+function methods:GetWidth() return self.width end
 function methods:GetWidth() return self.width end
 function methods:GetHeight() return self.height end
 function methods:SetText(v) self.text=v end
+function methods:SetFont(_,size) self.fontSize=size end
+function methods:GetStringWidth() return #(self.text or '')*(self.fontSize or 12)*(rawget(self,'measureFactor') or 0.6) end
 function methods:SetTexture(v) self.texture=v end
 function methods:SetMovable(v) self.movable=v end
 function methods:StartMoving() self.moving=true end
@@ -100,6 +104,10 @@ GetTotemInfo=function(slot) if slot==2 then return true,'Strength of Earth',90,3
 GetTotemTimeLeft=function(slot) return slot==2 and 20 or 0 end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 local earth=indicator.totemCells[1]
 check(not earth.placeholder.shown and earth.badge.text=='E' and earth.icon.texture==777 and earth.timer.text=='20s','active totem replaces marker with live icon and timer')
+check(indicator.helperText.text=='Recall 1 totem' and indicator.helperText:GetStringWidth()<=indicator.helperText.width,'recall hint fits without clipping')
+indicator.helperText.measureFactor=1;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
+check(indicator.helperText.text=='Recall 1' and indicator.helperText:GetStringWidth()<=indicator.helperText.width,'recall hint shortens when the full label will not fit')
+indicator.helperText.measureFactor=nil
 GetTotemInfo=function() return false,'',0,0,0 end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')
