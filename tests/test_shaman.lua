@@ -38,6 +38,15 @@ GetTotemTimeLeft=nil;totem=C.Totem(2);check(totem.left==20,'totem time fallback'
 GetTotemInfo=function() return secret end;check(C.Totem(1)==nil,'secret totem state hidden')
 GetTotemInfo=function() return false,secret,0,0,0 end;check(C.Totem(1)==nil,'secret totem name does not imply an empty slot')
 GetTotemInfo=function() error('restricted') end;check(C.Totem(1)==nil,'failed totem API hidden')
+C.SetTotemNames({['Stoneskin Totem']={slot=2,icon=777}})
+check(C.TrackSummon('Stoneskin Totem','totem-1',nil),'owned summon is tracked')
+check(C.TrackedTotem(2).active and C.TrackedTotem(2).icon==777 and C.TrackedTotem(2).left==nil,'tracked totem has no invented timer')
+check(not C.TrackSummon('Unknown Totem','totem-2',nil),'unclassified summons are ignored')
+check(C.TrackSummon('Stoneskin Totem','totem-2',888),'new summon replaces the same element')
+check(not C.ForgetTotem('totem-1') and C.TrackedTotem(2).guid=='totem-2','old totem death does not clear replacement')
+check(C.ForgetTotem('totem-2') and C.TrackedTotem(2)==nil,'tracked totem clears on death')
+check(C.TrackSummon('Stoneskin Totem','totem-3',nil),'totem can be tracked again')
+C.ClearTrackedTotems();check(C.TrackedTotem(2)==nil,'tracking clears on recall or world exit')
 local itemID=700
 GetInventoryItemID=function() return itemID end
 GetInventoryItemTexture=function() return 222 end

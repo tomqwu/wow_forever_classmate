@@ -1,3 +1,10 @@
+## 0.21.8
+
+- Track your own totems from summon and removal combat-log events when Forever's totem-slot API reports an empty name and zero time for a visible totem.
+- Show the tracked totem's icon and include it in the four-element count. Do not show an estimated timer when the client supplies none.
+
+Use `/reload` after updating, then place a fresh totem so the addon sees its summon event.
+
 ## 0.21.7
 
 - Detect active Shaman totems from their reported name or remaining time, including cases where Forever reports the first `GetTotemInfo` value as false.

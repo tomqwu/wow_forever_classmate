@@ -2,6 +2,35 @@ local _, NS = ...
 local Core=NS.Core
 local Context={}
 NS.ShamanContext=Context
+local trackedTotems,totemNames={},{}
+
+function Context.SetTotemNames(names)
+    totemNames=names or {}
+end
+
+function Context.TrackSummon(name,guid,icon)
+    if not Core.IsReadable(name) or type(name)~='string' or not Core.IsReadable(guid) or type(guid)~='string' then return false end
+    local info=totemNames[name]
+    if not info then return false end
+    trackedTotems[info.slot]={active=true,slot=info.slot,name=name,guid=guid,icon=Core.IsNumber(icon) and icon or info.icon,tracked=true}
+    return true
+end
+
+function Context.ForgetTotem(guid)
+    if not Core.IsReadable(guid) or type(guid)~='string' then return false end
+    for slot,state in pairs(trackedTotems) do
+        if state.guid==guid then trackedTotems[slot]=nil;return true end
+    end
+    return false
+end
+
+function Context.ClearTrackedTotems()
+    trackedTotems={}
+end
+
+function Context.TrackedTotem(slot)
+    return trackedTotems[slot]
+end
 
 local function Call(fn,...)
     if type(fn)~='function' then return nil end

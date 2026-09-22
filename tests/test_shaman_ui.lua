@@ -111,6 +111,18 @@ check(indicator.helperText.text=='Recall 1 totem' and indicator.helperText:GetSt
 indicator.helperText.measureFactor=1;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 check(indicator.helperText.text=='Recall 1' and indicator.helperText:GetStringWidth()<=indicator.helperText.width,'recall hint shortens when the full label will not fit')
 indicator.helperText.measureFactor=nil
+GetTotemInfo=function() return true,'',0,0,0 end;GetTotemTimeLeft=function() return 0 end
+UnitGUID=function() return 'player-guid' end
+indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
+CombatLogGetCurrentEventInfo=function() return 100,'SPELL_SUMMON',false,'other-guid','Other',0,0,'other-totem','Stoneskin Totem',0,0,999,'Stoneskin Totem',0 end
+indicator.scripts.OnEvent(indicator,'COMBAT_LOG_EVENT_UNFILTERED')
+check(earth.state.active==false,'other players totems are not tracked')
+CombatLogGetCurrentEventInfo=function() return 100,'SPELL_SUMMON',false,'player-guid','Oh Bruh',0,0,'totem-guid','Stoneskin Totem',0,0,999,'Stoneskin Totem',0 end
+indicator.scripts.OnEvent(indicator,'COMBAT_LOG_EVENT_UNFILTERED')
+check(earth.state.tracked and earth.icon.shown and earth.timer.text=='' and indicator.helperText.text=='Recall 1 totem','summon fallback counts own totem without fabricating a timer')
+CombatLogGetCurrentEventInfo=function() return 110,'UNIT_DIED',false,nil,nil,0,0,'totem-guid','Stoneskin Totem',0,0 end
+indicator.scripts.OnEvent(indicator,'COMBAT_LOG_EVENT_UNFILTERED')
+check(earth.state.active==false and indicator.Status():find('Totems 0/4',1,true),'totem death clears tracked fallback')
 GetTotemInfo=function() return false,'',0,0,0 end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')

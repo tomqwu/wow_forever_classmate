@@ -3,7 +3,7 @@
 ## Notes: Class-aware companion bars for every WoW Forever class, with learned racial support.
 ## IconTexture: Interface\AddOns\ForeverUtilities\Textures\ForeverClassmate
 ## Author: Codex
-## Version: 0.21.7
+## Version: 0.21.8
 ## SavedVariables: ForeverUtilitiesDB
 Core.lua
 ClassHost.lua

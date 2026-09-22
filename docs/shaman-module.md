@@ -30,6 +30,8 @@ The extracted Forever 1.60 UI source documents and uses:
 
 Totem order follows the Blizzard Shaman priority: Earth, Fire, Water, Air. `GetTotemInfo`'s first value can represent elemental reagent ownership, so the addon identifies a summoned totem from a readable name or positive time remaining instead. It never infers missing state from a secret or failed scan. Numeric timers appear only from readable API durations. Inactive class modules create no frames and perform no polling; disabling all Shaman information switches also stops its timer polling.
 
+Forever 1.60.1 has also been observed returning `true, "", 0, 0, 0` for `GetTotemInfo(2)` and `0` for `GetTotemTimeLeft(2)` while the player's Stoneskin Totem is visibly present. When slot data is empty, the module tracks player-owned `SPELL_SUMMON` combat-log events by totem name and clears them on totem death, destruction, dissipation, Totemic Recall, death, or leaving the world. These fallback totems have no numeric timer because the client did not provide one. A totem already active before `/reload` cannot be recovered from past combat-log events; place a fresh totem after reloading.
+
 ## Bar blocks
 
 The bar uses Forever's 426-pixel rendered desktop swing-bar width and remains 56 pixels high before scale:
