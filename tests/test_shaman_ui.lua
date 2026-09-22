@@ -20,6 +20,7 @@ function methods:SetText(v) self.text=v end
 function methods:SetFont(_,size) self.fontSize=size end
 function methods:GetStringWidth() return #(self.text or '')*(self.fontSize or 12)*(rawget(self,'measureFactor') or 0.6) end
 function methods:SetTexture(v) self.texture=v end
+function methods:SetDesaturated(v) self.desaturated=v end
 function methods:SetColorTexture(r,g,b,a) self.color={r,g,b,a} end
 function methods:SetMovable(v) self.movable=v end
 function methods:StartMoving() self.moving=true end
@@ -100,13 +101,14 @@ check(indicator and indicator.scripts.OnUpdate~=nil,'enabled info polls for live
 check(not indicator.events.COMBAT_LOG_EVENT_UNFILTERED,'Shaman avoids Blizzard-only combat-log event registration')
 check(indicator.totemCells[1].button.width==38 and indicator.totemCells[1].button.y==-9,'totem cells use the shared square size and top edge')
 check(indicator.weaponCell.button.width==38 and indicator.weaponCell.button.y==-9 and indicator.shieldCell.button.y==-9,'totem and upkeep cells share one top edge')
+check(indicator.weaponCell.badge.text=='' and indicator.shieldCell.badge.text=='3','upkeep icons omit letter labels while shield charges remain visible')
 check(indicator.helperIcon.y==-14 and indicator.helperIcon.y-indicator.helperIcon.height/2==-28,'helper icon shares the cell centerline')
 for _,cell in ipairs(indicator.totemCells) do
-    check(cell.button.shown and not cell.icon.shown and cell.badge.text=='' and cell.placeholder.shown and cell.placeholder.text==cell.info.label,'inactive element marker remains visible without dim fallback art')
+    check(cell.button.shown and cell.icon.shown and cell.icon.texture==cell.info.fallback and cell.icon.desaturated and cell.badge.text=='','inactive element uses a subdued icon without a large letter')
     check(cell.background.color[1]==0.09 and cell.stripe.width==3 and cell.stripe.color[1]<cell.info.color[1],'inactive totem stays dark with a narrow dim element stripe')
 end
 GetTotemInfo=function() return nil end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
-for _,cell in ipairs(indicator.totemCells) do check(cell.button.shown and cell.placeholder.shown,'unavailable element state does not leave a blank reserved group') end
+for _,cell in ipairs(indicator.totemCells) do check(cell.button.shown and cell.icon.shown and cell.icon.desaturated,'unavailable element keeps a subdued icon') end
 GetTotemInfo=function(slot) if slot==2 then return true,'',0,0,0 end return false,'',0,0,0 end
 local maelstrom=NS.Shaman.spells.maelstrom;NS.Shaman.spells.maelstrom=nil
 indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
@@ -115,7 +117,7 @@ NS.Shaman.spells.maelstrom=maelstrom
 GetTotemInfo=function(slot) if slot==2 then return false,'Earthbind Totem',90,30,777 end return false,'',0,0,0 end
 GetTotemTimeLeft=function(slot) return slot==2 and 20 or 0 end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 local earth=indicator.totemCells[1]
-check(not earth.placeholder.shown and earth.icon.shown and earth.badge.text=='E' and earth.icon.texture==777 and earth.timer.text=='20s','active totem replaces marker with live icon and timer')
+check(earth.icon.shown and not earth.icon.desaturated and earth.badge.text=='' and earth.icon.texture==777 and earth.timer.text=='20s','active totem replaces subdued art with live icon and timer')
 check(earth.background.color[1]==0.09 and earth.stripe.color[1]==earth.info.color[1],'active totem keeps dark cell and bright element stripe')
 check(indicator.helperText.text=='Recall 1 totem' and indicator.helperText:GetStringWidth()<=indicator.helperText.width,'recall hint fits without clipping')
 indicator.helperText.measureFactor=1;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')

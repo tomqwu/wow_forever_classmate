@@ -1,3 +1,10 @@
+## 0.21.11
+
+- Replaced the large Earth/Fire/Water/Air placeholder letters with subdued totem icons on dark tiles. Thin colored edges still identify each element.
+- Removed the redundant letter badges from active totems, weapon imbue, and shield; shield charges remain visible.
+
+Use `/reload` after updating.
+
 ## 0.21.10
 
 - Keep a previously readable Shaman totem icon and countdown visible when Forever hides live slot values in combat.

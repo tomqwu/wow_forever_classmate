@@ -57,8 +57,8 @@ local function CreateIndicator(host,db)
     local elementInfo={
         {slot=2,label='E',color={0.72,0.55,0.3},fallback='Interface\\Icons\\Spell_Nature_StoneClawTotem'},
         {slot=1,label='F',color={1,0.32,0.12},fallback='Interface\\Icons\\Spell_Fire_SearingTotem'},
-        {slot=3,label='W',color={0.2,0.65,1},fallback='Interface\\Icons\\INV_Spear_04'},
-        {slot=4,label='A',color={0.65,0.85,1},fallback='Interface\\Icons\\Spell_Nature_Windfury'},
+        {slot=3,label='W',color={0.2,0.65,1},fallback='Interface\\Icons\\Spell_Nature_ManaRegenTotem'},
+        {slot=4,label='A',color={0.65,0.85,1},fallback='Interface\\Icons\\Spell_Nature_GroundingTotem'},
     }
     local totemCells={}
     local function MakeCell(size)
@@ -75,11 +75,6 @@ local function CreateIndicator(host,db)
     end
     for i,info in ipairs(elementInfo) do
         local cell=MakeCell(38);cell.info=info;totemCells[i]=cell
-        local placeholder=cell.button:CreateFontString(nil,'OVERLAY','GameFontNormal')
-        placeholder:SetPoint('CENTER',cell.button,'CENTER',0,0)
-        placeholder:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',15,'OUTLINE')
-        placeholder:SetText(info.label);placeholder:SetTextColor(unpack(info.color));placeholder:Hide()
-        cell.placeholder=placeholder
         cell.button:SetScript('OnEnter',function(self)
             if not GameTooltip then return end
             GameTooltip:SetOwner(self,'ANCHOR_TOP')
@@ -94,7 +89,7 @@ local function CreateIndicator(host,db)
     end
     frame.totemCells=totemCells
     local weapon=MakeCell(38);local shield=MakeCell(38)
-    weapon.badge:SetText('W');shield.badge:SetText('S')
+    weapon.badge:SetText('');shield.badge:SetText('')
     local helperIcon=frame:CreateTexture(nil,'ARTWORK');helperIcon:SetSize(28,28)
     local helperText=frame:CreateFontString(nil,'OVERLAY','GameFontHighlight')
     helperText:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',12,'OUTLINE');helperText:SetJustifyH('LEFT');helperText:SetWordWrap(false)
@@ -229,15 +224,17 @@ local function CreateIndicator(host,db)
             if state==nil then unknownTotems=unknownTotems+1 end
             cell.button:SetShown(db.showTotems~=false)
             if state and state.active then
-                activeTotems=activeTotems+1;cell.icon:SetTexture(state.icon or cell.info.fallback);cell.icon:SetVertexColor(1,1,1,1);cell.icon:Show()
+                activeTotems=activeTotems+1;cell.icon:SetTexture(state.icon or cell.info.fallback);cell.icon:SetVertexColor(1,1,1,1);cell.icon:SetDesaturated(false);cell.icon:Show()
                 cell.stripe:SetColorTexture(unpack(cell.info.color));cell.timer:SetText(Context.FormatTime(state.left) or '')
-                cell.badge:SetText(cell.info.label);cell.placeholder:Hide()
+                cell.badge:SetText('')
             else
                 local c=cell.info.color
-                cell.icon:SetTexture(cell.info.fallback);cell.icon:Hide()
+                local shade=state==nil and 0.58 or 0.72
+                cell.icon:SetTexture(cell.info.fallback);cell.icon:SetDesaturated(true)
+                cell.icon:SetVertexColor(shade,shade,shade,0.9);cell.icon:Show()
                 local strength=state==nil and 0.42 or 0.62
                 cell.stripe:SetColorTexture(c[1]*strength,c[2]*strength,c[3]*strength,1)
-                cell.timer:SetText('');cell.badge:SetText('');cell.placeholder:Show()
+                cell.timer:SetText('');cell.badge:SetText('')
             end
         end
         local imbue=Context.WeaponImbue();weapon.state=imbue
@@ -256,7 +253,7 @@ local function CreateIndicator(host,db)
             shield.icon:SetTexture(type(aura)=='table' and (aura.icon or fallback) or fallback)
             shield.icon:SetVertexColor(type(aura)=='table' and 1 or 0.4,type(aura)=='table' and 1 or 0.4,type(aura)=='table' and 1 or 0.45,1)
             local count=type(aura)=='table' and aura.applications or 0
-            shield.badge:SetText(count and count>0 and tostring(count) or 'S')
+            shield.badge:SetText(count and count>0 and tostring(count) or '')
             shield.timer:SetText(type(aura)=='table' and (Context.FormatTime(aura.left) or '') or '')
             shield.stripe:SetColorTexture(missingShield and 1 or 0.25,missingShield and 0.15 or 0.75,missingShield and 0.1 or 1,1)
         end
