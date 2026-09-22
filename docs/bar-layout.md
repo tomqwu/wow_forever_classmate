@@ -37,7 +37,7 @@ preferences, so applying Hunter's Mark or changing targets never shifts the bar.
 
 The Shaman bar uses three readable groups across the same footprint:
 
-- Four 34px Earth, Fire, Water, and Air totem cells appear first.
+- Four aligned 38px Earth, Fire, Water, and Air totem cells appear first.
 - Main-hand weapon imbue and elemental-shield cells follow the totems.
 - The learned Maelstrom, Flame Shock/Lava Burst, Riptide, or Totemic Recall cue
   occupies the right group, with mana below it.

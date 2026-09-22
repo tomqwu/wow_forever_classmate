@@ -62,7 +62,7 @@ local function CreateIndicator(host,db)
         return {button=button,border=border,icon=icon,timer=timer,badge=badge}
     end
     for i,info in ipairs(elementInfo) do
-        local cell=MakeCell(34);cell.info=info;totemCells[i]=cell
+        local cell=MakeCell(38);cell.info=info;totemCells[i]=cell
         local placeholder=cell.button:CreateFontString(nil,'OVERLAY','GameFontNormal')
         placeholder:SetPoint('CENTER',cell.button,'CENTER',0,0)
         placeholder:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',15,'OUTLINE')
@@ -88,6 +88,7 @@ local function CreateIndicator(host,db)
     manaText:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',11,'OUTLINE');manaText:SetJustifyH('LEFT')
     local shieldNames,imbueNames={},{}
     local lastStatus='Not checked'
+    frame.weaponCell=weapon;frame.shieldCell=shield;frame.helperIcon=helperIcon
 
     local catalog={
         lightningShield={'Lightning Shield','shield'},waterShield={'Water Shield','shield'},
@@ -150,10 +151,10 @@ local function CreateIndicator(host,db)
     local function Layout()
         local x=10
         for i,cell in ipairs(totemCells) do
-            cell.button:ClearAllPoints();cell.button:SetPoint('TOPLEFT',frame,'TOPLEFT',x+(i-1)*38,-7)
+            cell.button:ClearAllPoints();cell.button:SetPoint('TOPLEFT',frame,'TOPLEFT',x+(i-1)*40,-9)
             cell.button:SetShown(db.showTotems~=false)
         end
-        if db.showTotems~=false then x=x+152 end
+        if db.showTotems~=false then x=x+160 end
         separators[1]:ClearAllPoints();separators[1]:SetPoint('TOPLEFT',frame,'TOPLEFT',x,-10)
         local upkeep=db.showWeaponImbue~=false or db.showShield~=false
         separators[1]:SetShown(db.showTotems~=false and upkeep)
@@ -165,7 +166,7 @@ local function CreateIndicator(host,db)
         separators[2]:ClearAllPoints();separators[2]:SetPoint('TOPLEFT',frame,'TOPLEFT',x+2,-10)
         separators[2]:SetShown(upkeep and (db.showSpecHelper~=false or db.showMana~=false or db.totemRecallHint~=false))
         if upkeep then x=x+10 end
-        helperIcon:ClearAllPoints();helperIcon:SetPoint('TOPLEFT',frame,'TOPLEFT',x,-6)
+        helperIcon:ClearAllPoints();helperIcon:SetPoint('TOPLEFT',frame,'TOPLEFT',x,-14)
         helperText:ClearAllPoints();helperText:SetPoint('TOPLEFT',frame,'TOPLEFT',x+34,-7);helperText:SetWidth(math.max(20,392-x-34))
         manaText:ClearAllPoints();manaText:SetPoint('TOPLEFT',frame,'TOPLEFT',x+34,-31);manaText:SetWidth(math.max(20,392-x-34))
     end

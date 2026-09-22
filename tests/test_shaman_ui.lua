@@ -88,6 +88,9 @@ local host=named.ForeverClassmateShamanFrame
 local indicator=named.ForeverClassmateShamanIndicator
 check(host and host.width==426 and host.height==56 and host.shown,'rendered native-width shaman bar created')
 check(indicator and indicator.scripts.OnUpdate~=nil,'enabled info polls for live timers')
+check(indicator.totemCells[1].button.width==38 and indicator.totemCells[1].button.y==-9,'totem cells use the shared square size and top edge')
+check(indicator.weaponCell.button.width==38 and indicator.weaponCell.button.y==-9 and indicator.shieldCell.button.y==-9,'totem and upkeep cells share one top edge')
+check(indicator.helperIcon.y==-14 and indicator.helperIcon.y-indicator.helperIcon.height/2==-28,'helper icon shares the cell centerline')
 for _,cell in ipairs(indicator.totemCells) do
     check(cell.button.shown and cell.icon.texture==cell.info.fallback and cell.badge.text=='' and cell.placeholder.shown and cell.placeholder.text==cell.info.label,'inactive element marker remains visible')
 end

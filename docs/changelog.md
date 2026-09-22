@@ -1,3 +1,10 @@
+## 0.21.4
+
+- Aligned the Shaman totem and weapon/shield cells to the same 38-pixel size and top edge.
+- Centered the helper icon on the same horizontal axis as the square cells and separators.
+
+Use `/reload` after updating. The element, upkeep, helper, and lock groups now share a consistent vertical rhythm inside the 56-pixel bar.
+
 ## 0.21.3
 
 - Replaced the Shaman bar's navy background and blue separators with a neutral dark surface so blue is no longer the only prominent visual.
