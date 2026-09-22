@@ -88,6 +88,12 @@ local host=named.ForeverClassmateShamanFrame
 local indicator=named.ForeverClassmateShamanIndicator
 check(host and host.width==426 and host.height==56 and host.shown,'rendered native-width shaman bar created')
 check(indicator and indicator.scripts.OnUpdate~=nil,'enabled info polls for live timers')
+for _,cell in ipairs(indicator.totemCells) do
+    check(cell.button.shown and cell.icon.texture==cell.info.fallback and cell.badge.text==cell.info.label,'inactive element placeholder remains visible')
+end
+GetTotemInfo=function() return nil end;indicator.Update()
+for _,cell in ipairs(indicator.totemCells) do check(cell.button.shown,'unavailable element state does not leave a blank reserved group') end
+GetTotemInfo=function() return false,'',0,0,0 end;indicator.Update()
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')
 local slash=SlashCmdList.FOREVERUTILITIES

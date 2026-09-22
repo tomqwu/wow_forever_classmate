@@ -64,13 +64,16 @@ local function CreateIndicator(host,db)
     for i,info in ipairs(elementInfo) do
         local cell=MakeCell(34);cell.info=info;totemCells[i]=cell
         cell.button:SetScript('OnEnter',function(self)
-            if not GameTooltip or not cell.state then return end
-            GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(cell.state.active and cell.state.name or (info.label..' element: no active totem'))
+            if not GameTooltip then return end
+            GameTooltip:SetOwner(self,'ANCHOR_TOP')
+            if cell.state==nil then GameTooltip:SetText(info.label..' element: status unavailable')
+            else GameTooltip:SetText(cell.state.active and cell.state.name or (info.label..' element: no active totem')) end
             if info.slot==1 and Shaman.spells and Shaman.spells.fireNova then GameTooltip:AddLine('Fire Nova requires an active Fire totem.',1,0.75,0.35) end
             GameTooltip:Show()
         end)
         cell.button:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
     end
+    frame.totemCells=totemCells
     local weapon=MakeCell(38);local shield=MakeCell(38)
     weapon.badge:SetText('W');shield.badge:SetText('S')
     local helperIcon=frame:CreateTexture(nil,'ARTWORK');helperIcon:SetSize(28,28)
@@ -166,14 +169,16 @@ local function CreateIndicator(host,db)
         local activeTotems=0
         for i,cell in ipairs(totemCells) do
             local state=Context.Totem(cell.info.slot);cell.state=state
-            cell.button:SetShown(db.showTotems~=false and state~=nil)
+            cell.button:SetShown(db.showTotems~=false)
             if state and state.active then
                 activeTotems=activeTotems+1;cell.icon:SetTexture(state.icon or cell.info.fallback);cell.icon:SetVertexColor(1,1,1,1)
                 cell.border:SetColorTexture(unpack(cell.info.color));cell.timer:SetText(Context.FormatTime(state.left) or '')
                 cell.badge:SetText(cell.info.label)
-            elseif state then
+            else
                 cell.icon:SetTexture(cell.info.fallback);cell.icon:SetVertexColor(0.25,0.25,0.28,1)
-                cell.border:SetColorTexture(0.18,0.23,0.3,0.8);cell.timer:SetText('');cell.badge:SetText(cell.info.label)
+                if state==nil then cell.icon:SetVertexColor(0.14,0.14,0.16,1);cell.border:SetColorTexture(0.12,0.15,0.2,0.7)
+                else cell.border:SetColorTexture(0.18,0.23,0.3,0.8) end
+                cell.timer:SetText('');cell.badge:SetText(cell.info.label)
             end
         end
         local imbue=Context.WeaponImbue();weapon.state=imbue

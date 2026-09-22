@@ -1,3 +1,10 @@
+## 0.21.2
+
+- Kept all four Shaman element cells visible as dim placeholders when no totem is active or Forever withholds the current slot state.
+- Removed the large empty reserved area at the left of the Shaman bar while preserving honest unavailable-state handling and active totem timers.
+
+Use `/reload` after updating. The placeholders identify Earth, Fire, Water, and Air without claiming an unreadable totem state is missing.
+
 ## 0.21.1
 
 - Corrected every class bar to the 426-pixel rendered width of Forever's default desktop Main Hand swing timer.
