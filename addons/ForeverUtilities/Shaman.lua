@@ -74,7 +74,7 @@ local function CreateIndicator(host,db)
             if not GameTooltip then return end
             GameTooltip:SetOwner(self,'ANCHOR_TOP')
             if cell.state==nil then GameTooltip:SetText(info.label..' element: status unavailable')
-            else GameTooltip:SetText(cell.state.active and cell.state.name or (info.label..' element: no active totem')) end
+            else GameTooltip:SetText(cell.state.active and (cell.state.name~='' and cell.state.name or (info.label..' totem active')) or (info.label..' element: no active totem')) end
             if info.slot==1 and Shaman.spells and Shaman.spells.fireNova then GameTooltip:AddLine('Fire Nova requires an active Fire totem.',1,0.75,0.35) end
             GameTooltip:Show()
         end)

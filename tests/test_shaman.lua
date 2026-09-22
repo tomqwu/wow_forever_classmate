@@ -19,8 +19,24 @@ GetTotemTimeLeft=function(slot) return slot==2 and 20 or 0 end
 local totem=C.Totem(2)
 check(totem.active and totem.name=='Strength of Earth' and totem.icon==111 and totem.left==20,'active totem fields')
 check(C.Totem(1).active==false,'empty totem slot')
+GetTotemInfo=function(slot)
+    if slot==2 then return false,'Earthbind Totem',90,30,111 end
+    return true,'',0,0,0
+end
+check(C.Totem(2).active and C.Totem(2).name=='Earthbind Totem','active totem name wins when reagent flag is false')
+check(C.Totem(1).active==false,'reagent flag alone does not mark an empty slot active')
+GetTotemInfo=function(slot)
+    if slot==2 then return false,'',90,30,111 end
+    return false,'',0,0,0
+end
+check(C.Totem(2).active and C.Totem(2).left==20,'positive time remaining identifies a totem without a readable name')
+GetTotemInfo=function(slot)
+    if slot==2 then return true,'Strength of Earth',90,30,111 end
+    return false,'',0,0,0
+end
 GetTotemTimeLeft=nil;totem=C.Totem(2);check(totem.left==20,'totem time fallback')
 GetTotemInfo=function() return secret end;check(C.Totem(1)==nil,'secret totem state hidden')
+GetTotemInfo=function() return false,secret,0,0,0 end;check(C.Totem(1)==nil,'secret totem name does not imply an empty slot')
 GetTotemInfo=function() error('restricted') end;check(C.Totem(1)==nil,'failed totem API hidden')
 local itemID=700
 GetInventoryItemID=function() return itemID end

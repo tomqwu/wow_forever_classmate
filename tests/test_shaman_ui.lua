@@ -102,7 +102,7 @@ for _,cell in ipairs(indicator.totemCells) do
 end
 GetTotemInfo=function() return nil end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 for _,cell in ipairs(indicator.totemCells) do check(cell.button.shown and cell.placeholder.shown,'unavailable element state does not leave a blank reserved group') end
-GetTotemInfo=function(slot) if slot==2 then return true,'Strength of Earth',90,30,777 end return false,'',0,0,0 end
+GetTotemInfo=function(slot) if slot==2 then return false,'Earthbind Totem',90,30,777 end return false,'',0,0,0 end
 GetTotemTimeLeft=function(slot) return slot==2 and 20 or 0 end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 local earth=indicator.totemCells[1]
 check(not earth.placeholder.shown and earth.icon.shown and earth.badge.text=='E' and earth.icon.texture==777 and earth.timer.text=='20s','active totem replaces marker with live icon and timer')

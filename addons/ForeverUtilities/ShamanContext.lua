@@ -21,15 +21,23 @@ end
 function Context.Totem(slot)
     if type(GetTotemInfo)~='function' then return nil end
     local ok,have,name,start,duration,icon=pcall(GetTotemInfo,slot)
-    if not ok or not Core.IsReadable(have) or type(have)~='boolean' then return nil end
-    if not have then return {active=false,slot=slot} end
-    for _,value in ipairs({name,start,duration,icon}) do if not Core.IsReadable(value) then return nil end end
+    if not ok then return nil end
     local left=Call(GetTotemTimeLeft,slot)
+    local readableName=Core.IsReadable(name) and type(name)=='string'
+    local active=(readableName and name~='') or (Core.IsNumber(left) and left>0)
+    if not active then
+        -- The first return value can mean the elemental reagent is owned,
+        -- rather than that a summoned totem currently occupies this slot.
+        if Core.IsReadable(have) and type(have)=='boolean' and readableName and name=='' then
+            return {active=false,slot=slot}
+        end
+        return nil
+    end
     if not Core.IsNumber(left) and Core.IsNumber(start) and Core.IsNumber(duration) then
         local now=Call(GetTime)
         if Core.IsNumber(now) then left=math.max(0,start+duration-now) end
     end
-    return {active=true,slot=slot,name=type(name)=='string' and name or '',icon=Core.IsNumber(icon) and icon or nil,
+    return {active=true,slot=slot,name=readableName and name or '',icon=Core.IsNumber(icon) and icon or nil,
         start=Core.IsNumber(start) and start or nil,duration=Core.IsNumber(duration) and duration or nil,
         left=Core.IsNumber(left) and math.max(0,left) or nil}
 end

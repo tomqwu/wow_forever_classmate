@@ -28,7 +28,7 @@ The extracted Forever 1.60 UI source documents and uses:
 - `C_SpellBook` and `C_Spell` for learned-spell discovery, names, and icons.
 - `UnitPower` and `UnitPowerMax` for mana only when both values are readable.
 
-Totem order follows the Blizzard Shaman priority: Earth, Fire, Water, Air. The addon never infers missing state from a secret or failed scan. Numeric timers appear only from readable API durations. Inactive class modules create no frames and perform no polling; disabling all Shaman information switches also stops its timer polling.
+Totem order follows the Blizzard Shaman priority: Earth, Fire, Water, Air. `GetTotemInfo`'s first value can represent elemental reagent ownership, so the addon identifies a summoned totem from a readable name or positive time remaining instead. It never infers missing state from a secret or failed scan. Numeric timers appear only from readable API durations. Inactive class modules create no frames and perform no polling; disabling all Shaman information switches also stops its timer polling.
 
 ## Bar blocks
 

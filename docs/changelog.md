@@ -1,3 +1,10 @@
+## 0.21.7
+
+- Detect active Shaman totems from their reported name or remaining time, including cases where Forever reports the first `GetTotemInfo` value as false.
+- Keep empty and unreadable totem slots distinct so an Earthbind Totem can light the Earth cell and count toward the totem total when the client provides readable evidence.
+
+Use `/reload` after updating.
+
 ## 0.21.6
 
 - Replaced solid-colored Shaman totem, weapon-imbue, and shield tiles with dark cells and narrow status-colored stripes.
