@@ -1,9 +1,11 @@
 local _, NS = ...
 local Core = {}
 NS.Core = Core
-NS.Version = '0.21.0'
+NS.Version = '0.21.1'
 NS.Classes = {}
-NS.ClassBarWidth = 213
+-- Forever stores the desktop swing-timer preset width as an offset from the
+-- 213px slider minimum. The preset value 213 therefore renders as 426px.
+NS.ClassBarWidth = 426
 NS.ClassBarHeight = 56
 
 function Core.IsReadable(value)

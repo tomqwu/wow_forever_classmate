@@ -62,7 +62,7 @@ slash('');local panel=named.ForeverHunterFriendOptions
 check(panel and panel.shown and rawget(panel,'rows')==nil,'single hunter settings panel')
 panel.enabled:SetChecked(true);panel.enabled.scripts.OnClick(panel.enabled)
 check(db.enabled and NS.Hunter.instance,'settings enable bar')
-check(named.ForeverUtilitiesDistanceFrame.width==213,'hunter host matches native swing-bar width')
+check(named.ForeverUtilitiesDistanceFrame.width==426,'hunter host matches rendered native swing-bar width')
 slash('scale 1.5');check(db.scale==1.5,'scale command')
 slash('scale 9');check(db.scale==1.5,'invalid scale rejected')
 slash('off');check(not db.enabled and not named.ForeverUtilitiesDistanceFrame.shown,'disable hides bar')

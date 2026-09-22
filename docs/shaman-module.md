@@ -32,12 +32,13 @@ Totem order follows the Blizzard Shaman priority: Earth, Fire, Water, Air. The a
 
 ## Bar blocks
 
-The bar uses Forever's 213-pixel default desktop swing-bar width and remains 56 pixels high before scale:
+The bar uses Forever's 426-pixel rendered desktop swing-bar width and remains 56 pixels high before scale:
 
 | Block | Contents |
 | --- | --- |
-| Top row | Four 25px element cells, followed by compact main-hand imbue and elemental-shield cells |
-| Bottom row | Maelstrom, Flame Shock/Lava Burst, Riptide, or recall cue; mana at the right |
+| Totems | Four 34px element cells with readable timers |
+| Upkeep | Main-hand imbue and elemental-shield cells |
+| Helper | Maelstrom, Flame Shock/Lava Burst, Riptide, or recall cue; mana below |
 | Control | Shared lock toggle |
 
 Preference changes reclaim unused space; transient combat states never resize the outer bar. Combat restores full opacity, an out-of-combat target uses 60%, and idle uses 20%.

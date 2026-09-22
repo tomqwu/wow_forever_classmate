@@ -7,7 +7,7 @@ for mask=0,255 do
     local function on(bit) return math.floor(mask/2^bit)%2==1 end
     local db={showRange=on(0),petGuide=on(7),petHappinessWarning=on(6),aspectWarning=on(5),showAngle=on(1),markWarning=on(2),showTargetTarget=on(3),showLockButton=on(4)}
     local l=NS.Layout.Compute(db)
-    check(l.width==213 and l.height==56,'native-width footprint')
+    check(l.width==426 and l.height==56,'rendered native swing-width footprint')
     local last=l.range.x+l.range.width
     for _,key in ipairs({'combat','pet','control'}) do
         if l[key] then
@@ -15,13 +15,13 @@ for mask=0,255 do
             last=l[key].x+l[key].width
         end
     end
-    check(last<=213 and l.text.width>=76,'bounds and minimum text width')
+    check(last<=426 and l.text.width>=196,'bounds and minimum text width')
     check(l.text.x+l.text.width<=l.range.x+l.range.width,'text stays in range block')
 end
 local full=NS.Layout.Compute({})
 local minimal=NS.Layout.Compute({petGuide=false,petHappinessWarning=false,showAngle=false,markWarning=false,aspectWarning=false,showTargetTarget=false,showLockButton=false})
 local guideOnly=NS.Layout.Compute({petGuide=true,petHappinessWarning=false,showTargetTarget=false})
-check(guideOnly.pet and guideOnly.pet.width==38,'pet guide reserves its compact slot without portrait or mood')
+check(guideOnly.pet and guideOnly.pet.width==48,'pet guide reserves its visual slot without portrait or mood')
 check(minimal.text.width>full.text.width,'hidden blocks return text space')
 local rows=NS.Layout.Rows(true)
 check(-rows.range.y+rows.range.height<=-rows.intel.y,'range ends before intel')

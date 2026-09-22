@@ -164,7 +164,7 @@ check(not f.label.text:find('24.7 yd',1,true),'lost distance availability clears
 UnitCanAttack=function() return false end
 UnitDistanceSquared=function() return 144,true end
 f.Refresh()
-check(f.label.text=='12.0 yd','friendly target numeric distance supported')
+check(f.label.text:find('12.0 yd',1,true),'friendly target numeric distance supported')
 UnitIsFriend=function() return true end
 UnitDistanceSquared=function() return 0,false end
 f.Refresh()

@@ -87,11 +87,11 @@ local configs={
 
 local function MakeCell(frame,x,width)
     local cell=CreateFrame('Button',nil,frame);cell:SetSize(width,48);cell:SetPoint('TOPLEFT',frame,'TOPLEFT',x,-4)
-    local icon=cell:CreateTexture(nil,'ARTWORK');icon:SetSize(22,22);icon:SetPoint('TOP',cell,'TOP',0,-1)
-    local top=cell:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');top:SetPoint('TOPLEFT',cell,'TOPLEFT',1,-25)
-    top:SetWidth(width-2);top:SetJustifyH('CENTER');top:SetWordWrap(false);top:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',8,'OUTLINE')
-    local bottom=cell:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');bottom:SetPoint('TOPLEFT',cell,'TOPLEFT',1,-37)
-    bottom:SetWidth(width-2);bottom:SetJustifyH('CENTER');bottom:SetWordWrap(false);bottom:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',8,'OUTLINE')
+    local icon=cell:CreateTexture(nil,'ARTWORK');icon:SetSize(24,24);icon:SetPoint('LEFT',cell,'LEFT',3,0)
+    local top=cell:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');top:SetPoint('TOPLEFT',cell,'TOPLEFT',31,-8)
+    top:SetWidth(width-34);top:SetJustifyH('LEFT');top:SetWordWrap(false);top:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',10,'OUTLINE')
+    local bottom=cell:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');bottom:SetPoint('TOPLEFT',cell,'TOPLEFT',31,-26)
+    bottom:SetWidth(width-34);bottom:SetJustifyH('LEFT');bottom:SetWordWrap(false);bottom:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',9,'OUTLINE')
     local line=frame:CreateTexture(nil,'ARTWORK');line:SetSize(1,36);line:SetPoint('RIGHT',cell,'RIGHT',0,0);line:SetColorTexture(0.6,0.7,0.85,0.18)
     cell.icon,cell.top,cell.bottom,cell.line=icon,top,bottom,line
     return cell
@@ -106,8 +106,8 @@ local function CreateIndicator(module,config,host,db)
     local frame=CreateFrame('Frame',module.indicatorName,host);frame:SetSize(NS.ClassBarWidth,NS.ClassBarHeight);frame:SetPoint('TOPLEFT',host,'TOPLEFT',0,0)
     local background=frame:CreateTexture(nil,'BACKGROUND');background:SetAllPoints(frame);background:SetColorTexture(0.012,0.02,0.035,0.94)
     local accent=frame:CreateTexture(nil,'ARTWORK');accent:SetPoint('TOPLEFT');accent:SetPoint('BOTTOMLEFT');accent:SetWidth(4);accent:SetColorTexture(unpack(config.color))
-    local resource=MakeCell(frame,5,34);local upkeep=MakeCell(frame,39,34);local target=MakeCell(frame,73,38)
-    local ability=MakeCell(frame,111,38);local racial=MakeCell(frame,149,38)
+    local resource=MakeCell(frame,7,75);local upkeep=MakeCell(frame,82,80);local target=MakeCell(frame,162,80)
+    local ability=MakeCell(frame,242,80);local racial=MakeCell(frame,322,76)
     frame.cells={resource=resource,upkeep=upkeep,target=target,ability=ability,racial=racial}
     local lastStatus='Not checked';local elapsed=0;local active=false
 

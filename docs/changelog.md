@@ -1,3 +1,12 @@
+## 0.21.1
+
+- Corrected every class bar to the 426-pixel rendered width of Forever's default desktop Main Hand swing timer.
+- Fixed the Edit Mode interpretation: the stored desktop width value `213` is an offset added to the 213-pixel slider minimum, rather than the final frame width.
+- Restored readable Hunter icons and text, full-size Shaman totem/upkeep groups, and five evenly distributed standard-class blocks across the corrected footprint.
+- Preserved every feature toggle, position, scale, lock state, combat fade, and disabled polling behavior.
+
+Use `/reload` after updating. Automated checks validate the 426 × 56 footprint and block bounds; final visual validation remains in the live Forever client.
+
 ## 0.21.0
 
 - Matched every class bar to Forever's 213-pixel default desktop swing-timer width while retaining the existing 56-pixel readable height.
@@ -6,7 +15,7 @@
 - Replaced the seven standard-class text blocks with five stable icon/status slots for resource, upkeep, target effect, learned ability, and racial state. Full names and exact details remain in tooltips.
 - Preserved every feature toggle, movement, lock button, scale, fading, saved position, and disabled polling behavior.
 
-Use `/reload` after updating. The 213-pixel width comes from Forever's current desktop Edit Mode swing-timer preset; the separate gamepad preset is narrower.
+Use `/reload` after updating. This release interpreted the stored Edit Mode width as the final frame width; version 0.21.1 corrects that conversion.
 
 ## 0.20.1
 

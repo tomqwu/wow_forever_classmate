@@ -64,12 +64,12 @@ distance; enemy numeric readings are not guaranteed. Clear stale values promptly
 
 Core.lua owns the class registry; ClassHost.lua owns shared movement, lock, scale, and position; UI.lua selects the active module and exposes `/fclassmate`, `/futils`, and `/f<class>`. Only the matching class may create a bar or poll.
 
-Distance.lua owns Hunter defaults, migration, and lazy creation. `ForeverUtilitiesDB.hunter` migrates once from `modules.distance` or legacy flat settings. Ammo stays below the white range text in the 213 × 56 Hunter layout.
+Distance.lua owns Hunter defaults, migration, and lazy creation. `ForeverUtilitiesDB.hunter` migrates once from `modules.distance` or legacy flat settings. Ammo stays below the white range text in the 426 × 56 Hunter layout.
 
-ShamanContext.lua owns secret-safe totem, temporary-enchant, aura, and mana reads. Shaman.lua owns spellbook discovery, defaults, event lifecycle, and its fixed 213 × 56 two-row layout. `ForeverUtilitiesDB.shaman` is independent. Track Earth/Fire/Water/Air totems, main-hand imbue, an elemental shield, mana, recall, and the learned Maelstrom/Lava Burst/Riptide cue. Never turn these cues into automated actions or unverified rotation claims.
+ShamanContext.lua owns secret-safe totem, temporary-enchant, aura, and mana reads. Shaman.lua owns spellbook discovery, defaults, event lifecycle, and its fixed 426 × 56 grouped layout. `ForeverUtilitiesDB.shaman` is independent. Track Earth/Fire/Water/Air totems, main-hand imbue, an elemental shield, mana, recall, and the learned Maelstrom/Lava Burst/Riptide cue. Never turn these cues into automated actions or unverified rotation claims.
 
 ClassContext.lua and StandardClasses.lua own the Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock runtime. Each class has an independent database and a fixed resource, upkeep, target/ability, and active-racial block. Spellbook discovery controls class and racial availability. Preserve “Context” for learned abilities that the client reports unusable, keep Priest racial spells ahead of base racials, and never infer why an ability is unavailable.
 
 ## Bar layout
 
-Layout.lua owns Hunter visual block allocation inside its fixed 213 × 56 bar. Shaman.lua owns the Shaman two-row allocation, and StandardClasses.lua owns the five fixed standard icon slots in the same outer footprint. Keep range/ammo, combat reminders, pet portrait, and control separate. Blocks do not shift with transient warning state; only feature preferences redistribute width. See docs/bar-layout.md before adding information.
+Layout.lua owns Hunter visual block allocation inside its fixed 426 × 56 bar. Shaman.lua owns the Shaman grouped allocation, and StandardClasses.lua owns the five fixed standard slots in the same outer footprint. The 426-pixel width is the rendered result of Forever's default desktop swing-timer preset: stored width offset 213 plus slider minimum 213. Keep range/ammo, combat reminders, pet portrait, and control separate. Blocks do not shift with transient warning state; only feature preferences redistribute width. See docs/bar-layout.md before adding information.

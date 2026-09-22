@@ -92,10 +92,10 @@ check(NS.Paladin.db.x==77 and NS.Paladin.db.y==-88 and NS.Paladin.db.scale==1.1 
 check(ForeverUtilitiesDB.warrior and ForeverUtilitiesDB.rogue and ForeverUtilitiesDB.druid and ForeverUtilitiesDB.mage and ForeverUtilitiesDB.priest and ForeverUtilitiesDB.warlock,'independent class databases initialized')
 check(NS.Paladin.spells.sealRighteousness and NS.Paladin.spells.judgementCrusader and NS.Paladin.spells.holyStrike and NS.Paladin.spells.willToSurvive,'class and racial spells discovered')
 local host=named.ForeverClassmatePaladinFrame;local indicator=named.ForeverClassmatePaladinIndicator
-check(host and host.width==213 and host.height==56 and host.shown,'standard class bar matches native swing-bar width')
+check(host and host.width==426 and host.height==56 and host.shown,'standard class bar matches rendered native swing-bar width')
 check(indicator and indicator.scripts.OnUpdate~=nil,'enabled helper polls live state')
-check(indicator.cells.resource.icon.width==22 and indicator.cells.resource.top.width==32,'compact icon slots fit the native-width bar')
-check(indicator.cells.racial.x+indicator.cells.racial.width==187,'all five class slots end before the lock control')
+check(indicator.cells.resource.icon.width==24 and indicator.cells.resource.top.width==41,'readable icon slots fit the native-width bar')
+check(indicator.cells.racial.x+indicator.cells.racial.width==398,'all five class slots end before the lock control')
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')
 NS.Paladin.SetEnabled(false);check(not host.shown and indicator.scripts.OnUpdate==nil,'disable hides helper and stops polling')

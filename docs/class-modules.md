@@ -1,10 +1,10 @@
 # Standard class modules
 
-Version 0.21.0 supports Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock alongside the existing Hunter and Shaman companions. The standard modules share `ClassContext.lua` and `StandardClasses.lua`, but each has an independent `ForeverUtilitiesDB.<class>` table and command.
+Version 0.21.1 supports Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock alongside the existing Hunter and Shaman companions. The standard modules share `ClassContext.lua` and `StandardClasses.lua`, but each has an independent `ForeverUtilitiesDB.<class>` table and command.
 
 ## Display model
 
-Each standard class uses five compact icon slots inside a 213 × 56 footprint matching Forever's default desktop swing-bar width:
+Each standard class uses five readable icon slots inside a 426 × 56 footprint matching Forever's rendered default desktop swing-bar width:
 
 1. **Resource:** power percentage plus a compact form, combo-point, health, or Soul Shard badge; hover shows exact values and names.
 2. **Upkeep:** independently evaluated buff families, Rogue weapon coatings and finisher buffs, or Warlock armor and demon presence.
