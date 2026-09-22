@@ -1,4 +1,6 @@
 local NS={}
+local secret={}
+issecretvalue=function(value) return rawequal(value,secret) end
 local root='addons/ForeverUtilities/'
 local frames,named={},{}
 local methods={}
@@ -48,7 +50,8 @@ UnitAffectingCombat=function() return false end
 UnitIsDead=function() return false end
 UnitPower=function() return 80 end
 UnitPowerMax=function() return 100 end
-GetTime=function() return 100 end
+local now=100
+GetTime=function() return now end
 GetTotemInfo=function() return false,'',0,0,0 end
 GetTotemTimeLeft=function() return 0 end
 GetInventoryItemID=function() return nil end
@@ -58,6 +61,7 @@ local book={
     [1]={spellID=1001,name='Maelstrom Weapon',iconID=501},
     [2]={spellID=1002,name='Windfury Weapon',iconID=502},
     [3]={spellID=1003,name='Lightning Shield',iconID=503},
+    [4]={spellID=1004,name='Stoneclaw Totem',iconID=504},
 }
 C_Spell={GetSpellInfo=function(value)
     if type(value)=='number' then local item=book[value-1000];return item and {name=item.name,iconID=item.iconID} end
@@ -65,7 +69,7 @@ C_Spell={GetSpellInfo=function(value)
 end}
 C_SpellBook={
     GetNumSpellBookSkillLines=function() return 1 end,
-    GetSpellBookSkillLineInfo=function() return {itemIndexOffset=0,numSpellBookItems=3} end,
+    GetSpellBookSkillLineInfo=function() return {itemIndexOffset=0,numSpellBookItems=4} end,
     GetSpellBookItemInfo=function(slot) local item=book[slot];return {spellID=item.spellID,isPassive=false,isOffSpec=false} end,
     IsSpellKnown=function() return true end,
 }
@@ -117,6 +121,19 @@ check(indicator.helperText.text=='Recall 1 totem' and indicator.helperText:GetSt
 indicator.helperText.measureFactor=1;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 check(indicator.helperText.text=='Recall 1' and indicator.helperText:GetStringWidth()<=indicator.helperText.width,'recall hint shortens when the full label will not fit')
 indicator.helperText.measureFactor=nil
+GetTotemInfo=function() return secret,secret,secret,secret,secret end;GetTotemTimeLeft=function() return secret end
+UnitAffectingCombat=function() return true end
+now=105;indicator.scripts.OnEvent(indicator,'PLAYER_REGEN_DISABLED')
+check(earth.state.cached and earth.timer.text=='15s' and earth.icon.shown and indicator.helperText.text~='Recall 1 totem','readable precombat totem counts down through secret combat reads')
+now=125;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
+check(not earth.state or not earth.state.active,'totem update clears expired cached state')
+now=130;indicator.scripts.OnEvent(indicator,'UNIT_SPELLCAST_SUCCEEDED','player','cast-guid',1004)
+check(earth.state.castObserved and earth.state.name=='Stoneclaw Totem' and earth.timer.text=='' and indicator.Status():find('Totems 1/4',1,true),'player totem cast appears and counts in combat without an invented timer')
+indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
+check(earth.state.castObserved,'placement update preserves a matching recent cast')
+now=135;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
+check(earth.state==nil,'later totem removal event clears combat cast')
+UnitAffectingCombat=function() return false end
 GetTotemInfo=function() return false,'',0,0,0 end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')

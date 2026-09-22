@@ -1,3 +1,11 @@
+## 0.21.10
+
+- Keep a previously readable Shaman totem icon and countdown visible when Forever hides live slot values in combat.
+- Recognize the player's learned totem spellcasts during combat and clear observed casts on a later totem-removal event. Newly cast totems show no numeric timer until the client provides a readable one.
+- Continue avoiding the Blizzard-only combat-log event that caused the blocked-action warning.
+
+Use `/reload` after updating.
+
 ## 0.21.9
 
 - Removed combat-log event tracking after Forever blocked the addon from a Blizzard-only action.

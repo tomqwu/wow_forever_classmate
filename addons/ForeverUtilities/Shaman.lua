@@ -7,6 +7,16 @@ local Shaman={
     panelName='ForeverClassmateShamanOptions',minimapName='ForeverClassmateShamanMinimap',
 }
 NS.Shaman=Shaman
+local totemCatalog={
+    ['Earthbind Totem']=2,['Stoneskin Totem']=2,['Stoneclaw Totem']=2,['Strength of Earth Totem']=2,
+    ['Tremor Totem']=2,['Earth Elemental Totem']=2,
+    ['Searing Totem']=1,['Magma Totem']=1,['Flametongue Totem']=1,['Frost Resistance Totem']=1,
+    ['Fire Elemental Totem']=1,['Fire Nova Totem']=1,
+    ['Healing Stream Totem']=3,['Mana Spring Totem']=3,['Mana Tide Totem']=3,
+    ['Disease Cleansing Totem']=3,['Poison Cleansing Totem']=3,['Fire Resistance Totem']=3,
+    ['Windfury Totem']=4,['Grace of Air Totem']=4,['Grounding Totem']=4,
+    ['Nature Resistance Totem']=4,['Sentry Totem']=4,['Windwall Totem']=4,['Tranquil Air Totem']=4,
+}
 
 local function Normalize(db)
     for key,default in pairs({x=0,y=-210,scale=1,minimapAngle=35}) do
@@ -75,6 +85,8 @@ local function CreateIndicator(host,db)
             GameTooltip:SetOwner(self,'ANCHOR_TOP')
             if cell.state==nil then GameTooltip:SetText(info.label..' element: status unavailable')
             else GameTooltip:SetText(cell.state.active and (cell.state.name~='' and cell.state.name or (info.label..' totem active')) or (info.label..' element: no active totem')) end
+            if cell.state and cell.state.cached then GameTooltip:AddLine('Last readable state; live combat data unavailable.',0.75,0.85,1) end
+            if cell.state and cell.state.castObserved then GameTooltip:AddLine('Cast observed; timer unavailable.',0.75,0.85,1) end
             if info.slot==1 and Shaman.spells and Shaman.spells.fireNova then GameTooltip:AddLine('Fire Nova requires an active Fire totem.',1,0.75,0.35) end
             GameTooltip:Show()
         end)
@@ -88,7 +100,8 @@ local function CreateIndicator(host,db)
     helperText:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',12,'OUTLINE');helperText:SetJustifyH('LEFT');helperText:SetWordWrap(false)
     local manaText=frame:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall')
     manaText:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',11,'OUTLINE');manaText:SetJustifyH('LEFT')
-    local shieldNames,imbueNames={},{}
+    local shieldNames,imbueNames,totemBySpellID={},{},{}
+    local totemCache,recentCast={},{}
     local lastStatus='Not checked'
     frame.weaponCell=weapon;frame.shieldCell=shield;frame.helperIcon=helperIcon;frame.helperText=helperText
 
@@ -100,7 +113,15 @@ local function CreateIndicator(host,db)
         frostbrand={'Frostbrand Weapon','imbue'},windfury={'Windfury Weapon','imbue'},
     }
     local function Discover()
-        Shaman.spells={};shieldNames={};imbueNames={}
+        Shaman.spells={};shieldNames={};imbueNames={};totemBySpellID={}
+        local totemNames={}
+        for english,slot in pairs(totemCatalog) do
+            totemNames[english]=slot
+            local data=Core.Call(C_Spell and C_Spell.GetSpellInfo,english)
+            if type(data)=='table' and Core.IsReadable(data.name) and type(data.name)=='string' then
+                totemNames[data.name]=slot
+            end
+        end
         if not C_SpellBook or not C_Spell or not Enum or not Enum.SpellBookSpellBank then return end
         local wanted={}
         for key,entry in pairs(catalog) do
@@ -121,6 +142,9 @@ local function CreateIndicator(host,db)
                         and not item.isPassive and not item.isOffSpec and Core.Call(C_SpellBook.IsSpellKnown,id)==true then
                         seen[id]=true
                         local data=Core.Call(C_Spell.GetSpellInfo,id)
+                        if type(data)=='table' and Core.IsReadable(data.name) and type(data.name)=='string' and totemNames[data.name] then
+                            totemBySpellID[id]={slot=totemNames[data.name],name=data.name,icon=Core.IsNumber(data.iconID) and data.iconID or nil}
+                        end
                         local match=type(data)=='table' and Core.IsReadable(data.name) and wanted[data.name]
                         if match then
                             local spell={id=id,name=data.name,icon=Core.IsNumber(data.iconID) and data.iconID or nil,slot=slot}
@@ -177,7 +201,31 @@ local function CreateIndicator(host,db)
     local function Update()
         local activeTotems,unknownTotems=0,0
         for i,cell in ipairs(totemCells) do
-            local state=Context.Totem(cell.info.slot);cell.state=state
+            local slot=cell.info.slot
+            local state=Context.Totem(slot)
+            if state and state.active then
+                local saved=totemCache[slot]
+                if saved and saved.name==state.name and not Core.IsNumber(state.left)
+                    and Core.IsNumber(saved.start) and Core.IsNumber(saved.duration) then
+                    local now=Core.Call(GetTime)
+                    if Core.IsNumber(now) then
+                        state.left=math.max(0,saved.start+saved.duration-now)
+                        state.start=saved.start;state.duration=saved.duration;state.cached=true
+                    end
+                end
+                totemCache[slot]=state
+            elseif state and not state.active then totemCache[slot]=nil
+            else
+                local saved=totemCache[slot]
+                if saved and Core.IsNumber(saved.start) and Core.IsNumber(saved.duration) then
+                    local now=Core.Call(GetTime)
+                    local left=Core.IsNumber(now) and math.max(0,saved.start+saved.duration-now) or nil
+                    if left and left>0 then
+                        state={active=true,slot=slot,name=saved.name,icon=saved.icon,left=left,start=saved.start,duration=saved.duration,cached=true}
+                    elseif left then totemCache[slot]=nil end
+                elseif saved then state=saved end
+            end
+            cell.state=state
             if state==nil then unknownTotems=unknownTotems+1 end
             cell.button:SetShown(db.showTotems~=false)
             if state and state.active then
@@ -266,7 +314,7 @@ local function CreateIndicator(host,db)
     end
 
     local active=false;local elapsed=0
-    local events={'PLAYER_TOTEM_UPDATE','PLAYER_ENTERING_WORLD','PLAYER_LEAVING_WORLD','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED',
+    local events={'PLAYER_TOTEM_UPDATE','UNIT_SPELLCAST_SUCCEEDED','PLAYER_ENTERING_WORLD','PLAYER_LEAVING_WORLD','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED',
         'PLAYER_TARGET_CHANGED','PLAYER_DEAD','PLAYER_ALIVE','PLAYER_UNGHOST','SPELLS_CHANGED','PLAYER_EQUIPMENT_CHANGED','UNIT_INVENTORY_CHANGED','UNIT_AURA','UNIT_POWER_UPDATE'}
     local function NeedsPoll()
         return db.showTotems~=false or db.showWeaponImbue~=false or db.showShield~=false or db.showSpecHelper~=false or db.showMana~=false or db.totemRecallHint~=false
@@ -274,6 +322,7 @@ local function CreateIndicator(host,db)
     local function Refresh()
         frame:SetScript('OnUpdate',nil);frame:SetShown(db.enabled);Layout()
         if not db.enabled then
+            totemCache={};recentCast={}
             if active then for _,event in ipairs(events) do frame:UnregisterEvent(event) end end
             active=false;lastStatus='Shaman helper disabled';return
         end
@@ -281,12 +330,41 @@ local function CreateIndicator(host,db)
         Update();elapsed=0
         if NeedsPoll() then frame:SetScript('OnUpdate',function(_,delta) elapsed=elapsed+delta;if elapsed>=0.25 then elapsed=0;Update() end end) end
     end
-    frame:SetScript('OnEvent',function(_,event,unit)
+    frame:SetScript('OnEvent',function(_,event,unit,_,spellID)
         if not db.enabled then return end
+        if event=='UNIT_SPELLCAST_SUCCEEDED' then
+            if unit=='player' and Core.IsNumber(spellID) then
+                local totem=totemBySpellID[spellID]
+                if totem then
+                    totemCache[totem.slot]={active=true,slot=totem.slot,name=totem.name,icon=totem.icon,castObserved=true}
+                    recentCast[totem.slot]=Core.Call(GetTime)
+                    Update()
+                end
+            end
+            return
+        end
+        if event=='PLAYER_TOTEM_UPDATE' then
+            if Core.IsNumber(unit) and unit>=1 and unit<=4 then
+                local state=Context.Totem(unit)
+                local now=Core.Call(GetTime)
+                local castAt=recentCast[unit]
+                if state and state.active then totemCache[unit]=state
+                elseif not (Core.IsNumber(now) and Core.IsNumber(castAt) and now-castAt<=1) then totemCache[unit]=nil end
+            end
+            Update();return
+        end
         if event=='UNIT_AURA' and Core.IsReadable(unit) and unit~='player' and unit~='target' then return end
         if event=='UNIT_INVENTORY_CHANGED' and Core.IsReadable(unit) and unit~='player' then return end
         if event=='UNIT_POWER_UPDATE' and Core.IsReadable(unit) and unit~='player' then return end
-        if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then frame:SetScript('OnUpdate',nil);return end
+        if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then totemCache={};recentCast={};frame:SetScript('OnUpdate',nil);return end
+        if event=='PLAYER_REGEN_ENABLED' then
+            for slot,saved in pairs(totemCache) do
+                if saved.castObserved then
+                    local state=Context.Totem(slot)
+                    if state and state.active then totemCache[slot]=state else totemCache[slot]=nil end
+                end
+            end
+        end
         if event=='SPELLS_CHANGED' or event=='PLAYER_ENTERING_WORLD' then Discover() end
         if event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_ALIVE' or event=='PLAYER_UNGHOST' then Refresh() else Update() end
     end)
