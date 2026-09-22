@@ -24,7 +24,11 @@ GetTotemInfo=function(slot)
     return true,'',0,0,0
 end
 check(C.Totem(2).active and C.Totem(2).name=='Earthbind Totem','active totem name wins when reagent flag is false')
-check(C.Totem(1).active==false,'reagent flag alone does not mark an empty slot active')
+check(C.Totem(1)==nil,'reagent flag alone does not establish an active or empty slot')
+GetTotemInfo=function() return true,'',0,0,0 end
+GetTotemTimeLeft=function() return 0 end
+check(C.Totem(2)==nil,'owned reagent with empty slot data is unavailable, not confirmed empty')
+GetTotemTimeLeft=function(slot) return slot==2 and 20 or 0 end
 GetTotemInfo=function(slot)
     if slot==2 then return false,'',90,30,111 end
     return false,'',0,0,0
@@ -38,15 +42,6 @@ GetTotemTimeLeft=nil;totem=C.Totem(2);check(totem.left==20,'totem time fallback'
 GetTotemInfo=function() return secret end;check(C.Totem(1)==nil,'secret totem state hidden')
 GetTotemInfo=function() return false,secret,0,0,0 end;check(C.Totem(1)==nil,'secret totem name does not imply an empty slot')
 GetTotemInfo=function() error('restricted') end;check(C.Totem(1)==nil,'failed totem API hidden')
-C.SetTotemNames({['Stoneskin Totem']={slot=2,icon=777}})
-check(C.TrackSummon('Stoneskin Totem','totem-1',nil),'owned summon is tracked')
-check(C.TrackedTotem(2).active and C.TrackedTotem(2).icon==777 and C.TrackedTotem(2).left==nil,'tracked totem has no invented timer')
-check(not C.TrackSummon('Unknown Totem','totem-2',nil),'unclassified summons are ignored')
-check(C.TrackSummon('Stoneskin Totem','totem-2',888),'new summon replaces the same element')
-check(not C.ForgetTotem('totem-1') and C.TrackedTotem(2).guid=='totem-2','old totem death does not clear replacement')
-check(C.ForgetTotem('totem-2') and C.TrackedTotem(2)==nil,'tracked totem clears on death')
-check(C.TrackSummon('Stoneskin Totem','totem-3',nil),'totem can be tracked again')
-C.ClearTrackedTotems();check(C.TrackedTotem(2)==nil,'tracking clears on recall or world exit')
 local itemID=700
 GetInventoryItemID=function() return itemID end
 GetInventoryItemTexture=function() return 222 end

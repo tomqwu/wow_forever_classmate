@@ -1,3 +1,10 @@
+## 0.21.9
+
+- Removed combat-log event tracking after Forever blocked the addon from a Blizzard-only action.
+- When Forever reports an elemental reagent but an empty totem name and zero time, show the slot as unavailable instead of claiming zero active totems.
+
+Use `/reload` after updating. Totems that Forever does not expose through its slot API remain unknown; the bar does not guess their active state or timer.
+
 ## 0.21.8
 
 - Track your own totems from summon and removal combat-log events when Forever's totem-slot API reports an empty name and zero time for a visible totem.

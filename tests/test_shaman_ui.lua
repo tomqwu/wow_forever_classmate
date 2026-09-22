@@ -93,6 +93,7 @@ local host=named.ForeverClassmateShamanFrame
 local indicator=named.ForeverClassmateShamanIndicator
 check(host and host.width==426 and host.height==56 and host.shown,'rendered native-width shaman bar created')
 check(indicator and indicator.scripts.OnUpdate~=nil,'enabled info polls for live timers')
+check(not indicator.events.COMBAT_LOG_EVENT_UNFILTERED,'Shaman avoids Blizzard-only combat-log event registration')
 check(indicator.totemCells[1].button.width==38 and indicator.totemCells[1].button.y==-9,'totem cells use the shared square size and top edge')
 check(indicator.weaponCell.button.width==38 and indicator.weaponCell.button.y==-9 and indicator.shieldCell.button.y==-9,'totem and upkeep cells share one top edge')
 check(indicator.helperIcon.y==-14 and indicator.helperIcon.y-indicator.helperIcon.height/2==-28,'helper icon shares the cell centerline')
@@ -102,6 +103,11 @@ for _,cell in ipairs(indicator.totemCells) do
 end
 GetTotemInfo=function() return nil end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 for _,cell in ipairs(indicator.totemCells) do check(cell.button.shown and cell.placeholder.shown,'unavailable element state does not leave a blank reserved group') end
+GetTotemInfo=function(slot) if slot==2 then return true,'',0,0,0 end return false,'',0,0,0 end
+local maelstrom=NS.Shaman.spells.maelstrom;NS.Shaman.spells.maelstrom=nil
+indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
+check(indicator.totemCells[1].state==nil and indicator.helperText.text=='?/4 totems','empty Earth slot API is shown as unavailable rather than zero active')
+NS.Shaman.spells.maelstrom=maelstrom
 GetTotemInfo=function(slot) if slot==2 then return false,'Earthbind Totem',90,30,777 end return false,'',0,0,0 end
 GetTotemTimeLeft=function(slot) return slot==2 and 20 or 0 end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 local earth=indicator.totemCells[1]
@@ -111,18 +117,6 @@ check(indicator.helperText.text=='Recall 1 totem' and indicator.helperText:GetSt
 indicator.helperText.measureFactor=1;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 check(indicator.helperText.text=='Recall 1' and indicator.helperText:GetStringWidth()<=indicator.helperText.width,'recall hint shortens when the full label will not fit')
 indicator.helperText.measureFactor=nil
-GetTotemInfo=function() return true,'',0,0,0 end;GetTotemTimeLeft=function() return 0 end
-UnitGUID=function() return 'player-guid' end
-indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
-CombatLogGetCurrentEventInfo=function() return 100,'SPELL_SUMMON',false,'other-guid','Other',0,0,'other-totem','Stoneskin Totem',0,0,999,'Stoneskin Totem',0 end
-indicator.scripts.OnEvent(indicator,'COMBAT_LOG_EVENT_UNFILTERED')
-check(earth.state.active==false,'other players totems are not tracked')
-CombatLogGetCurrentEventInfo=function() return 100,'SPELL_SUMMON',false,'player-guid','Oh Bruh',0,0,'totem-guid','Stoneskin Totem',0,0,999,'Stoneskin Totem',0 end
-indicator.scripts.OnEvent(indicator,'COMBAT_LOG_EVENT_UNFILTERED')
-check(earth.state.tracked and earth.icon.shown and earth.timer.text=='' and indicator.helperText.text=='Recall 1 totem','summon fallback counts own totem without fabricating a timer')
-CombatLogGetCurrentEventInfo=function() return 110,'UNIT_DIED',false,nil,nil,0,0,'totem-guid','Stoneskin Totem',0,0 end
-indicator.scripts.OnEvent(indicator,'COMBAT_LOG_EVENT_UNFILTERED')
-check(earth.state.active==false and indicator.Status():find('Totems 0/4',1,true),'totem death clears tracked fallback')
 GetTotemInfo=function() return false,'',0,0,0 end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')

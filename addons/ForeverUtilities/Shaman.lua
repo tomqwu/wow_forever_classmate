@@ -7,17 +7,6 @@ local Shaman={
     panelName='ForeverClassmateShamanOptions',minimapName='ForeverClassmateShamanMinimap',
 }
 NS.Shaman=Shaman
-local totemCatalog={
-    ['Earthbind Totem']=2,['Stoneskin Totem']=2,['Stoneclaw Totem']=2,['Strength of Earth Totem']=2,
-    ['Tremor Totem']=2,['Earth Elemental Totem']=2,
-    ['Searing Totem']=1,['Magma Totem']=1,['Flametongue Totem']=1,['Frost Resistance Totem']=1,
-    ['Fire Elemental Totem']=1,['Fire Nova Totem']=1,
-    ['Healing Stream Totem']=3,['Mana Spring Totem']=3,['Mana Tide Totem']=3,
-    ['Disease Cleansing Totem']=3,['Poison Cleansing Totem']=3,['Fire Resistance Totem']=3,
-    ['Windfury Totem']=4,['Grace of Air Totem']=4,['Grounding Totem']=4,
-    ['Nature Resistance Totem']=4,['Sentry Totem']=4,['Windwall Totem']=4,
-    ['Tranquil Air Totem']=4,['Wrath of Air Totem']=4,
-}
 
 local function Normalize(db)
     for key,default in pairs({x=0,y=-210,scale=1,minimapAngle=35}) do
@@ -86,7 +75,6 @@ local function CreateIndicator(host,db)
             GameTooltip:SetOwner(self,'ANCHOR_TOP')
             if cell.state==nil then GameTooltip:SetText(info.label..' element: status unavailable')
             else GameTooltip:SetText(cell.state.active and (cell.state.name~='' and cell.state.name or (info.label..' totem active')) or (info.label..' element: no active totem')) end
-            if cell.state and cell.state.tracked then GameTooltip:AddLine('Tracked from your summon; timer unavailable.',0.75,0.85,1) end
             if info.slot==1 and Shaman.spells and Shaman.spells.fireNova then GameTooltip:AddLine('Fire Nova requires an active Fire totem.',1,0.75,0.35) end
             GameTooltip:Show()
         end)
@@ -100,7 +88,7 @@ local function CreateIndicator(host,db)
     helperText:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',12,'OUTLINE');helperText:SetJustifyH('LEFT');helperText:SetWordWrap(false)
     local manaText=frame:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall')
     manaText:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',11,'OUTLINE');manaText:SetJustifyH('LEFT')
-    local shieldNames,imbueNames,recallNames={},{},{['Totemic Recall']=true}
+    local shieldNames,imbueNames={},{}
     local lastStatus='Not checked'
     frame.weaponCell=weapon;frame.shieldCell=shield;frame.helperIcon=helperIcon;frame.helperText=helperText
 
@@ -113,19 +101,6 @@ local function CreateIndicator(host,db)
     }
     local function Discover()
         Shaman.spells={};shieldNames={};imbueNames={}
-        recallNames={['Totemic Recall']=true}
-        local recall=Core.Call(C_Spell and C_Spell.GetSpellInfo,'Totemic Recall')
-        if type(recall)=='table' and Core.IsReadable(recall.name) and type(recall.name)=='string' then recallNames[recall.name]=true end
-        local names={}
-        for english,slot in pairs(totemCatalog) do
-            local data=Core.Call(C_Spell and C_Spell.GetSpellInfo,english)
-            local icon=type(data)=='table' and Core.IsNumber(data.iconID) and data.iconID or nil
-            names[english]={slot=slot,icon=icon}
-            if type(data)=='table' and Core.IsReadable(data.name) and type(data.name)=='string' then
-                names[data.name]={slot=slot,icon=icon}
-            end
-        end
-        Context.SetTotemNames(names)
         if not C_SpellBook or not C_Spell or not Enum or not Enum.SpellBookSpellBank then return end
         local wanted={}
         for key,entry in pairs(catalog) do
@@ -200,11 +175,10 @@ local function CreateIndicator(host,db)
     end
 
     local function Update()
-        local activeTotems=0
+        local activeTotems,unknownTotems=0,0
         for i,cell in ipairs(totemCells) do
-            local state=Context.Totem(cell.info.slot)
-            if not state or not state.active then state=Context.TrackedTotem(cell.info.slot) or state end
-            cell.state=state
+            local state=Context.Totem(cell.info.slot);cell.state=state
+            if state==nil then unknownTotems=unknownTotems+1 end
             cell.button:SetShown(db.showTotems~=false)
             if state and state.active then
                 activeTotems=activeTotems+1;cell.icon:SetTexture(state.icon or cell.info.fallback);cell.icon:SetVertexColor(1,1,1,1);cell.icon:Show()
@@ -261,7 +235,8 @@ local function CreateIndicator(host,db)
             if type(tide)=='table' then helper='Riptide '..(Context.FormatTime(tide.left) or 'active');color={0.25,0.8,1}
             else helper='Riptide ready' end
         elseif db.showSpecHelper~=false then
-            helper=activeTotems..'/4 totems';icon='Interface\\Icons\\Spell_Nature_StoneClawTotem'
+            helper=(unknownTotems>0 and (activeTotems>0 and (activeTotems..'+/4') or '?/4') or (activeTotems..'/4'))..' totems'
+            icon='Interface\\Icons\\Spell_Nature_StoneClawTotem'
         end
         helperIcon:SetShown(helper~='');helperIcon:SetTexture(icon or 'Interface\\Icons\\Spell_Nature_Lightning')
         helperText:SetText(helper)
@@ -284,14 +259,14 @@ local function CreateIndicator(host,db)
         local mana=db.showMana~=false and Context.ManaPercent() or nil
         manaText:SetText(mana and ('Mana '..mana..'%') or '');manaText:SetShown(mana~=nil)
         frame:SetAlpha((db.fadeOutOfCombat==false or inCombat) and 1 or (hasTarget and 0.6 or 0.2))
-        lastStatus=string.format('Totems %d/4; weapon imbue %s; shield %s; helper %s; mana %s',activeTotems,
+        lastStatus=string.format('Totems %d/4 confirmed, %d unavailable; weapon imbue %s; shield %s; helper %s; mana %s',activeTotems,unknownTotems,
             imbue and (imbue.active and 'active' or (imbue.equipped and 'missing' or 'no weapon')) or 'unavailable',
             missingShield==nil and 'unavailable' or (missingShield and 'missing' or (aura and 'active' or 'inactive')),
             helper~='' and helper or 'off',mana and (mana..'%') or 'unavailable')
     end
 
     local active=false;local elapsed=0
-    local events={'PLAYER_TOTEM_UPDATE','COMBAT_LOG_EVENT_UNFILTERED','PLAYER_ENTERING_WORLD','PLAYER_LEAVING_WORLD','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED',
+    local events={'PLAYER_TOTEM_UPDATE','PLAYER_ENTERING_WORLD','PLAYER_LEAVING_WORLD','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED',
         'PLAYER_TARGET_CHANGED','PLAYER_DEAD','PLAYER_ALIVE','PLAYER_UNGHOST','SPELLS_CHANGED','PLAYER_EQUIPMENT_CHANGED','UNIT_INVENTORY_CHANGED','UNIT_AURA','UNIT_POWER_UPDATE'}
     local function NeedsPoll()
         return db.showTotems~=false or db.showWeaponImbue~=false or db.showShield~=false or db.showSpecHelper~=false or db.showMana~=false or db.totemRecallHint~=false
@@ -299,7 +274,6 @@ local function CreateIndicator(host,db)
     local function Refresh()
         frame:SetScript('OnUpdate',nil);frame:SetShown(db.enabled);Layout()
         if not db.enabled then
-            Context.ClearTrackedTotems()
             if active then for _,event in ipairs(events) do frame:UnregisterEvent(event) end end
             active=false;lastStatus='Shaman helper disabled';return
         end
@@ -307,31 +281,12 @@ local function CreateIndicator(host,db)
         Update();elapsed=0
         if NeedsPoll() then frame:SetScript('OnUpdate',function(_,delta) elapsed=elapsed+delta;if elapsed>=0.25 then elapsed=0;Update() end end) end
     end
-    local function CombatLogEvent()
-        if type(CombatLogGetCurrentEventInfo)~='function' then return end
-        local ok,_,kind,_,sourceGUID,_,_,_,destGUID,destName,_,_,spellID,spellName=pcall(CombatLogGetCurrentEventInfo)
-        if not ok or not Core.IsReadable(kind) or type(kind)~='string' then return end
-        if kind=='UNIT_DIED' or kind=='UNIT_DESTROYED' or kind=='UNIT_DISSIPATES' then
-            if Context.ForgetTotem(destGUID) then Update() end
-            return
-        end
-        local playerGUID=Core.Call(UnitGUID,'player')
-        if not Core.IsReadable(sourceGUID) or type(sourceGUID)~='string' or sourceGUID~=playerGUID then return end
-        if kind=='SPELL_SUMMON' then
-            local spell=Core.IsNumber(spellID) and Core.Call(C_Spell and C_Spell.GetSpellInfo,spellID) or nil
-            local icon=type(spell)=='table' and spell.iconID or nil
-            if Context.TrackSummon(spellName,destGUID,icon) or Context.TrackSummon(destName,destGUID,icon) then Update() end
-        elseif kind=='SPELL_CAST_SUCCESS' and Core.IsReadable(spellName) and type(spellName)=='string' and recallNames[spellName] then
-            Context.ClearTrackedTotems();Update()
-        end
-    end
     frame:SetScript('OnEvent',function(_,event,unit)
         if not db.enabled then return end
-        if event=='COMBAT_LOG_EVENT_UNFILTERED' then CombatLogEvent();return end
         if event=='UNIT_AURA' and Core.IsReadable(unit) and unit~='player' and unit~='target' then return end
         if event=='UNIT_INVENTORY_CHANGED' and Core.IsReadable(unit) and unit~='player' then return end
         if event=='UNIT_POWER_UPDATE' and Core.IsReadable(unit) and unit~='player' then return end
-        if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then Context.ClearTrackedTotems();frame:SetScript('OnUpdate',nil);return end
+        if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then frame:SetScript('OnUpdate',nil);return end
         if event=='SPELLS_CHANGED' or event=='PLAYER_ENTERING_WORLD' then Discover() end
         if event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_ALIVE' or event=='PLAYER_UNGHOST' then Refresh() else Update() end
     end)
