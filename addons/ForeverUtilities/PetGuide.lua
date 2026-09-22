@@ -90,6 +90,10 @@ function Guide.Summary(info)
     local prefix=info.special and (info.classification..' ') or ''
     return prefix..info.family.name..': '..info.family.ability
 end
+function Guide.CompactSummary(info)
+    if info.rare then return info.rare.name..': '..info.family.ability end
+    return info.family.name..': '..info.family.ability
+end
 function Guide.Create(parent)
     local badge=CreateFrame('Button',nil,parent)
     badge:SetSize(18,18);badge:EnableMouse(true);badge:Hide()
@@ -142,11 +146,11 @@ function Guide.Create(parent)
         elseif info.special or info.notable or info.rare then r,g,b=1,0.75,0.15 end
         border:SetColorTexture(r,g,b,1)
         label:SetTextColor(1,info.tooHigh and 0.4 or 0.88,info.tooHigh and 0.3 or 0.55)
-        label:SetText(Guide.Summary(info))
+        label:SetText(width<100 and Guide.CompactSummary(info) or Guide.Summary(info))
         label:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',11,'OUTLINE')
         local measured=label:GetStringWidth()
         if Core.IsNumber(measured) and measured>width then
-            label:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',math.max(9,11*width/measured),'OUTLINE')
+            label:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',math.max(8,11*width/measured),'OUTLINE')
         end
         label:Show();badge:Show();hit:Show();ShowTooltip()
     end

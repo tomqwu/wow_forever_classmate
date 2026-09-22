@@ -90,9 +90,9 @@ local db={enabled=true,locked=true}
 local moveHint=setmetatable({}, {__index=methods})
 function moveHint:SetPoint(_,_,_,_,y) self.y=y end
 local f=NS.Range.Create({hint=moveHint},db)
-check(f.label.text:find('Shooting',1,true),'discovered auto shot')
+check(f.label.text:find('~8-35 yd',1,true) and f.Status():find('Auto Shot: found',1,true),'discovered auto shot')
 distance=6;f.scripts.OnUpdate(f,0.15)
-check(f.label.text:find('Too close',1,true),'updates without swing events')
+check(f.label.text:find('~5-8 yd',1,true),'updates without swing events')
 distance=50;f.scripts.OnUpdate(f,0.15)
 check(f.label.text:find('>35 yd',1,true),'far target')
 target=false;f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
@@ -135,10 +135,10 @@ C_SpellBook.IsSpellBookItemInRange=function(slot)
 end
 distance=20
 f=NS.Range.Create({hint=moveHint},db)
-check(f.label.text:find('Shooting',1,true),'spellbook fallback classifies shooting')
+check(f.label.text:find('~8-35 yd',1,true),'spellbook fallback classifies shooting')
 check(f.Status():find('nil/nil',1,true),'diagnostics report missing native checks')
 distance=50;f.scripts.OnUpdate(f,0.15)
-check(f.label.text:find('Too far',1,true),'spellbook fallback classifies far')
+check(f.label.text:find('>35 yd',1,true),'spellbook fallback classifies far')
 -- Regression: a broad spell supplies an upper bound but Auto Shot metadata is absent.
 metadata[4]={minRange=0,maxRange=100}
 C_SpellBook.GetSpellBookSkillLineInfo=function() return {itemIndexOffset=0,numSpellBookItems=4} end
@@ -146,12 +146,12 @@ C_Spell.IsRangedAutoAttackSpell=function() return false end
 C_SwingTimer.IsTargetWithinSwingRange=function() return false end
 distance=50
 f=NS.Range.Create({hint=moveHint},db)
-check(f.label.text:find('Out of range | ~35-100 yd',1,true),'negative attack check overrides blue bracket')
+check(f.label.text:find('~35-100 yd',1,true),'negative attack check overrides blue bracket')
 check(f.textures[2].color[1]==1 and f.textures[2].color[2]==0.15,'out-of-range accent is actually red')
 check(f.textures[3].color[1]==1 and f.textures[3].color[2]==0.15,'out-of-range icon border is actually red')
 C_SwingTimer.IsTargetWithinSwingRange=function() return nil end
 f.Refresh()
-check(f.label.text:find('Distance',1,true),'unavailable attack check is not invented as false')
+check(f.label.text:find('~35-100 yd',1,true),'unavailable attack check retains the readable distance bracket')
 check(f.textures[2].color[1]==0.3 and f.textures[2].color[3]==1,'genuinely unclassified bracket remains blue')
 UnitDistanceSquared=function() return distance*distance,true end
 distance=23.4;f.Refresh()
@@ -164,7 +164,7 @@ check(not f.label.text:find('24.7 yd',1,true),'lost distance availability clears
 UnitCanAttack=function() return false end
 UnitDistanceSquared=function() return 144,true end
 f.Refresh()
-check(f.label.text=='Distance | 12.0 yd','friendly target numeric distance supported')
+check(f.label.text=='12.0 yd','friendly target numeric distance supported')
 UnitIsFriend=function() return true end
 UnitDistanceSquared=function() return 0,false end
 f.Refresh()

@@ -1,3 +1,13 @@
+## 0.21.0
+
+- Matched every class bar to Forever's 213-pixel default desktop swing-timer width while retaining the existing 56-pixel readable height.
+- Reflowed Hunter into compact range, combat, pet, and control blocks. Exact numeric yards stay visible; approximate classifications collapse to the useful range bracket when space is tight, and full pet details remain available on hover.
+- Reflowed Shaman into a top row of four totems plus weapon/shield upkeep and a bottom row for the learned class cue and mana.
+- Replaced the seven standard-class text blocks with five stable icon/status slots for resource, upkeep, target effect, learned ability, and racial state. Full names and exact details remain in tooltips.
+- Preserved every feature toggle, movement, lock button, scale, fading, saved position, and disabled polling behavior.
+
+Use `/reload` after updating. The 213-pixel width comes from Forever's current desktop Edit Mode swing-timer preset; the separate gamepad preset is narrower.
+
 ## 0.20.1
 
 - Fixed Druid startup when the current-power API is unavailable and updated form detection for the current shapeshift API signature.

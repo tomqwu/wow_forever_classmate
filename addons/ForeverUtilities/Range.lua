@@ -73,7 +73,7 @@ function Range.Measure(probes, melee, ranged, shot)
 end
 function Range.Create(host, db)
     local frame = CreateFrame('Frame', 'ForeverUtilitiesIndicator', host)
-    frame:SetSize(400,NS.TargetContext.Height(db))
+    frame:SetSize(NS.ClassBarWidth,NS.TargetContext.Height(db))
     frame:SetPoint('TOPLEFT',host,'TOPLEFT',0,0)
     -- Keep the readout legible against bright terrain and busy combat effects.
     local background = frame:CreateTexture(nil,'BACKGROUND')
@@ -84,31 +84,31 @@ function Range.Create(host, db)
     accent:SetPoint('BOTTOMLEFT',frame,'BOTTOMLEFT',0,0)
     accent:SetWidth(4)
     local iconBorder = frame:CreateTexture(nil,'ARTWORK',nil,0)
-    iconBorder:SetSize(44,44); iconBorder:SetPoint('TOPLEFT',frame,'TOPLEFT',10,-6)
+    iconBorder:SetSize(28,28); iconBorder:SetPoint('TOPLEFT',frame,'TOPLEFT',4,-14)
     local icon = frame:CreateTexture(nil,'ARTWORK',nil,1)
-    icon:SetSize(38,38); icon:SetPoint('CENTER',iconBorder,'CENTER',0,0)
+    icon:SetSize(24,24); icon:SetPoint('CENTER',iconBorder,'CENTER',0,0)
     icon:SetTexture('Interface\\Icons\\Ability_Marksmanship')
     local label = frame:CreateFontString(nil,'OVERLAY','GameFontNormalLarge')
-    label:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',16,'OUTLINE')
+    label:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',11,'OUTLINE')
     label:SetShadowColor(0,0,0,1)
     label:SetShadowOffset(1,-1)
-    label:SetPoint('TOPLEFT',frame,'TOPLEFT',66,-6)
+    label:SetPoint('TOPLEFT',frame,'TOPLEFT',34,-6)
     label:SetHeight(44)
     label:SetJustifyH('LEFT')
     label:SetWordWrap(false)
     local markName
     local aspectNames={}
     local markBorder=frame:CreateTexture(nil,'ARTWORK',nil,0)
-    markBorder:SetSize(24,24);markBorder:SetPoint('TOPLEFT',frame,'TOPLEFT',310,-27)
+    markBorder:SetSize(16,16);markBorder:SetPoint('TOPLEFT',frame,'TOPLEFT',120,-5)
     markBorder:SetColorTexture(1,0.65,0.1,1);markBorder:Hide()
     local markIcon=frame:CreateTexture(nil,'ARTWORK',nil,1)
-    markIcon:SetSize(20,20);markIcon:SetPoint('CENTER',markBorder,'CENTER',0,0)
+    markIcon:SetSize(14,14);markIcon:SetPoint('CENTER',markBorder,'CENTER',0,0)
     markIcon:SetTexture('Interface\\Icons\\Ability_Hunter_SniperShot');markIcon:Hide()
     frame.markIcon=markIcon
     local aspectBorder=frame:CreateTexture(nil,'ARTWORK',nil,0)
-    aspectBorder:SetSize(24,24);aspectBorder:SetColorTexture(1,0.65,0.1,1);aspectBorder:Hide()
+    aspectBorder:SetSize(16,16);aspectBorder:SetColorTexture(1,0.65,0.1,1);aspectBorder:Hide()
     local aspectIcon=frame:CreateTexture(nil,'ARTWORK',nil,1)
-    aspectIcon:SetSize(20,20);aspectIcon:SetPoint('CENTER',aspectBorder,'CENTER',0,0)
+    aspectIcon:SetSize(14,14);aspectIcon:SetPoint('CENTER',aspectBorder,'CENTER',0,0)
     aspectIcon:SetTexture('Interface\\Icons\\Spell_Nature_RavenForm');aspectIcon:Hide()
     frame.aspectIcon=aspectIcon
     local function UpdateAspect()
@@ -116,14 +116,14 @@ function Range.Create(host, db)
         aspectIcon:SetShown(missing);aspectBorder:SetShown(missing)
     end
     local petHighlight=frame:CreateTexture(nil,'ARTWORK',nil,0)
-    petHighlight:SetSize(44,44);petHighlight:SetPoint('RIGHT',frame,'RIGHT',-21,0)
+    petHighlight:SetSize(30,30);petHighlight:SetPoint('RIGHT',frame,'RIGHT',-21,0)
     petHighlight:SetColorTexture(1,0.1,0.1,1);petHighlight:Hide()
     local portrait=frame:CreateTexture(nil,'ARTWORK',nil,1)
-    portrait:SetSize(38,38);portrait:SetPoint('RIGHT',frame,'RIGHT',-24,0)
+    portrait:SetSize(26,26);portrait:SetPoint('RIGHT',frame,'RIGHT',-23,0)
     portrait:Hide()
     frame.portrait=portrait;frame.petHighlight=petHighlight
     local mood=CreateFrame('Button',nil,frame)
-    mood:SetSize(18,18);mood:Hide()
+    mood:SetSize(16,16);mood:Hide()
     local moodIcon=mood:CreateTexture(nil,'OVERLAY')
     moodIcon:SetAllPoints();moodIcon:SetTexture('Interface\\PetPaperDollFrame\\UI-PetHappiness')
     frame.moodBadge=mood
@@ -143,12 +143,12 @@ function Range.Create(host, db)
         elseif moodValue==2 then moodIcon:SetTexCoord(0.1875,0.375,0,0.359375) end
     end
     local angleLabel=frame:CreateFontString(nil,'OVERLAY','GameFontHighlight')
-    angleLabel:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',12,'OUTLINE')
+    angleLabel:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',9,'OUTLINE')
     angleLabel:SetJustifyH('LEFT');angleLabel:SetWordWrap(false)
     angleLabel:SetTextColor(0.9,0.93,1)
     angleLabel:SetPoint('TOPLEFT',frame,'TOPLEFT',190,-33)
     local ammoLabel=frame:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall')
-    ammoLabel:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',12,'OUTLINE')
+    ammoLabel:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',9,'OUTLINE')
     ammoLabel:SetJustifyH('LEFT');ammoLabel:SetWordWrap(false);ammoLabel:SetSize(110,14)
     local guide=NS.PetGuide.Create(frame)
     frame.petGuideBadge=guide
@@ -200,17 +200,17 @@ function Range.Create(host, db)
         end
         if layout.combat then
             local x=layout.combat.x
-            markBorder:ClearAllPoints();markBorder:SetPoint('TOPLEFT',frame,'TOPLEFT',x+(db.aspectWarning~=false and 3 or 16),-5)
-            aspectBorder:ClearAllPoints();aspectBorder:SetPoint('TOPLEFT',frame,'TOPLEFT',x+(db.markWarning~=false and 29 or 16),-5)
-            angleLabel:ClearAllPoints();angleLabel:SetPoint('TOPLEFT',frame,'TOPLEFT',x+3,-34)
-            angleLabel:SetWidth(50);angleLabel:SetJustifyH('CENTER')
+            markBorder:ClearAllPoints();markBorder:SetPoint('TOPLEFT',frame,'TOPLEFT',x+(db.aspectWarning~=false and 1 or 10),-7)
+            aspectBorder:ClearAllPoints();aspectBorder:SetPoint('TOPLEFT',frame,'TOPLEFT',x+(db.markWarning~=false and 18 or 10),-7)
+            angleLabel:ClearAllPoints();angleLabel:SetPoint('TOPLEFT',frame,'TOPLEFT',x+1,-31)
+            angleLabel:SetWidth(34);angleLabel:SetJustifyH('CENTER')
         end
         angleLabel:SetShown(db.showAngle~=false)
         if layout.pet then
-            guide:ClearAllPoints();guide:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.pet.x+3,-31)
-            mood:ClearAllPoints();mood:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.pet.x+27,-31)
-            portrait:ClearAllPoints();portrait:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.pet.x+5,-9)
-            petHighlight:ClearAllPoints();petHighlight:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.pet.x+2,-6)
+            guide:ClearAllPoints();guide:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.pet.x+1,-34)
+            mood:ClearAllPoints();mood:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.pet.x+20,-35)
+            portrait:ClearAllPoints();portrait:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.pet.x+6,-5)
+            petHighlight:ClearAllPoints();petHighlight:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.pet.x+4,-3)
         else portrait:Hide();petHighlight:Hide();mood:Hide();guide.Clear() end
     end
     local function ClearContext()
@@ -290,9 +290,15 @@ function Range.Create(host, db)
         iconBorder:SetColorTexture(c[1],c[2],c[3],1)
         accent:SetColorTexture(c[1],c[2],c[3],1)
         label:SetTextColor(1,1,1,1)
-        label:SetText(text)
+        local display=text
+        if layout.text.width<100 then
+            local title,detail=text:match('^(.-) | (.+)$')
+            if detail and detail~='yards unavailable' then display=detail
+            elseif title then display=title end
+        end
+        label:SetText(display)
         -- Keep long range estimates inside their block without wrapping over ammo.
-        for size=16,12,-1 do
+        for size=11,8,-1 do
             label:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',size,'OUTLINE')
             local width=label:GetStringWidth()
             if not Core.IsNumber(width) or width<=layout.text.width then break end

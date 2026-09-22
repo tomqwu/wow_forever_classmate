@@ -1,15 +1,16 @@
 # Standard class modules
 
-Version 0.20.1 supports Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock alongside the existing Hunter and Shaman companions. The standard modules share `ClassContext.lua` and `StandardClasses.lua`, but each has an independent `ForeverUtilitiesDB.<class>` table and command.
+Version 0.21.0 supports Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock alongside the existing Hunter and Shaman companions. The standard modules share `ClassContext.lua` and `StandardClasses.lua`, but each has an independent `ForeverUtilitiesDB.<class>` table and command.
 
 ## Display model
 
-Each new class uses four fixed blocks inside the existing 400 × 56 footprint:
+Each standard class uses five compact icon slots inside a 213 × 56 footprint matching Forever's default desktop swing-bar width:
 
-1. **Resource:** a compact power percentage plus stance, form, combo points, health, or Soul Shards where relevant; hover shows exact values and names.
+1. **Resource:** power percentage plus a compact form, combo-point, health, or Soul Shard badge; hover shows exact values and names.
 2. **Upkeep:** independently evaluated buff families, Rogue weapon coatings and finisher buffs, or Warlock armor and demon presence.
-3. **Target and ability:** independently toggleable target effects and learned ability/proc state. Restricted aura data stays unknown instead of becoming a false warning.
-4. **Racial:** the most useful learned active racial now, with all learned racial states in the tooltip. Priest racials remain ahead of base racials.
+3. **Target:** the player's readable effect on the current target.
+4. **Ability:** a current proc or one learned ability's real readiness or cooldown.
+5. **Racial:** the most useful learned active racial now, with all learned racial states in the tooltip. Priest racials remain ahead of base racials.
 
 The bar does not select a specialization from a talent guess. It discovers learned spells and shows only states the client exposes. “Ready” uses the cooldown and usability APIs; “Context” means the ability is learned and off cooldown but the client currently reports it unusable. The addon does not explain an unavailable condition unless the API exposes it.
 

@@ -21,12 +21,6 @@ end
 local function FirstSpell(spells,keys)
     for _,key in ipairs(keys or {}) do if spells[key] then return spells[key] end end
 end
-local function AuraStatus(aura,prefix)
-    local suffix=Context.FormatTime(aura and aura.left)
-    local stacks=aura and aura.applications and aura.applications>1 and (' ×'..aura.applications) or ''
-    return prefix..stacks..(suffix and (' '..suffix) or '')
-end
-
 local sharedRacials={}
 for _,entry in ipairs(Context.RacialCatalog) do sharedRacials[#sharedRacials+1]=entry end
 
@@ -93,11 +87,11 @@ local configs={
 
 local function MakeCell(frame,x,width)
     local cell=CreateFrame('Button',nil,frame);cell:SetSize(width,48);cell:SetPoint('TOPLEFT',frame,'TOPLEFT',x,-4)
-    local icon=cell:CreateTexture(nil,'ARTWORK');icon:SetSize(24,24);icon:SetPoint('LEFT',cell,'LEFT',3,0)
-    local top=cell:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');top:SetPoint('TOPLEFT',cell,'TOPLEFT',31,-8)
-    top:SetWidth(width-34);top:SetJustifyH('LEFT');top:SetWordWrap(false);top:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',10,'OUTLINE')
-    local bottom=cell:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');bottom:SetPoint('TOPLEFT',cell,'TOPLEFT',31,-26)
-    bottom:SetWidth(width-34);bottom:SetJustifyH('LEFT');bottom:SetWordWrap(false);bottom:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',9,'OUTLINE')
+    local icon=cell:CreateTexture(nil,'ARTWORK');icon:SetSize(22,22);icon:SetPoint('TOP',cell,'TOP',0,-1)
+    local top=cell:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');top:SetPoint('TOPLEFT',cell,'TOPLEFT',1,-25)
+    top:SetWidth(width-2);top:SetJustifyH('CENTER');top:SetWordWrap(false);top:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',8,'OUTLINE')
+    local bottom=cell:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');bottom:SetPoint('TOPLEFT',cell,'TOPLEFT',1,-37)
+    bottom:SetWidth(width-2);bottom:SetJustifyH('CENTER');bottom:SetWordWrap(false);bottom:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',8,'OUTLINE')
     local line=frame:CreateTexture(nil,'ARTWORK');line:SetSize(1,36);line:SetPoint('RIGHT',cell,'RIGHT',0,0);line:SetColorTexture(0.6,0.7,0.85,0.18)
     cell.icon,cell.top,cell.bottom,cell.line=icon,top,bottom,line
     return cell
@@ -109,11 +103,12 @@ local function Paint(cell,icon,top,bottom,color,dim)
 end
 
 local function CreateIndicator(module,config,host,db)
-    local frame=CreateFrame('Frame',module.indicatorName,host);frame:SetSize(400,56);frame:SetPoint('TOPLEFT',host,'TOPLEFT',0,0)
+    local frame=CreateFrame('Frame',module.indicatorName,host);frame:SetSize(NS.ClassBarWidth,NS.ClassBarHeight);frame:SetPoint('TOPLEFT',host,'TOPLEFT',0,0)
     local background=frame:CreateTexture(nil,'BACKGROUND');background:SetAllPoints(frame);background:SetColorTexture(0.012,0.02,0.035,0.94)
     local accent=frame:CreateTexture(nil,'ARTWORK');accent:SetPoint('TOPLEFT');accent:SetPoint('BOTTOMLEFT');accent:SetWidth(4);accent:SetColorTexture(unpack(config.color))
-    local resource=MakeCell(frame,7,91);local upkeep=MakeCell(frame,98,102);local target=MakeCell(frame,200,105);local racial=MakeCell(frame,305,67)
-    frame.cells={resource=resource,upkeep=upkeep,target=target,racial=racial}
+    local resource=MakeCell(frame,5,34);local upkeep=MakeCell(frame,39,34);local target=MakeCell(frame,73,38)
+    local ability=MakeCell(frame,111,38);local racial=MakeCell(frame,149,38)
+    frame.cells={resource=resource,upkeep=upkeep,target=target,ability=ability,racial=racial}
     local lastStatus='Not checked';local elapsed=0;local active=false
 
     local function Discover()
@@ -137,7 +132,8 @@ local function CreateIndicator(module,config,host,db)
     end
     Tooltip(resource,function() return config.label..' resources' end,function() return 'Live readable player resource state.' end)
     Tooltip(upkeep,function() return config.upkeepLabel end,function() return 'Shows learned upkeep from your current auras or equipped weapon coatings.' end)
-    Tooltip(target,function() return config.targetLabel end,function() return 'Tracks your readable target effects, proc auras, and learned usable abilities.' end)
+    Tooltip(target,function() return config.targetLabel end,function() return 'Tracks your readable target effects.' end)
+    Tooltip(ability,function() return config.label..' ability' end,function() return 'Tracks a readable proc or learned usable ability.' end)
     Tooltip(racial,function() return racial.state and racial.state.spell.name or 'Racial ability' end,function()
         return 'The learned active racial with its real cooldown and current usability. Context means the game reports it unusable now.'
     end)
@@ -148,24 +144,24 @@ local function CreateIndicator(module,config,host,db)
         local hostile=hasTarget and Core.Call(UnitCanAttack,'player','target')==true and Core.Call(UnitIsDead,'target')==false
         local power
         if config.currentPower then power=Context.CurrentPower() else power=Context.Power(config.powerType,config.powerLabel) end
-        local resourceTop=power and ((power.label or 'Power')..' '..power.percent..'%') or 'Resource ?'
+        local resourceTop=power and (power.percent..'%') or '?'
         local resourceBottom=''
         local resourceLines={}
         if power then resourceLines[#resourceLines+1]=(power.label or 'Power')..': '..math.floor(power.current+0.5)..' / '..math.floor(power.maximum+0.5)
         else resourceLines[#resourceLines+1]='The client did not expose a readable resource value.' end
         if config.showCombo then
-            local cp=Context.ComboPoints();resourceBottom=cp and ('CP '..cp..'/5') or ''
+            local cp=Context.ComboPoints();resourceBottom=cp and ('CP'..cp) or ''
             if cp then resourceLines[#resourceLines+1]='Combo points: '..cp..' / 5' end
         elseif config.showForm then
-            local form=Context.Form();resourceBottom=form and 'Form active' or 'Base form'
+            local form=Context.Form();resourceBottom=form and 'Form' or 'Base'
             if form then resourceLines[#resourceLines+1]='Form or stance: '..form.name end
         elseif config.showHealth then
-            local hp=Context.HealthPercent('player');resourceBottom=hp and ('HP '..hp..'%') or ''
+            local hp=Context.HealthPercent('player');resourceBottom=hp and ('H'..hp) or ''
             if hp then resourceLines[#resourceLines+1]='Health: '..hp..'%' end
         end
         if config.showShards then
             local shards=Context.ItemCount('Soul Shard')
-            if shards then resourceBottom=(resourceBottom~='' and (resourceBottom..' ') or '')..'S'..shards;resourceLines[#resourceLines+1]='Soul Shards: '..shards end
+            if shards then resourceBottom=(resourceBottom~='' and (resourceBottom..'/') or '')..'S'..shards;resourceLines[#resourceLines+1]='Soul Shards: '..shards end
         end
         resource.tooltipTitle=config.label..' resources';resource.tooltipLines=resourceLines
         Paint(resource,config.icon,resourceTop,resourceBottom,config.color,power==nil);resource:SetShown(db.showResource~=false)
@@ -208,8 +204,8 @@ local function CreateIndicator(module,config,host,db)
             elseif petExists==false or petDead==true then upkeepMissing=upkeepMissing+1;upkeepDim=true;upkeepLines[#upkeepLines+1]='Demon: missing'
             else upkeepUnknown=upkeepUnknown+1;upkeepLines[#upkeepLines+1]='Demon: unavailable' end
         end
-        local upkeepTop=upkeepTotal>0 and ('Upkeep '..upkeepActive..'/'..upkeepTotal) or 'No upkeep'
-        local upkeepBottom=upkeepMissing>0 and (upkeepMissing..' missing') or (upkeepUnknown>0 and 'Unavailable' or (upkeepTotal>0 and 'All active' or ''))
+        local upkeepTop=upkeepTotal>0 and (upkeepActive..'/'..upkeepTotal) or '—'
+        local upkeepBottom=upkeepMissing>0 and ('!'..upkeepMissing) or (upkeepUnknown>0 and '?' or (upkeepTotal>0 and 'OK' or ''))
         local upkeepWarn=inCombat and upkeepMissing>0
         upkeep.tooltipTitle=config.upkeepLabel;upkeep.tooltipLines=upkeepLines
         Paint(upkeep,upkeepIcon or config.icon,upkeepTop,upkeepBottom,upkeepWarn and {1,0.25,0.18} or config.color,upkeepDim)
@@ -221,60 +217,60 @@ local function CreateIndicator(module,config,host,db)
         if showTarget and hostile then targetAura=Context.Aura('target','HARMFUL',Context.Names(module.spells,module.targetKeys),true)
         elseif showTarget then targetAura=false end
         local cue=showAbilities and Context.BestCue(module.spells,module.cueKeys) or nil
-        local targetText,abilityText,targetIcon,abilityIcon,targetColor,targetDim
-        local targetLines={}
+        local targetText,abilityText,targetIcon,abilityIcon,targetColor,abilityColor,targetDim,abilityDim
+        local targetLines,abilityLines={},{}
         if showTarget and type(targetAura)=='table' then
-            targetText=AuraStatus(targetAura,'Effect');targetIcon=targetAura.icon;targetColor=config.color
+            targetText=targetAura.applications and targetAura.applications>1 and ('×'..targetAura.applications) or (Context.FormatTime(targetAura.left) or 'On')
+            targetIcon=targetAura.icon;targetColor=config.color
             local remaining=Context.FormatTime(targetAura.left)
             targetLines[#targetLines+1]=targetAura.name..(remaining and (' — '..remaining) or ' — active')
         elseif showTarget and hostile then
             local targetSpell=FirstSpell(module.spells,module.targetKeys)
-            if targetSpell and targetAura==false then targetText='Effect missing';targetColor={1,0.72,0.28};targetDim=true;targetLines[#targetLines+1]=targetSpell.name..': missing'
-            elseif targetSpell and targetAura==nil then targetText='Effect ?';targetLines[#targetLines+1]='Target effects: unavailable'
-            else targetText='Hostile target' end
+            if targetSpell and targetAura==false then targetText='!';targetColor={1,0.72,0.28};targetDim=true;targetLines[#targetLines+1]=targetSpell.name..': missing'
+            elseif targetSpell and targetAura==nil then targetText='?';targetLines[#targetLines+1]='Target effects: unavailable'
+            else targetText='—' end
             targetIcon=targetSpell and targetSpell.icon or config.icon
-        elseif showTarget then targetText=hasTarget and 'Friendly target' or 'No target';targetIcon=config.icon;targetDim=true end
+        elseif showTarget then targetText=hasTarget and 'Friend' or 'None';targetIcon=config.icon;targetDim=true end
         if showAbilities and type(proc)=='table' then
-            abilityText=AuraStatus(proc,'Proc');abilityIcon=proc.icon;targetColor={0.3,1,0.48}
+            abilityText=proc.applications and proc.applications>1 and ('×'..proc.applications) or (Context.FormatTime(proc.left) or 'Proc')
+            abilityIcon=proc.icon;abilityColor={0.3,1,0.48}
             local remaining=Context.FormatTime(proc.left)
-            targetLines[#targetLines+1]=proc.name..(remaining and (' — '..remaining) or ' — active')
+            abilityLines[#abilityLines+1]=proc.name..(remaining and (' — '..remaining) or ' — active')
         elseif showAbilities and cue then
             abilityIcon=cue.spell.icon
-            if cue.status=='ready' then abilityText='Ability ready';targetColor={0.3,1,0.48}
-            elseif cue.status=='cooldown' then abilityText='Ability '..(Context.FormatTime(cue.left) or '')
-            elseif cue.status=='context' then abilityText='Needs context'
-            else abilityText='Ability ?' end
+            if cue.status=='ready' then abilityText='Ready';abilityColor={0.3,1,0.48}
+            elseif cue.status=='cooldown' then abilityText=Context.FormatTime(cue.left) or 'CD'
+            elseif cue.status=='context' then abilityText='Ctx';abilityDim=true
+            else abilityText='?';abilityDim=true end
             local detail=cue.status=='cooldown' and (Context.FormatTime(cue.left) or 'cooldown') or cue.status
-            targetLines[#targetLines+1]=cue.spell.name..': '..detail
+            abilityLines[#abilityLines+1]=cue.spell.name..': '..detail
         end
-        local targetTop,targetBottom
-        if showTarget and showAbilities then targetTop,targetBottom=targetText,abilityText
-        elseif showTarget then targetTop=targetText
-        else targetTop=abilityText end
-        target.tooltipTitle=config.targetLabel..' / abilities';target.tooltipLines=targetLines
-        Paint(target,abilityIcon or targetIcon or config.icon,targetTop,targetBottom,targetColor,targetDim);target:SetShown(showTarget or showAbilities)
+        target.tooltipTitle=config.targetLabel;target.tooltipLines=targetLines
+        ability.tooltipTitle=config.label..' ability';ability.tooltipLines=abilityLines
+        Paint(target,targetIcon or config.icon,targetText,'Effect',targetColor,targetDim);target:SetShown(showTarget)
+        Paint(ability,abilityIcon or config.icon,abilityText,'Ability',abilityColor,abilityDim);ability:SetShown(showAbilities)
 
         local racialStates=Context.RacialStates(module.spells,module.classToken);local racialState=racialStates[1];racial.state=racialState
         if racialState then
             local status,color
             if racialState.status=='ready' then status='Ready';color={0.3,1,0.48}
             elseif racialState.status=='cooldown' then status=Context.FormatTime(racialState.left);color={1,0.72,0.28}
-            elseif racialState.status=='context' then status='Context';color={0.65,0.7,0.78}
-            else status='Unknown';color={0.55,0.6,0.68} end
+            elseif racialState.status=='context' then status='Ctx';color={0.65,0.7,0.78}
+            else status='?';color={0.55,0.6,0.68} end
             racial.tooltipTitle=racialState.spell.name;racial.tooltipLines={}
             for _,state in ipairs(racialStates) do
                 local stateText=state.status=='cooldown' and (Context.FormatTime(state.left) or 'cooldown') or state.status
                 racial.tooltipLines[#racial.tooltipLines+1]=state.spell.name..': '..stateText
             end
-            Paint(racial,racialState.spell.icon,'Racial',status,color,not racialState.ready)
+            Paint(racial,racialState.spell.icon,status,'Racial',color,not racialState.ready)
         else
             racial.tooltipTitle='Racial ability';racial.tooltipLines={'No learned active racial was found.'}
-            Paint(racial,config.icon,'Racial','None',{0.55,0.6,0.68},true)
+            Paint(racial,config.icon,'None','Racial',{0.55,0.6,0.68},true)
         end
         racial:SetShown(db.showRacial~=false)
 
         frame:SetAlpha((db.fadeOutOfCombat==false or inCombat) and 1 or (hasTarget and 0.6 or 0.2))
-        lastStatus=string.format('%s; upkeep %s; target %s; racial %s',resourceTop,upkeepBottom or 'off',targetTop or 'off',
+        lastStatus=string.format('%s; upkeep %s; target %s; ability %s; racial %s',resourceTop,upkeepBottom or 'off',targetText or 'off',abilityText or 'off',
             racialState and (racialState.spell.name..' '..(racialState.status=='cooldown' and (Context.FormatTime(racialState.left) or 'cooldown') or racialState.status)) or 'unavailable')
     end
 
@@ -321,7 +317,7 @@ local defaultOptions={
 
 for token,config in pairs(configs) do
     local module={name='Forever Classmate — '..config.label,description=config.description,command=config.command,
-        enableLabel='Enable '..config.label:lower()..' bar',width=400,height=56,
+        enableLabel='Enable '..config.label:lower()..' bar',width=NS.ClassBarWidth,height=NS.ClassBarHeight,
         frameName='ForeverClassmate'..config.label..'Frame',lockName='ForeverClassmate'..config.label..'Lock',
         panelName='ForeverClassmate'..config.label..'Options',minimapName='ForeverClassmate'..config.label..'Minimap',
         indicatorName='ForeverClassmate'..config.label..'Indicator',normalize=Normalize,options=defaultOptions,

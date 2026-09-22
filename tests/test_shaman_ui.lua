@@ -86,7 +86,7 @@ check(NS.Shaman.instance~=nil,'shaman creates active helper')
 check(NS.Shaman.spells.maelstrom and NS.Shaman.spells.windfury and NS.Shaman.spells.lightningShield,'learned Shaman abilities discovered from spellbook')
 local host=named.ForeverClassmateShamanFrame
 local indicator=named.ForeverClassmateShamanIndicator
-check(host and host.width==400 and host.height==56 and host.shown,'compact shaman bar created')
+check(host and host.width==213 and host.height==56 and host.shown,'native-width shaman bar created')
 check(indicator and indicator.scripts.OnUpdate~=nil,'enabled info polls for live timers')
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')

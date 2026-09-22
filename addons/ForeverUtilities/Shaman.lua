@@ -2,7 +2,7 @@ local _, NS = ...
 local Core,Context=NS.Core,NS.ShamanContext
 local Shaman={
     name='Forever Classmate — Shaman',description='Totems, weapon imbues, elemental shields, mana, and spec-aware combat cues.',
-    command='/fshaman',enableLabel='Enable shaman bar',width=400,height=56,
+    command='/fshaman',enableLabel='Enable shaman bar',width=NS.ClassBarWidth,height=NS.ClassBarHeight,
     frameName='ForeverClassmateShamanFrame',lockName='ForeverClassmateShamanLock',
     panelName='ForeverClassmateShamanOptions',minimapName='ForeverClassmateShamanMinimap',
 }
@@ -36,13 +36,13 @@ Shaman.options={
 
 local function CreateIndicator(host,db)
     local frame=CreateFrame('Frame','ForeverClassmateShamanIndicator',host)
-    frame:SetSize(400,56);frame:SetPoint('TOPLEFT',host,'TOPLEFT',0,0)
+    frame:SetSize(NS.ClassBarWidth,NS.ClassBarHeight);frame:SetPoint('TOPLEFT',host,'TOPLEFT',0,0)
     local background=frame:CreateTexture(nil,'BACKGROUND');background:SetAllPoints(frame)
     background:SetColorTexture(0.012,0.025,0.04,0.94)
     local accent=frame:CreateTexture(nil,'ARTWORK');accent:SetPoint('TOPLEFT');accent:SetPoint('BOTTOMLEFT')
     accent:SetWidth(4);accent:SetColorTexture(0.2,0.65,1,1)
     local separators={}
-    for i=1,2 do local line=frame:CreateTexture(nil,'ARTWORK');line:SetSize(1,36);line:SetColorTexture(0.5,0.75,1,0.2);separators[i]=line end
+    for i=1,2 do local line=frame:CreateTexture(nil,'ARTWORK');line:SetSize(1,24);line:SetColorTexture(0.5,0.75,1,0.2);separators[i]=line end
 
     local elementInfo={
         {slot=2,label='E',color={0.72,0.55,0.3},fallback='Interface\\Icons\\Spell_Nature_StoneClawTotem'},
@@ -56,13 +56,13 @@ local function CreateIndicator(host,db)
         local border=button:CreateTexture(nil,'ARTWORK');border:SetAllPoints();border:SetColorTexture(0.3,0.45,0.6,0.7)
         local icon=button:CreateTexture(nil,'ARTWORK');icon:SetPoint('TOPLEFT',button,'TOPLEFT',2,-2);icon:SetPoint('BOTTOMRIGHT',button,'BOTTOMRIGHT',-2,2)
         local timer=button:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');timer:SetPoint('BOTTOM',button,'BOTTOM',0,2)
-        timer:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',10,'OUTLINE')
+        timer:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',8,'OUTLINE')
         local badge=button:CreateFontString(nil,'OVERLAY','GameFontNormalSmall');badge:SetPoint('TOPLEFT',button,'TOPLEFT',3,-2)
-        badge:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',9,'OUTLINE')
+        badge:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',8,'OUTLINE')
         return {button=button,border=border,icon=icon,timer=timer,badge=badge}
     end
     for i,info in ipairs(elementInfo) do
-        local cell=MakeCell(34);cell.info=info;totemCells[i]=cell
+        local cell=MakeCell(25);cell.info=info;totemCells[i]=cell
         cell.button:SetScript('OnEnter',function(self)
             if not GameTooltip or not cell.state then return end
             GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(cell.state.active and cell.state.name or (info.label..' element: no active totem'))
@@ -71,13 +71,13 @@ local function CreateIndicator(host,db)
         end)
         cell.button:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
     end
-    local weapon=MakeCell(38);local shield=MakeCell(38)
+    local weapon=MakeCell(25);local shield=MakeCell(25)
     weapon.badge:SetText('W');shield.badge:SetText('S')
-    local helperIcon=frame:CreateTexture(nil,'ARTWORK');helperIcon:SetSize(28,28)
+    local helperIcon=frame:CreateTexture(nil,'ARTWORK');helperIcon:SetSize(18,18)
     local helperText=frame:CreateFontString(nil,'OVERLAY','GameFontHighlight')
-    helperText:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',12,'OUTLINE');helperText:SetJustifyH('LEFT');helperText:SetWordWrap(false)
+    helperText:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',10,'OUTLINE');helperText:SetJustifyH('LEFT');helperText:SetWordWrap(false)
     local manaText=frame:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall')
-    manaText:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',11,'OUTLINE');manaText:SetJustifyH('LEFT')
+    manaText:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',9,'OUTLINE');manaText:SetJustifyH('RIGHT')
     local shieldNames,imbueNames={},{}
     local lastStatus='Not checked'
 
@@ -140,26 +140,25 @@ local function CreateIndicator(host,db)
     shield.button:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
 
     local function Layout()
-        local x=10
+        local x=5
         for i,cell in ipairs(totemCells) do
-            cell.button:ClearAllPoints();cell.button:SetPoint('TOPLEFT',frame,'TOPLEFT',x+(i-1)*38,-7)
+            cell.button:ClearAllPoints();cell.button:SetPoint('TOPLEFT',frame,'TOPLEFT',x+(i-1)*27,-4)
             cell.button:SetShown(db.showTotems~=false)
         end
-        if db.showTotems~=false then x=x+152 end
-        separators[1]:ClearAllPoints();separators[1]:SetPoint('TOPLEFT',frame,'TOPLEFT',x,-10)
+        if db.showTotems~=false then x=x+108 end
+        separators[1]:ClearAllPoints();separators[1]:SetPoint('TOPLEFT',frame,'TOPLEFT',x,-5)
         local upkeep=db.showWeaponImbue~=false or db.showShield~=false
         separators[1]:SetShown(db.showTotems~=false and upkeep)
-        if upkeep and db.showTotems~=false then x=x+9 end
-        weapon.button:ClearAllPoints();weapon.button:SetPoint('TOPLEFT',frame,'TOPLEFT',x,-9)
-        weapon.button:SetShown(db.showWeaponImbue~=false);if db.showWeaponImbue~=false then x=x+42 end
-        shield.button:ClearAllPoints();shield.button:SetPoint('TOPLEFT',frame,'TOPLEFT',x,-9)
-        shield.button:SetShown(db.showShield~=false);if db.showShield~=false then x=x+42 end
-        separators[2]:ClearAllPoints();separators[2]:SetPoint('TOPLEFT',frame,'TOPLEFT',x+2,-10)
-        separators[2]:SetShown(upkeep and (db.showSpecHelper~=false or db.showMana~=false or db.totemRecallHint~=false))
-        if upkeep then x=x+10 end
-        helperIcon:ClearAllPoints();helperIcon:SetPoint('TOPLEFT',frame,'TOPLEFT',x,-6)
-        helperText:ClearAllPoints();helperText:SetPoint('TOPLEFT',frame,'TOPLEFT',x+34,-7);helperText:SetWidth(math.max(20,366-x-34))
-        manaText:ClearAllPoints();manaText:SetPoint('TOPLEFT',frame,'TOPLEFT',x+34,-31);manaText:SetWidth(math.max(20,366-x-34))
+        if upkeep and db.showTotems~=false then x=x+5 end
+        weapon.button:ClearAllPoints();weapon.button:SetPoint('TOPLEFT',frame,'TOPLEFT',x,-4)
+        weapon.button:SetShown(db.showWeaponImbue~=false);if db.showWeaponImbue~=false then x=x+28 end
+        shield.button:ClearAllPoints();shield.button:SetPoint('TOPLEFT',frame,'TOPLEFT',x,-4)
+        shield.button:SetShown(db.showShield~=false);if db.showShield~=false then x=x+28 end
+        separators[2]:ClearAllPoints();separators[2]:SetPoint('TOPLEFT',frame,'TOPLEFT',x+1,-5)
+        separators[2]:SetShown(false)
+        helperIcon:ClearAllPoints();helperIcon:SetPoint('TOPLEFT',frame,'TOPLEFT',5,-34)
+        helperText:ClearAllPoints();helperText:SetPoint('TOPLEFT',frame,'TOPLEFT',27,-35);helperText:SetWidth(108)
+        manaText:ClearAllPoints();manaText:SetPoint('TOPLEFT',frame,'TOPLEFT',138,-35);manaText:SetWidth(43)
     end
 
     local function Update()

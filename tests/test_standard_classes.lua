@@ -92,9 +92,10 @@ check(NS.Paladin.db.x==77 and NS.Paladin.db.y==-88 and NS.Paladin.db.scale==1.1 
 check(ForeverUtilitiesDB.warrior and ForeverUtilitiesDB.rogue and ForeverUtilitiesDB.druid and ForeverUtilitiesDB.mage and ForeverUtilitiesDB.priest and ForeverUtilitiesDB.warlock,'independent class databases initialized')
 check(NS.Paladin.spells.sealRighteousness and NS.Paladin.spells.judgementCrusader and NS.Paladin.spells.holyStrike and NS.Paladin.spells.willToSurvive,'class and racial spells discovered')
 local host=named.ForeverClassmatePaladinFrame;local indicator=named.ForeverClassmatePaladinIndicator
-check(host and host.width==400 and host.height==56 and host.shown,'standard class bar has fixed footprint')
+check(host and host.width==213 and host.height==56 and host.shown,'standard class bar matches native swing-bar width')
 check(indicator and indicator.scripts.OnUpdate~=nil,'enabled helper polls live state')
-check(indicator.cells.resource.icon.width==24 and indicator.cells.resource.top.width==57,'compact cells reserve more width for status text')
+check(indicator.cells.resource.icon.width==22 and indicator.cells.resource.top.width==32,'compact icon slots fit the native-width bar')
+check(indicator.cells.racial.x+indicator.cells.racial.width==187,'all five class slots end before the lock control')
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')
 NS.Paladin.SetEnabled(false);check(not host.shown and indicator.scripts.OnUpdate==nil,'disable hides helper and stops polling')
@@ -110,8 +111,8 @@ end
 local originalAuras=C_UnitAuras.GetAuraDataByIndex
 C_UnitAuras.GetAuraDataByIndex=function() error('restricted aura') end
 indicator.Update()
-check(indicator.cells.upkeep.bottom.text=='Unavailable','restricted upkeep aura is not reported as missing')
-check(indicator.cells.target.top.text=='Effect ?','restricted target aura is not reported as missing: '..tostring(indicator.cells.target.top.text))
+check(indicator.cells.upkeep.bottom.text=='?','restricted upkeep aura is not reported as missing')
+check(indicator.cells.target.top.text=='?','restricted target aura is not reported as missing: '..tostring(indicator.cells.target.top.text))
 
 local targetReads=0
 C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
@@ -120,8 +121,11 @@ C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
 end
 NS.Paladin.db.showTarget=false;indicator.Update()
 check(targetReads==0,'disabled target block does not read target auras')
-check(indicator.cells.target.top.text=='Ability ready' and indicator.cells.target.bottom.text=='','ability display remains independent of target display')
+check(not indicator.cells.target.shown and indicator.cells.ability.shown and indicator.cells.ability.top.text=='Ready','ability display remains independent of target display')
 NS.Paladin.db.showTarget=true
+NS.Paladin.db.showAbilities=false;indicator.Update()
+check(indicator.cells.target.shown and not indicator.cells.ability.shown and indicator.cells.target.top.text=='12s','target display remains independent of ability display')
+NS.Paladin.db.showAbilities=true
 
 local rogueIndicator=named.ForeverClassmateRogueIndicator
 NS.Rogue.spells={sliceDice={id=2001,name='Slice and Dice',icon=61,kind='upkeep'}}
@@ -129,7 +133,7 @@ C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
     if unit=='player' and filter=='HELPFUL' and index==1 then return {name='Slice and Dice',icon=61,expirationTime=130,sourceUnit='player'} end
 end
 rogueIndicator.Update()
-check(rogueIndicator.cells.upkeep.top.text=='Upkeep 1/1','Rogue finisher buff is checked alongside weapon coatings')
+check(rogueIndicator.cells.upkeep.top.text=='1/1','Rogue finisher buff is checked alongside weapon coatings')
 check(rogueIndicator.cells.upkeep.tooltipLines[2] and rogueIndicator.cells.upkeep.tooltipLines[2]:find('Slice and Dice',1,true),'Rogue upkeep details name the active finisher buff')
 
 local druidIndicator=named.ForeverClassmateDruidIndicator
@@ -139,8 +143,8 @@ C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
 end
 local savedPowerType=UnitPowerType;UnitPowerType=nil
 local ok=pcall(druidIndicator.Update)
-check(ok and druidIndicator.cells.resource.top.text=='Resource ?','Druid survives an unavailable current-power API')
-check(druidIndicator.cells.upkeep.top.text=='Upkeep 1/2' and druidIndicator.cells.upkeep.bottom.text=='1 missing','Druid tracks Mark and Thorns as independent upkeep')
+check(ok and druidIndicator.cells.resource.top.text=='?','Druid survives an unavailable current-power API')
+check(druidIndicator.cells.upkeep.top.text=='1/2' and druidIndicator.cells.upkeep.bottom.text=='!1','Druid tracks Mark and Thorns as independent upkeep')
 UnitPowerType=savedPowerType
 
 local shadowProc=false

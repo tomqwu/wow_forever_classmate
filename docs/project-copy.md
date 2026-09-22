@@ -22,7 +22,7 @@ Forever Classmate detects your class and shows the compact information that clas
 
 ## Current release position
 
-Hunter includes range, ammo, target context, pet care, and rare-beast guidance. Shaman includes live totems, imbue and shield upkeep, mana, recall, and learned-spec cues. Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock add compact resource, grouped upkeep, independently toggleable target/ability, and context-aware active-racial blocks driven by the live spellbook and current client state.
+Every class uses a 213-pixel-wide bar matching Forever's default desktop swing timer. Hunter includes range, ammo, target context, pet care, and rare-beast guidance. Shaman includes live totems, imbue and shield upkeep, mana, recall, and learned-spec cues. Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock add compact resource, grouped upkeep, independently toggleable target/ability, and context-aware active-racial slots driven by the live spellbook and current client state.
 
 ## Keywords
 

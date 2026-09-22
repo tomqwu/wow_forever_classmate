@@ -1,8 +1,10 @@
 local _, NS = ...
 local Core = {}
 NS.Core = Core
-NS.Version = '0.20.1'
+NS.Version = '0.21.0'
 NS.Classes = {}
+NS.ClassBarWidth = 213
+NS.ClassBarHeight = 56
 
 function Core.IsReadable(value)
     return not (issecretvalue and issecretvalue(value))

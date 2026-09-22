@@ -2,7 +2,7 @@
 
 **One compact, class-aware companion for World of Warcraft: Forever.**
 
-Version 0.20.1 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent.
+Version 0.21.0 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Every class bar now uses Forever's 213-pixel default desktop swing-bar width.
 
 ## Class companions
 
