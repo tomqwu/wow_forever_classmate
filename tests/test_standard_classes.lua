@@ -4,7 +4,10 @@ local frames,named={},{}
 local methods={}
 local function object() return setmetatable({scripts={},events={},shown=true},{__index=methods}) end
 function methods:SetScript(key,value) self.scripts[key]=value end
-function methods:RegisterEvent(event) self.events[event]=true end
+function methods:RegisterEvent(event)
+    assert(event~='LEARNED_SPELL_IN_TAB','Forever rejects the removed learned-spell event')
+    self.events[event]=true
+end
 function methods:UnregisterEvent(event) self.events[event]=nil end
 function methods:CreateFontString() return object() end
 function methods:CreateTexture() return object() end
@@ -107,6 +110,7 @@ for _,entry in ipairs({{'WARRIOR',NS.Warrior},{'ROGUE',NS.Rogue},{'DRUID',NS.Dru
     currentClass=entry[1];entry[2].Apply()
     check(entry[2].instance~=nil,entry[1]..' creates its own helper when active')
     check(named[entry[2].frameName] and named[entry[2].indicatorName],entry[1]..' uses its own named frames')
+    check(named[entry[2].indicatorName].events.LEARNED_SPELL_IN_SKILL_LINE,entry[1]..' registers the supported spell learning event')
 end
 
 local originalAuras=C_UnitAuras.GetAuraDataByIndex

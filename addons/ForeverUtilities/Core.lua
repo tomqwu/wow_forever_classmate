@@ -16,6 +16,11 @@ function Core.IsNumber(value)
         and value == value and value > -math.huge and value < math.huge
 end
 
+function Core.Icon(value)
+    if Core.IsNumber(value) and value>0 then return value end
+    if Core.IsReadable(value) and type(value)=='string' and value~='' then return value end
+end
+
 function Core.Call(fn,...)
     if type(fn)~='function' then return nil end
     local function Pack(...) return {n=select('#',...),...} end

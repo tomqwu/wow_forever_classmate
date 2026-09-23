@@ -57,7 +57,7 @@ function Context.Discover(catalog)
                         if type(info)=='table' and Core.IsReadable(info.name) and type(info.name)=='string'
                             and (not item.isPassive or entry.allowPassive)
                             and (not previous or (Core.IsNumber(level) and Core.IsNumber(previous.level) and level>previous.level)) then
-                            spells[entry.key]={id=id,name=info.name,icon=Core.IsNumber(info.iconID) and info.iconID or nil,slot=slot,
+                            spells[entry.key]={id=id,name=info.name,icon=Core.Icon(info.iconID),slot=slot,
                                 kind=entry.kind,priority=entry.priority or 100,passive=item.isPassive==true,level=level,auraNames=aliases[entry.key]}
                         end
                     end
@@ -102,7 +102,7 @@ function Context.Aura(unit,filter,names,requirePlayer)
                     local now=Call(GetTime)
                     if Core.IsNumber(now) then left=math.max(0,aura.expirationTime-now) end
                 end
-                return {name=aura.name,icon=Core.IsNumber(aura.icon) and aura.icon or nil,
+                return {name=aura.name,icon=Core.Icon(aura.icon),
                     applications=Core.IsNumber(aura.applications) and aura.applications or nil,left=left}
             end
         end
@@ -144,7 +144,7 @@ function Context.Form()
     if active~=true then return nil end
     local info=Core.IsNumber(spellID) and Call(C_Spell and C_Spell.GetSpellInfo,spellID) or nil
     local name=type(info)=='table' and Core.IsReadable(info.name) and info.name or nil
-    return {name=type(name)=='string' and name or 'Active form',icon=Core.IsReadable(texture) and texture or nil,spellID=spellID}
+    return {name=type(name)=='string' and name or 'Active form',icon=Core.Icon(texture),spellID=spellID}
 end
 
 function Context.WeaponCoatings()

@@ -9,6 +9,8 @@ local count=0
 local function check(value,message) assert(value,message);count=count+1 end
 
 check(NS.Version=='test-version','status version comes from installed TOC metadata')
+check(NS.Core.Icon(0)==nil and NS.Core.Icon(-1)==nil and NS.Core.Icon(secret)==nil and NS.Core.Icon('')==nil,'invalid and secret icon values stay unavailable')
+check(NS.Core.Icon(123)==123 and NS.Core.Icon('Interface\\Icons\\Spell_Nature_LightningShield')~=nil,'positive file IDs and texture paths remain usable')
 local function hole() return nil,'second',nil,'fourth' end
 local a,b,c,d=NS.Core.Call(hole)
 check(a==nil and b=='second' and c==nil and d=='fourth','safe call preserves nil holes and trailing returns')
@@ -70,6 +72,7 @@ C_UnitAuras={GetAuraDataByIndex=function(_,index) return auras[index] end}
 UnitIsUnit=function(a,b) return a==b end
 local aura=C.Aura('player','HELPFUL',{['Battle Shout']=true},true)
 check(aura.name=='Battle Shout' and aura.left==30,'own aura and timer')
+auras[1].icon=0;check(C.Aura('player','HELPFUL',{['Battle Shout']=true},true).icon==nil,'zero aura icon cannot override a learned spell fallback')
 auras={{name='Battle Shout',icon=44,expirationTime=130,isFromPlayerOrPlayerPet=true}}
 check(C.Aura('target','HARMFUL',{['Battle Shout']=true},true).name=='Battle Shout','player-origin flag accepted')
 auras={{name=secret}};check(C.Aura('player','HELPFUL',{['Battle Shout']=true},false)==nil,'secret aura does not become missing')

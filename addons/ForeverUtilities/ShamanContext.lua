@@ -27,14 +27,18 @@ function Context.Totem(slot)
         end
         return nil
     end
-    if not Core.IsNumber(left) and Core.IsNumber(start) and Core.IsNumber(duration) then
+    -- Forever can expose a name while the icon and timing fields are still 0.
+    -- Such placeholders must not replace a usable cast observation or timer.
+    start=Core.IsNumber(start) and start>=0 and start or nil
+    duration=Core.IsNumber(duration) and duration>0 and duration or nil
+    left=Core.IsNumber(left) and left>0 and left or nil
+    if not left and start and duration then
         local now=Call(GetTime)
         if Core.IsNumber(now) then left=math.max(0,start+duration-now) end
     end
-    return {active=true,slot=slot,name=readableName and name or '',icon=Core.IsNumber(icon) and icon or nil,
-        spellID=Core.IsNumber(spellID) and spellID or nil,
-        start=Core.IsNumber(start) and start or nil,duration=Core.IsNumber(duration) and duration or nil,
-        left=Core.IsNumber(left) and math.max(0,left) or nil}
+    return {active=true,slot=slot,name=readableName and name or '',icon=Core.Icon(icon),
+        spellID=Core.IsNumber(spellID) and spellID>0 and spellID or nil,
+        start=duration and start or nil,duration=duration,left=left}
 end
 
 function Context.WeaponImbue()
@@ -54,11 +58,11 @@ function Context.WeaponImbue()
         if enchant.hasEnchant==true then
             local milliseconds=enchant.timeLeft
             local left=Core.IsNumber(milliseconds) and math.max(0,milliseconds/1000) or nil
-            local icon=Core.IsNumber(enchant.enchantIconID) and enchant.enchantIconID or texture
+            local icon=Core.Icon(enchant.enchantIconID) or Core.Icon(texture)
             return {equipped=true,active=true,left=left,icon=icon,charges=Core.IsNumber(enchant.charges) and enchant.charges or nil}
         end
     end
-    return {equipped=true,active=false,icon=texture}
+    return {equipped=true,active=false,icon=Core.Icon(texture)}
 end
 
 function Context.Aura(unit,filter,names,requirePlayer)

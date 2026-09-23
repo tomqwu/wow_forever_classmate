@@ -50,3 +50,7 @@ Preference changes reclaim unused space; transient combat states never resize th
 ## September 23 review
 
 Passive Maelstrom Weapon is supported, and restricted stacks remain unknown. Riptide readiness comes from the shared cooldown/usability checks; personal Flame Shock uses the shared aura-owner checks. Recall hints require a learned Totemic Recall. Observed totems remain tracked across combat exit if the native slot API is still unavailable. Death/world exit suspend the bar until return. See [the class review](class-review-2026-09-23.md).
+
+The 0.21.16 follow-up separates icon artwork from cell backgrounds, rejects zero texture IDs, and merges partial native readings with the current summon rather than erasing usable fields. Native remaining-only readings establish a countdown even if start/duration are missing. Successful casts get a brief placement grace period, and another spell or summon start cannot inherit the old timer. A zero duration never becomes a learned duration.
+
+The totem number means **remaining summoned lifetime**, not the action-button cooldown. For example, [Stoneclaw Totem](https://www.wowhead.com/forever/spell=5730/stoneclaw-totem) lasts 15 seconds with a 30-second cast cooldown, so 12 seconds on the bar and 27 seconds on the action button are consistent. Runtime durations still come from readable client data, not this example.

@@ -43,6 +43,12 @@ GetTotemTimeLeft=nil;totem=C.Totem(2);check(totem.left==20,'totem time fallback'
 GetTotemInfo=function() return secret end;check(C.Totem(1)==nil,'secret totem state hidden')
 GetTotemInfo=function() return false,secret,0,0,0 end;check(C.Totem(1)==nil,'secret totem name does not imply an empty slot')
 GetTotemInfo=function() error('restricted') end;check(C.Totem(1)==nil,'failed totem API hidden')
+GetTotemInfo=function() return true,'Stoneclaw Totem',0,0,0,1,0 end
+GetTotemTimeLeft=function() return 0 end;totem=C.Totem(2)
+check(totem.active and totem.icon==nil and totem.spellID==nil and totem.left==nil and totem.duration==nil,
+    'named active totem with zero metadata leaves icon and lifetime unavailable')
+GetTotemInfo=function() return true,'Stoneclaw Totem',97,15,0,1,5730 end;totem=C.Totem(2)
+check(totem.left==12 and totem.duration==15,'zero remaining placeholder falls back to readable lifetime metadata')
 local itemID=700
 GetInventoryItemID=function() return itemID end
 GetInventoryItemTexture=function() return 222 end
@@ -53,6 +59,8 @@ C_Item={GetWeaponEnchantInfo=function(slot)
 end}
 local imbue=C.WeaponImbue()
 check(imbue.equipped and imbue.active and imbue.left==90.5 and imbue.icon==333 and imbue.charges==3,'weapon imbue data')
+C_Item.GetWeaponEnchantInfo=function() return {{hasEnchant=true,timeLeft=90000,enchantIconID=0}} end
+check(C.WeaponImbue().icon==222,'zero enchant icon uses weapon art instead of a blank texture')
 C_Item.GetWeaponEnchantInfo=function() return {} end
 imbue=C.WeaponImbue();check(imbue.equipped and not imbue.active,'readable missing imbue')
 itemID=nil;check(C.WeaponImbue().equipped==false,'empty weapon slot')

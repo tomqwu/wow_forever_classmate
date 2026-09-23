@@ -6,10 +6,13 @@ local frames,named={},{}
 local methods={}
 local function object() return setmetatable({scripts={},events={},shown=true},{__index=methods}) end
 function methods:SetScript(key,value) self.scripts[key]=value end
-function methods:RegisterEvent(event) self.events[event]=true end
+function methods:RegisterEvent(event)
+    assert(event~='LEARNED_SPELL_IN_TAB','Forever rejects the removed learned-spell event')
+    self.events[event]=true
+end
 function methods:UnregisterEvent(event) self.events[event]=nil end
 function methods:CreateFontString() return object() end
-function methods:CreateTexture() return object() end
+function methods:CreateTexture(_,layer) local texture=object();texture.layer=layer;return texture end
 function methods:CreateMaskTexture() return object() end
 function methods:SetSize(w,h) self.width,self.height=w,h end
 function methods:SetWidth(w) self.width=w end
@@ -103,6 +106,9 @@ local indicator=named.ForeverClassmateShamanIndicator
 check(host and host.width==426 and host.height==56 and host.shown,'rendered native-width shaman bar created')
 check(indicator and indicator.scripts.OnUpdate~=nil,'enabled info polls for live timers')
 check(indicator.alpha==0.2,'idle shaman bar dims without a target or active totem')
+check(indicator.totemCells[1].background.layer=='BACKGROUND' and indicator.totemCells[1].icon.layer=='ARTWORK'
+    and indicator.weaponCell.background.layer=='BACKGROUND' and indicator.shieldCell.background.layer=='BACKGROUND',
+    'all Shaman cell backgrounds draw below their icons regardless of texture batching')
 check(not indicator.events.COMBAT_LOG_EVENT_UNFILTERED,'Shaman avoids Blizzard-only combat-log event registration')
 check(indicator.totemCells[1].button.width==38 and indicator.totemCells[1].button.y==-9,'totem cells use the shared square size and top edge')
 check(indicator.weaponCell.button.width==38 and indicator.weaponCell.button.y==-9 and indicator.shieldCell.button.y==-9,'totem and upkeep cells share one top edge')
@@ -165,6 +171,41 @@ check(earth.state and earth.state.castObserved and earth.icon.texture==604 and e
     'observed totem cast outside spellbook IDs keeps bar visible without guessing a timer')
 now=142;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
 check(earth.state==nil and indicator.alpha==0.2,'later totem removal clears dynamically recognized cast')
+
+-- A cast may precede its native slot update; incomplete native data must not
+-- erase the cast icon or replace its lifetime with placeholder zeroes.
+db.totemDurations[1004]=15
+GetTotemInfo=function() return false,'',0,0,0 end;GetTotemTimeLeft=function() return 0 end
+now=200;indicator.scripts.OnEvent(indicator,'UNIT_SPELLCAST_SUCCEEDED','player','new-cast',1004)
+check(earth.state and earth.icon.texture==504 and earth.timer.text=='~15s','cast survives the pre-placement empty slot snapshot')
+GetTotemInfo=function(slot) if slot==2 then return true,'Stoneclaw Totem',0,0,0,1,0 end return false,'',0,0,0 end
+now=203;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
+check(earth.icon.texture==504 and earth.timer.text=='~12s' and indicator.alpha==1,'partial totem update retains cast icon and correct lifetime outside combat')
+indicator.scripts.OnEvent(indicator,'PLAYER_REGEN_ENABLED')
+check(earth.icon.texture==504 and earth.timer.text=='~12s','combat exit uses the same partial-state merge instead of overwriting the cache')
+check(db.totemDurations[1004]==15,'placeholder timing never replaces learned duration')
+GetTotemTimeLeft=function(slot) return slot==2 and 8 or 0 end
+GetTotemInfo=function(slot) if slot==2 then return true,'',0,0,0 end return false,'',0,0,0 end
+now=205;indicator.scripts.OnUpdate(indicator,0.25)
+check(earth.timer.text=='8s' and not earth.state.estimated,'readable remaining lifetime corrects the estimate without full start/duration metadata')
+check(earth.icon.texture==504 and earth.state.name=='Stoneclaw Totem','missing native identity preserves the current observed cast')
+GetTotemInfo=function() return secret,secret,secret,secret,secret end;GetTotemTimeLeft=function() return secret end
+now=207;indicator.scripts.OnUpdate(indicator,0.25)
+check(earth.timer.text=='6s' and earth.icon.texture==504,'remaining-only native timer keeps counting through unavailable data')
+now=213;indicator.scripts.OnUpdate(indicator,0.25)
+check(earth.state==nil and indicator.alpha==0.2,'remaining-only countdown expires and restores idle fading')
+GetTotemInfo=function(slot) if slot==2 then return true,'Stoneclaw Totem',220,15,0,1,1004 end return false,'',0,0,0 end
+GetTotemTimeLeft=function() return 0 end
+now=223;indicator.scripts.OnUpdate(indicator,0.25)
+check(earth.icon.texture==504 and earth.timer.text=='12s','native zero icon falls back to learned art and zero remaining uses readable start/duration')
+now=224;indicator.scripts.OnEvent(indicator,'UNIT_SPELLCAST_SUCCEEDED','player','recast',1004)
+check(earth.timer.text=='~15s','new cast is not overwritten by the previous native summon during placement')
+GetTotemInfo=function(slot) if slot==2 then return true,'Stoneskin Totem',0,0,0 end return false,'',0,0,0 end
+now=226;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
+check(earth.state.name=='Stoneskin Totem' and earth.timer.text=='','a different totem in the same slot never inherits the old timer')
+GetTotemInfo=function() return false,'',0,0,0 end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
+check(earth.state and not earth.state.active and indicator.alpha==0.2,'confirmed removal immediately clears merged state')
+now=142 -- Later helper fixtures use this clock independently of the totem sequence.
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')
 

@@ -1,3 +1,12 @@
+## 0.21.16
+
+- Put Shaman cell backgrounds on a lower draw layer so they cannot cover active totem, imbue, or shield icons. Zero/invalid icon IDs now use available spell or weapon art instead of a blank texture.
+- Preserve a totem's observed icon and countdown when Forever returns partial native data, including on combat exit. Handle cast success arriving before the slot updates, keep remaining-only timers counting, and discard old timing when another totem replaces it.
+- Totem tooltips explicitly identify the remaining lifetime. This is separate from the spell's cast cooldown: Stoneclaw has a 15-second lifetime and a 30-second cooldown.
+- Includes the Mage/all-class learned-spell event correction from 0.21.15, with startup tests that reject the removed `LEARNED_SPELL_IN_TAB` event.
+
+Use `/reload` and check `/fclassmate status` for 0.21.16. Automated validation uses mocked APIs; live rendering and beta API behavior still need in-game confirmation.
+
 ## 0.21.15
 
 - Reviewed all nine class helpers and the shared racial catalog. Corrected short cooldowns falsely reported as ready, nil-hole secret-value guards, malformed aura/weapon readings, base-spell overrides, and standard spell-rank selection.
