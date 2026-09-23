@@ -15,7 +15,7 @@ function Context.FormatTime(seconds)
 end
 
 function Context.Discover(catalog)
-    local spells,wanted={},{}
+    local spells,wanted,aliases={},{},{}
     if type(catalog)~='table' or not C_SpellBook or not C_Spell or not Enum or not Enum.SpellBookSpellBank then return spells end
     local function Want(name,entry)
         if type(name)~='string' then return end
@@ -23,11 +23,13 @@ function Context.Discover(catalog)
         wanted[name][#wanted[name]+1]=entry
     end
     for _,entry in ipairs(catalog) do
+        aliases[entry.key]={}
         for _,candidate in ipairs(entry.names or {}) do
             Want(candidate,entry)
+            aliases[entry.key][candidate]=true
             local info=Call(C_Spell.GetSpellInfo,candidate)
             local name=type(info)=='table' and info.name
-            if Core.IsReadable(name) and type(name)=='string' and name~=candidate then Want(name,entry) end
+            if Core.IsReadable(name) and type(name)=='string' and name~=candidate then Want(name,entry);aliases[entry.key][name]=true end
         end
     end
     local lineCount=Call(C_SpellBook.GetNumSpellBookSkillLines)
@@ -40,14 +42,23 @@ function Context.Discover(catalog)
                 local item=Call(C_SpellBook.GetSpellBookItemInfo,slot,Enum.SpellBookSpellBank.Player)
                 local id=type(item)=='table' and item.spellID
                 if Core.IsNumber(id) and not seen[id] and Core.IsReadable(item.isPassive) and Core.IsReadable(item.isOffSpec)
-                    and not item.isOffSpec and Call(C_SpellBook.IsSpellKnown,id)==true then
+                    and not item.isOffSpec and (Call(C_SpellBook.IsSpellKnown,id)==true
+                        or (Core.IsNumber(item.baseSpellID) and Call(C_SpellBook.IsSpellKnown,item.baseSpellID)==true)) then
                     seen[id]=true
                     local info=Call(C_Spell.GetSpellInfo,id)
                     local entries=type(info)=='table' and Core.IsReadable(info.name) and wanted[info.name]
+                    if not entries and Core.IsNumber(item.baseSpellID) then
+                        local base=Call(C_Spell.GetSpellInfo,item.baseSpellID)
+                        entries=type(base)=='table' and Core.IsReadable(base.name) and wanted[base.name]
+                    end
+                    local level=Call(C_Spell.GetSpellLevelLearned,id)
                     for _,entry in ipairs(entries or {}) do
-                        if (not item.isPassive or entry.allowPassive) and not spells[entry.key] then
+                        local previous=spells[entry.key]
+                        if type(info)=='table' and Core.IsReadable(info.name) and type(info.name)=='string'
+                            and (not item.isPassive or entry.allowPassive)
+                            and (not previous or (Core.IsNumber(level) and Core.IsNumber(previous.level) and level>previous.level)) then
                             spells[entry.key]={id=id,name=info.name,icon=Core.IsNumber(info.iconID) and info.iconID or nil,slot=slot,
-                                kind=entry.kind,priority=entry.priority or 100,passive=item.isPassive==true}
+                                kind=entry.kind,priority=entry.priority or 100,passive=item.isPassive==true,level=level,auraNames=aliases[entry.key]}
                         end
                     end
                 end
@@ -62,6 +73,7 @@ function Context.Names(spells,keys)
     for _,key in ipairs(keys or {}) do
         local spell=spells and spells[key]
         if spell and type(spell.name)=='string' then names[spell.name]=true end
+        if spell then for name in pairs(spell.auraNames or {}) do names[name]=true end end
     end
     return names
 end
@@ -75,14 +87,13 @@ function Context.Aura(unit,filter,names,requirePlayer)
         local ok,aura=pcall(api,unit,index,filter)
         if not ok or not Core.IsReadable(aura) then return nil end
         if aura==nil then if uncertain then return nil end;return false end
-        if type(aura)~='table' or not Core.IsReadable(aura.name) then uncertain=true
+        if type(aura)~='table' or not Core.IsReadable(aura.name) or type(aura.name)~='string' or aura.name=='' then uncertain=true
         elseif names[aura.name] then
             local sourceOK=true
             if requirePlayer then
-                if not Core.IsReadable(aura.sourceUnit) or not Core.IsReadable(aura.isFromPlayerOrPlayerPet) then return nil end
-                if type(aura.sourceUnit)=='string' then
+                if Core.IsReadable(aura.sourceUnit) and type(aura.sourceUnit)=='string' then
                     sourceOK=aura.sourceUnit=='player' or Call(UnitIsUnit,aura.sourceUnit,'player')==true
-                elseif type(aura.isFromPlayerOrPlayerPet)=='boolean' then sourceOK=aura.isFromPlayerOrPlayerPet
+                elseif Core.IsReadable(aura.isFromPlayerOrPlayerPet) and type(aura.isFromPlayerOrPlayerPet)=='boolean' then sourceOK=aura.isFromPlayerOrPlayerPet
                 else return nil end
             end
             if sourceOK then
@@ -92,7 +103,7 @@ function Context.Aura(unit,filter,names,requirePlayer)
                     if Core.IsNumber(now) then left=math.max(0,aura.expirationTime-now) end
                 end
                 return {name=aura.name,icon=Core.IsNumber(aura.icon) and aura.icon or nil,
-                    applications=Core.IsNumber(aura.applications) and aura.applications or 0,left=left}
+                    applications=Core.IsNumber(aura.applications) and aura.applications or nil,left=left}
             end
         end
     end
@@ -140,13 +151,15 @@ function Context.WeaponCoatings()
     if not C_Item or type(C_Item.GetWeaponEnchantInfo)~='function' or not Enum or not Enum.WeaponSlot then return nil end
     local result={equipped=0,active=0,main=false,off=false}
     for _,entry in ipairs({{slot=16,enum=Enum.WeaponSlot.MainHand,key='main'},{slot=17,enum=Enum.WeaponSlot.OffHand,key='off'}}) do
-        local itemID=Call(GetInventoryItemID,'player',entry.slot)
+        if type(GetInventoryItemID)~='function' then return nil end
+        local ok,itemID=pcall(GetInventoryItemID,'player',entry.slot)
+        if not ok or not Core.IsReadable(itemID) then return nil end
         if Core.IsNumber(itemID) and itemID>0 then
             result.equipped=result.equipped+1
             local enchants=Call(C_Item.GetWeaponEnchantInfo,entry.enum)
             if type(enchants)~='table' then return nil end
             for _,enchant in pairs(enchants) do
-                if type(enchant)~='table' or not Core.IsReadable(enchant.hasEnchant) then return nil end
+                if type(enchant)~='table' or not Core.IsReadable(enchant.hasEnchant) or type(enchant.hasEnchant)~='boolean' then return nil end
                 if enchant.hasEnchant==true then result.active=result.active+1;result[entry.key]=true;break end
             end
         elseif itemID~=nil then return nil end
@@ -166,11 +179,11 @@ function Context.Cooldown(spell)
     local info=Call(C_Spell and C_Spell.GetSpellCooldown,spell.id)
     if type(info)=='table' then start,duration,enabled=info.startTime,info.duration,info.isEnabled
     elseif type(GetSpellCooldown)=='function' then start,duration,enabled=Call(GetSpellCooldown,spell.id) end
-    if not Core.IsReadable(enabled) then return nil end
+    if not Core.IsReadable(enabled) or (type(enabled)~='boolean' and enabled~=0 and enabled~=1) then return nil end
     if enabled==false or enabled==0 then return {left=nil,enabled=false} end
-    if not Core.IsNumber(start) or not Core.IsNumber(duration) then return nil end
+    if not Core.IsNumber(start) or not Core.IsNumber(duration) or start<0 or duration<0 then return nil end
     local left=0
-    if duration>1.6 then
+    if duration>0 then
         local now=Call(GetTime)
         if not Core.IsNumber(now) then return nil end
         left=math.max(0,start+duration-now)
@@ -210,6 +223,7 @@ end
 local racialCatalog={
     {key='willToSurvive',names={'Will to Survive'},kind='racial',priority=1},
     {key='stoneform',names={'Stoneform'},kind='racial',priority=1},
+    {key='findTreasure',names={'Find Treasure'},kind='racial',priority=3},
     {key='elunesLight',names={"Elune's Light",'Elunes Light'},kind='racial',priority=1},
     {key='eureka',names={'Eureka!','Eureka'},kind='racial',priority=1},
     {key='bloodFury',names={'Blood Fury'},kind='racial',priority=1},

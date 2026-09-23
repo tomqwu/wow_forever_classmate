@@ -60,10 +60,11 @@ GetInventoryItemID=function() return nil end
 Enum={WeaponSlot={MainHand=0},SpellBookSpellBank={Player=0}}
 C_Item={GetWeaponEnchantInfo=function() return {} end}
 local book={
-    [1]={spellID=1001,name='Maelstrom Weapon',iconID=501},
+    [1]={spellID=1001,name='Maelstrom Weapon',iconID=501,isPassive=true},
     [2]={spellID=1002,name='Windfury Weapon',iconID=502},
     [3]={spellID=1003,name='Lightning Shield',iconID=503},
     [4]={spellID=1004,name='Stoneclaw Totem',iconID=504},
+    [5]={spellID=1005,name='Totemic Recall',iconID=505},
 }
 C_Spell={GetSpellInfo=function(value)
     if value==2004 then return {name='Stoneclaw Totem',iconID=604} end
@@ -72,8 +73,8 @@ C_Spell={GetSpellInfo=function(value)
 end}
 C_SpellBook={
     GetNumSpellBookSkillLines=function() return 1 end,
-    GetSpellBookSkillLineInfo=function() return {itemIndexOffset=0,numSpellBookItems=4} end,
-    GetSpellBookItemInfo=function(slot) local item=book[slot];return {spellID=item.spellID,isPassive=false,isOffSpec=false} end,
+    GetSpellBookSkillLineInfo=function() return {itemIndexOffset=0,numSpellBookItems=#book} end,
+    GetSpellBookItemInfo=function(slot) local item=book[slot];return {spellID=item.spellID,isPassive=item.isPassive==true,isOffSpec=false} end,
     IsSpellKnown=function() return true end,
 }
 C_UnitAuras={GetAuraDataByIndex=function(unit,index,filter)
@@ -85,6 +86,7 @@ end}
 ForeverUtilitiesDB={shaman={x=72,y=-101,scale=1.2,locked=false}}
 assert(loadfile(root..'Core.lua'))('ForeverUtilities',NS)
 assert(loadfile(root..'ClassHost.lua'))('ForeverUtilities',NS)
+assert(loadfile('addons/ForeverUtilities/ClassContext.lua'))('ForeverUtilities',NS)
 assert(loadfile(root..'ShamanContext.lua'))('ForeverUtilities',NS)
 assert(loadfile(root..'Shaman.lua'))('ForeverUtilities',NS)
 assert(loadfile(root..'UI.lua'))('ForeverUtilities',NS)
@@ -148,6 +150,9 @@ indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
 check(earth.state.castObserved and earth.timer.text=='~30s','placement update preserves the estimated countdown')
 now=132;indicator.scripts.OnUpdate(indicator,0.25)
 check(earth.timer.text=='~28s','estimated combat timer counts down')
+UnitAffectingCombat=function() return false end
+indicator.scripts.OnEvent(indicator,'PLAYER_REGEN_ENABLED')
+check(earth.state and earth.timer.text=='~28s' and indicator.alpha==1,'ending combat does not discard an observed totem when native data remains unavailable')
 now=135;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
 check(earth.state==nil,'later totem removal event clears combat cast')
 UnitAffectingCombat=function() return false end
@@ -162,6 +167,27 @@ now=142;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
 check(earth.state==nil and indicator.alpha==0.2,'later totem removal clears dynamically recognized cast')
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')
+
+local savedAuras=C_UnitAuras.GetAuraDataByIndex
+C_UnitAuras.GetAuraDataByIndex=function() return secret end
+indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')
+check(indicator.helperText.text=='Maelstrom ?/5','restricted Maelstrom aura is not presented as zero stacks')
+C_UnitAuras.GetAuraDataByIndex=function(_,index) if index==1 then return {name='Maelstrom Weapon',applications=secret} end end
+indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')
+check(indicator.helperText.text=='Maelstrom ?/5','secret Maelstrom stack count remains unknown')
+C_UnitAuras.GetAuraDataByIndex=savedAuras
+local savedSpells=NS.Shaman.spells
+NS.Shaman.spells={riptide={id=2000,name='Riptide',icon=123}}
+C_Spell.GetSpellCooldown=function() return {startTime=140,duration=10,isEnabled=true} end
+C_Spell.IsSpellUsable=function() return true,false end
+indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')
+check(indicator.helperText.text=='Riptide 8s','Riptide reports a cooldown instead of unconditional ready')
+NS.Shaman.spells=savedSpells
+indicator.scripts.OnEvent(indicator,'PLAYER_DEAD')
+indicator.scripts.OnEvent(indicator,'UNIT_AURA','player');indicator.Refresh()
+check(not indicator.shown and not indicator.scripts.OnUpdate,'Shaman queued events and settings refresh cannot revive dead-player polling')
+indicator.scripts.OnEvent(indicator,'PLAYER_ALIVE')
+check(indicator.shown and indicator.scripts.OnUpdate,'Shaman resumes when alive')
 local slash=SlashCmdList.FOREVERUTILITIES
 slash('')
 local panel=named.ForeverClassmateShamanOptions

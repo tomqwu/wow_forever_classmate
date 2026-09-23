@@ -105,6 +105,7 @@ local function CreateIndicator(host,db)
         lightningShield={'Lightning Shield','shield'},waterShield={'Water Shield','shield'},
         maelstrom={'Maelstrom Weapon','maelstrom'},lava={'Lava Burst','lava'},flame={'Flame Shock','flame'},
         riptide={'Riptide','riptide'},fireNova={'Fire Nova','fireNova'},
+        recall={'Totemic Recall','recall'},
         rockbiter={'Rockbiter Weapon','imbue'},flametongue={'Flametongue Weapon','imbue'},
         frostbrand={'Frostbrand Weapon','imbue'},windfury={'Windfury Weapon','imbue'},
     }
@@ -134,14 +135,15 @@ local function CreateIndicator(host,db)
                     local item=Core.Call(C_SpellBook.GetSpellBookItemInfo,slot,Enum.SpellBookSpellBank.Player)
                     local id=type(item)=='table' and item.spellID
                     if Core.IsNumber(id) and not seen[id] and Core.IsReadable(item.isPassive) and Core.IsReadable(item.isOffSpec)
-                        and not item.isPassive and not item.isOffSpec and Core.Call(C_SpellBook.IsSpellKnown,id)==true then
+                        and not item.isOffSpec and (Core.Call(C_SpellBook.IsSpellKnown,id)==true
+                            or (Core.IsNumber(item.baseSpellID) and Core.Call(C_SpellBook.IsSpellKnown,item.baseSpellID)==true)) then
                         seen[id]=true
                         local data=Core.Call(C_Spell.GetSpellInfo,id)
-                        if type(data)=='table' and Core.IsReadable(data.name) and type(data.name)=='string' and totemNames[data.name] then
+                        if not item.isPassive and type(data)=='table' and Core.IsReadable(data.name) and type(data.name)=='string' and totemNames[data.name] then
                             totemBySpellID[id]={slot=totemNames[data.name],name=data.name,icon=Core.IsNumber(data.iconID) and data.iconID or nil}
                         end
                         local match=type(data)=='table' and Core.IsReadable(data.name) and wanted[data.name]
-                        if match then
+                        if match and (not item.isPassive or match.kind=='maelstrom') then
                             local spell={id=id,name=data.name,icon=Core.IsNumber(data.iconID) and data.iconID or nil,slot=slot}
                             Shaman.spells[match.key]=spell
                             if match.kind=='shield' then shieldNames[data.name]=true end
@@ -228,7 +230,8 @@ local function CreateIndicator(host,db)
         local activeTotems,unknownTotems=0,0
         for i,cell in ipairs(totemCells) do
             local slot=cell.info.slot
-            local state=Context.Totem(slot)
+            local state
+            if db.showTotems~=false or db.totemRecallHint~=false or db.showSpecHelper~=false then state=Context.Totem(slot) end
             if state and state.active then
                 RememberDuration(state)
                 local saved=totemCache[slot]
@@ -272,7 +275,7 @@ local function CreateIndicator(host,db)
                 cell.timer:SetText('');cell.badge:SetText('')
             end
         end
-        local imbue=Context.WeaponImbue();weapon.state=imbue
+        local imbue=db.showWeaponImbue~=false and Context.WeaponImbue() or nil;weapon.state=imbue
         weapon.button:SetShown(db.showWeaponImbue~=false and imbue~=nil and imbue.equipped)
         if imbue and imbue.equipped then
             weapon.icon:SetTexture(imbue.icon or 'Interface\\Icons\\INV_Mace_02')
@@ -281,7 +284,9 @@ local function CreateIndicator(host,db)
             local warn=next(imbueNames)~=nil and not imbue.active
             weapon.stripe:SetColorTexture(warn and 1 or 0.25,warn and 0.15 or 0.75,warn and 0.1 or 1,1)
         end
-        local missingShield,aura=Context.MissingShield(shieldNames);shield.state=aura
+        local missingShield,aura
+        if db.showShield~=false then missingShield,aura=Context.MissingShield(shieldNames) end
+        shield.state=aura
         shield.button:SetShown(db.showShield~=false and next(shieldNames)~=nil and missingShield~=nil)
         if next(shieldNames) then
             local fallback=(Shaman.spells.waterShield or Shaman.spells.lightningShield or {}).icon or 'Interface\\Icons\\Spell_Nature_LightningShield'
@@ -295,14 +300,15 @@ local function CreateIndicator(host,db)
         local inCombat=Core.Call(UnitAffectingCombat,'player')==true
         local hasTarget=Core.Call(UnitExists,'target')==true
         local helper,icon,color='',nil,{0.75,0.85,1}
-        if db.totemRecallHint~=false and not inCombat and activeTotems>0 then
+        if db.totemRecallHint~=false and Shaman.spells.recall and not inCombat and activeTotems>0 then
             helper='Recall '..activeTotems..' totem'..(activeTotems==1 and '' or 's');color={1,0.75,0.25}
             local recall=Core.Call(C_Spell and C_Spell.GetSpellInfo,'Totemic Recall');icon=type(recall)=='table' and recall.iconID
         elseif db.showSpecHelper~=false and Shaman.spells.maelstrom then
             local auraState=Context.Aura('player','HELPFUL',{[Shaman.spells.maelstrom.name]=true},false)
-            local stacks=type(auraState)=='table' and auraState.applications or 0
-            helper='Maelstrom '..stacks..'/5';icon=Shaman.spells.maelstrom.icon
-            if stacks>=5 then color={0.25,1,0.45} end
+            local stacks
+            if type(auraState)=='table' then stacks=auraState.applications elseif auraState==false then stacks=0 end
+            helper='Maelstrom '..(stacks or '?')..'/5';icon=Shaman.spells.maelstrom.icon
+            if stacks and stacks>=5 then color={0.25,1,0.45} end
         elseif db.showSpecHelper~=false and Shaman.spells.lava and Shaman.spells.flame then
             local flame=Context.FlameShock(Shaman.spells.flame.name);icon=Shaman.spells.flame.icon
             if type(flame)=='table' then helper='Flame '..(Context.FormatTime(flame.left) or 'active');color={1,0.55,0.2}
@@ -313,7 +319,12 @@ local function CreateIndicator(host,db)
             local friendly=Core.Call(UnitIsFriend,'player','target')==true and Core.Call(UnitIsDead,'target')==false
             local tide=friendly and Context.Aura('target','HELPFUL',{[Shaman.spells.riptide.name]=true},true) or nil
             if type(tide)=='table' then helper='Riptide '..(Context.FormatTime(tide.left) or 'active');color={0.25,0.8,1}
-            else helper='Riptide ready' end
+            else
+                local state=NS.ClassContext.SpellState(Shaman.spells.riptide)
+                helper='Riptide'
+                if state and state.status=='ready' then helper='Riptide ready'
+                elseif state and state.status=='cooldown' then helper='Riptide '..(Context.FormatTime(state.left) or '') end
+            end
         elseif db.showSpecHelper~=false then
             helper=(unknownTotems>0 and (activeTotems>0 and (activeTotems..'+/4') or '?/4') or (activeTotems..'/4'))..' totems'
             icon='Interface\\Icons\\Spell_Nature_StoneClawTotem'
@@ -345,9 +356,9 @@ local function CreateIndicator(host,db)
             helper~='' and helper or 'off',mana and (mana..'%') or 'unavailable')
     end
 
-    local active=false;local elapsed=0
+    local active=false;local elapsed=0;local suspended=false
     local events={'PLAYER_TOTEM_UPDATE','UNIT_SPELLCAST_SUCCEEDED','PLAYER_ENTERING_WORLD','PLAYER_LEAVING_WORLD','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED',
-        'PLAYER_TARGET_CHANGED','PLAYER_DEAD','PLAYER_ALIVE','PLAYER_UNGHOST','SPELLS_CHANGED','PLAYER_EQUIPMENT_CHANGED','UNIT_INVENTORY_CHANGED','UNIT_AURA','UNIT_POWER_UPDATE'}
+        'PLAYER_TARGET_CHANGED','PLAYER_DEAD','PLAYER_ALIVE','PLAYER_UNGHOST','SPELLS_CHANGED','LEARNED_SPELL_IN_SKILL_LINE','PLAYER_EQUIPMENT_CHANGED','UNIT_INVENTORY_CHANGED','UNIT_AURA','UNIT_POWER_UPDATE'}
     local function NeedsPoll()
         return db.showTotems~=false or db.showWeaponImbue~=false or db.showShield~=false or db.showSpecHelper~=false or db.showMana~=false or db.totemRecallHint~=false
     end
@@ -359,13 +370,19 @@ local function CreateIndicator(host,db)
             active=false;lastStatus='Shaman helper disabled';return
         end
         if not active then for _,event in ipairs(events) do frame:RegisterEvent(event) end;active=true;Discover() end
+        if suspended or Core.PlayerDead() then frame:Hide();return end
         Update();elapsed=0
         if NeedsPoll() then frame:SetScript('OnUpdate',function(_,delta) elapsed=elapsed+delta;if elapsed>=0.25 then elapsed=0;Update() end end) end
     end
     frame:SetScript('OnEvent',function(_,event,unit,_,spellID)
         if not db.enabled then return end
+        if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then
+            suspended=true;totemCache={};recentCast={};frame:SetScript('OnUpdate',nil);frame:Hide();return
+        end
+        if event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_ALIVE' or event=='PLAYER_UNGHOST' then suspended=false end
+        if suspended or Core.PlayerDead() then return end
         if event=='UNIT_SPELLCAST_SUCCEEDED' then
-            if unit=='player' and Core.IsNumber(spellID) then
+            if Core.IsReadable(unit) and unit=='player' and Core.IsNumber(spellID) then
                 local totem=ResolveTotemSpell(spellID)
                 if totem then
                     local now=Core.Call(GetTime)
@@ -392,16 +409,16 @@ local function CreateIndicator(host,db)
         if event=='UNIT_AURA' and Core.IsReadable(unit) and unit~='player' and unit~='target' then return end
         if event=='UNIT_INVENTORY_CHANGED' and Core.IsReadable(unit) and unit~='player' then return end
         if event=='UNIT_POWER_UPDATE' and Core.IsReadable(unit) and unit~='player' then return end
-        if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then totemCache={};recentCast={};frame:SetScript('OnUpdate',nil);return end
         if event=='PLAYER_REGEN_ENABLED' then
             for slot,saved in pairs(totemCache) do
                 if saved.castObserved then
                     local state=Context.Totem(slot)
-                    if state and state.active then RememberDuration(state);totemCache[slot]=state else totemCache[slot]=nil end
+                    if state and state.active then RememberDuration(state);totemCache[slot]=state
+                    elseif state then totemCache[slot]=nil end
                 end
             end
         end
-        if event=='SPELLS_CHANGED' or event=='PLAYER_ENTERING_WORLD' then Discover() end
+        if event=='SPELLS_CHANGED' or event=='LEARNED_SPELL_IN_SKILL_LINE' or event=='PLAYER_ENTERING_WORLD' then Discover() end
         if event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_ALIVE' or event=='PLAYER_UNGHOST' then Refresh() else Update() end
     end)
     frame.Refresh=Refresh;frame.Status=function() return lastStatus end
@@ -416,7 +433,7 @@ function Shaman.Initialize(saved)
     Shaman.db=saved.shaman
     if type(Shaman.db.totemDurations)~='table' then Shaman.db.totemDurations={} end
     for key,value in pairs(Shaman.defaults) do if type(Shaman.db[key])~=type(value) then Shaman.db[key]=value end end
-    saved.schemaVersion=3;Shaman.Apply()
+    Core.EnsureSchema(saved,3);Shaman.Apply()
 end
 function Shaman.IsClass() return NS.ActiveClass()==Shaman end
 function Shaman.Apply()

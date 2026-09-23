@@ -1,3 +1,13 @@
+## 0.21.15
+
+- Reviewed all nine class helpers and the shared racial catalog. Corrected short cooldowns falsely reported as ready, nil-hole secret-value guards, malformed aura/weapon readings, base-spell overrides, and standard spell-rank selection.
+- Added Paladin Seal of Fury/Justice and judgment-effect recognition, Druid Gift of the Wild and Priest prayer equivalents, learned-summon gating for Warlock, and Dwarf Find Treasure discovery. Missing optional target effects are now neutral instead of blanket rotation warnings.
+- Fixed Shaman passive Maelstrom discovery, unknown stack counts, Riptide readiness, personal Flame Shock tracking, learned-only Recall hints, and totem retention when combat ends with unavailable native data.
+- All classes stay suspended while dead or loading, and resume on return. Disabled standard blocks stop querying their APIs; Hunter stops polling when all target widgets are disabled.
+- Startup and status now read the actual addon version from its TOC. Class initialization preserves newer shared saved-data schemas.
+
+Use `/reload` after updating. Validation uses mocked APIs; restricted live readings remain unavailable. See `docs/class-review-2026-09-23.md` for review coverage and limits.
+
 ## 0.21.14
 
 - Recognize a Shaman totem from the player’s successful cast spell ID even when Forever reports a different ID in the spellbook. This keeps the totem icon and bar visible when the slot API reports `?/4`.

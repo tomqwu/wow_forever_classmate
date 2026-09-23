@@ -1,5 +1,6 @@
 local NS={}
 local secret={}
+C_AddOns={GetAddOnMetadata=function() return 'test-version' end}
 issecretvalue=function(value) return rawequal(value,secret) end
 assert(loadfile('addons/ForeverUtilities/Core.lua'))('ForeverUtilities',NS)
 assert(loadfile('addons/ForeverUtilities/ClassContext.lua'))('ForeverUtilities',NS)
@@ -7,6 +8,14 @@ local C=NS.ClassContext
 local count=0
 local function check(value,message) assert(value,message);count=count+1 end
 
+check(NS.Version=='test-version','status version comes from installed TOC metadata')
+local function hole() return nil,'second',nil,'fourth' end
+local a,b,c,d=NS.Core.Call(hole)
+check(a==nil and b=='second' and c==nil and d=='fourth','safe call preserves nil holes and trailing returns')
+check(NS.Core.Call(function() return 'public',nil,secret end)==nil,'safe call rejects secret returns after a nil hole')
+
+local savedSchema={schemaVersion=4};NS.Core.EnsureSchema(savedSchema,3)
+check(savedSchema.schemaVersion==4,'initializing older class settings cannot downgrade shared schema')
 local book={
     [1]={spellID=1001,name='Battle Shout',iconID=11,isPassive=false},
     [2]={spellID=1002,name='Bloodthrill',iconID=12,isPassive=true},
@@ -108,4 +117,30 @@ GetShapeshiftForm=function() return 2 end
 GetShapeshiftFormInfo=function() return 777,true,true,4001 end
 C_Spell.GetSpellInfo=function(id) if id==4001 then return {name='Bear Form',iconID=777} end end
 local form=C.Form();check(form.name=='Bear Form' and form.icon==777 and form.spellID==4001,'active form uses current API signature')
+
+C_Spell.GetSpellCooldown=function() return {startTime=99.5,duration=1.2,isEnabled=true} end
+check(C.SpellState({id=10}).status=='cooldown','short real cooldowns are not reported ready')
+C_Spell.GetSpellCooldown=function() return {startTime=0,duration=0} end
+check(C.SpellState({id=10}).status=='unknown','incomplete cooldown result does not invent readiness')
+auras={{name='Battle Shout',applications=secret,sourceUnit='player',isFromPlayerOrPlayerPet=secret}}
+local partial=C.Aura('player','HELPFUL',{['Battle Shout']=true},true)
+check(partial and partial.applications==nil,'readable owner is enough while hidden stacks stay unknown')
+auras={{icon=55}}
+check(C.Aura('player','HELPFUL',{['Battle Shout']=true},false)==nil,'malformed aura prevents a false missing warning')
+GetInventoryItemID=function() error('unavailable') end
+check(C.WeaponCoatings()==nil,'unavailable weapon inventory is not treated as unequipped')
+C_SpellBook.GetSpellBookSkillLineInfo=function() return {itemIndexOffset=0,numSpellBookItems=1} end
+C_SpellBook.GetSpellBookItemInfo=function() return {spellID=102,baseSpellID=101,isPassive=false,isOffSpec=false} end
+C_SpellBook.IsSpellKnown=function(id) return id==101 end
+C_Spell.GetSpellInfo=function(id) return {name=id==102 and 'Empowered Battle Shout' or 'Battle Shout',iconID=1} end
+local override=C.Discover(catalog)
+check(override.shout and override.shout.id==102,'known base identifies an overridden spell with a different name')
+C_SpellBook.GetSpellBookSkillLineInfo=function() return {itemIndexOffset=0,numSpellBookItems=2} end
+C_SpellBook.GetSpellBookItemInfo=function(slot) return {spellID=slot,isPassive=false,isOffSpec=false} end
+C_SpellBook.IsSpellKnown=function() return true end
+C_Spell.GetSpellInfo=function() return {name='Power Word: Fortitude',iconID=1} end
+C_Spell.GetSpellLevelLearned=function(id) return id*10 end
+local ranks=C.Discover({{key='fortitude',names={'Power Word: Fortitude','Prayer of Fortitude'}}})
+check(ranks.fortitude.id==2,'highest readable learned rank supplies spell readiness')
+check(C.Names(ranks,{'fortitude'})['Prayer of Fortitude'],'equivalent group buff is accepted even before the group spell is learned')
 print('PASS: '..count..' shared class context checks')

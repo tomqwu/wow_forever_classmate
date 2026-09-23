@@ -3,13 +3,7 @@ local Core=NS.Core
 local Context={}
 NS.ShamanContext=Context
 
-local function Call(fn,...)
-    if type(fn)~='function' then return nil end
-    local values={pcall(fn,...)}
-    if not table.remove(values,1) then return nil end
-    for _,value in ipairs(values) do if not Core.IsReadable(value) then return nil end end
-    return unpack(values)
-end
+local Call=Core.Call
 
 function Context.FormatTime(seconds)
     if not Core.IsNumber(seconds) or seconds<0 then return nil end
@@ -56,7 +50,7 @@ function Context.WeaponImbue()
     local enchants=Call(api,slot)
     if type(enchants)~='table' then return nil end
     for _,enchant in pairs(enchants) do
-        if type(enchant)~='table' or not Core.IsReadable(enchant.hasEnchant) then return nil end
+        if type(enchant)~='table' or not Core.IsReadable(enchant.hasEnchant) or type(enchant.hasEnchant)~='boolean' then return nil end
         if enchant.hasEnchant==true then
             local milliseconds=enchant.timeLeft
             local left=Core.IsNumber(milliseconds) and math.max(0,milliseconds/1000) or nil
@@ -68,32 +62,7 @@ function Context.WeaponImbue()
 end
 
 function Context.Aura(unit,filter,names,requirePlayer)
-    if type(names)~='table' or not next(names) then return nil end
-    local api=C_UnitAuras and C_UnitAuras.GetAuraDataByIndex
-    if type(api)~='function' then return nil end
-    local unknown=false
-    for index=1,255 do
-        local ok,aura=pcall(api,unit,index,filter)
-        if not ok or not Core.IsReadable(aura) then return nil end
-        if aura==nil then if unknown then return nil end;return false end
-        if type(aura)~='table' or not Core.IsReadable(aura.name) then unknown=true
-        elseif names[aura.name] then
-            local sourceOK=true
-            if requirePlayer then
-                if not Core.IsReadable(aura.sourceUnit) then return nil end
-                sourceOK=aura.sourceUnit=='player' or Call(UnitIsUnit,aura.sourceUnit,'player')==true
-            end
-            if sourceOK then
-                local left
-                if Core.IsNumber(aura.expirationTime) and aura.expirationTime>0 then
-                    local now=Call(GetTime);if Core.IsNumber(now) then left=math.max(0,aura.expirationTime-now) end
-                end
-                return {name=aura.name,icon=Core.IsNumber(aura.icon) and aura.icon or nil,
-                    applications=Core.IsNumber(aura.applications) and aura.applications or 0,left=left}
-            end
-        end
-    end
-    return nil
+    return NS.ClassContext.Aura(unit,filter,names,requirePlayer)
 end
 
 function Context.MissingShield(names)
@@ -109,7 +78,7 @@ end
 function Context.FlameShock(name)
     if type(name)~='string' or name=='' then return nil end
     if Call(UnitCanAttack,'player','target')~=true or Call(UnitIsDead,'target')~=false then return false end
-    return Context.Aura('target','HARMFUL',{[name]=true},false)
+    return Context.Aura('target','HARMFUL',{[name]=true},true)
 end
 
 function Context.ManaPercent()

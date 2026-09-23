@@ -242,6 +242,13 @@ function Range.Create(host, db)
     local function Discover()
         spells, shot, markName = {}, nil, nil
         aspectNames={}
+        local aspectCandidates={}
+        for _,name in ipairs({'Aspect of the Hawk','Aspect of the Monkey','Aspect of the Cheetah','Aspect of the Pack',
+            'Aspect of the Beast','Aspect of the Wild','Aspect of the Viper','Aspect of the Dragonhawk'}) do
+            aspectCandidates[name]=true
+            local data=Call(C_Spell and C_Spell.GetSpellInfo,name)
+            if type(data)=='table' and Core.IsReadable(data.name) and type(data.name)=='string' then aspectCandidates[data.name]=true end
+        end
         local markInfo=Call(C_Spell and C_Spell.GetSpellInfo,"Hunter's Mark")
         local wanted=type(markInfo)=='table' and markInfo.name or "Hunter's Mark"
         if not Core.IsReadable(wanted) then wanted=nil end
@@ -257,11 +264,12 @@ function Range.Create(host, db)
                     local id=type(item)=='table' and item.spellID
                     if Core.IsNumber(id) and not seen[id] and Core.IsReadable(item.isPassive)
                         and Core.IsReadable(item.isOffSpec) and not item.isPassive and not item.isOffSpec
-                        and Call(C_SpellBook.IsSpellKnown,id)==true then
+                        and (Call(C_SpellBook.IsSpellKnown,id)==true
+                            or (Core.IsNumber(item.baseSpellID) and Call(C_SpellBook.IsSpellKnown,item.baseSpellID)==true)) then
                         seen[id]=true
                         local data=Call(C_Spell.GetSpellInfo,id)
                         if type(data)=='table' and Core.IsReadable(data.name) and type(data.name)=='string'
-                            and data.name:match('^Aspect of ') then
+                            and (aspectCandidates[data.name] or data.name:match('^Aspect of ')) then
                             aspectNames[data.name]=true
                             if Core.IsNumber(data.iconID) then aspectIcon:SetTexture(data.iconID) end
                         end
@@ -336,9 +344,9 @@ function Range.Create(host, db)
             ..'; native melee/ranged: '..tostring(melee)..'/'..tostring(ranged)..'; '..text
         Paint(state,text)
     end
-    local active=false
-    local rangeEvents={'PLAYER_TARGET_CHANGED','SPELLS_CHANGED','PLAYER_ENTERING_WORLD',
-        'PLAYER_LEAVING_WORLD','PLAYER_DEAD','PLAYER_EQUIPMENT_CHANGED','UNIT_FLAGS','UNIT_TARGET','UNIT_NAME_UPDATE','UNIT_PORTRAIT_UPDATE','BAG_UPDATE_DELAYED','UNIT_INVENTORY_CHANGED','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED','UNIT_HEALTH','UNIT_MAXHEALTH','UNIT_PET','UNIT_AURA','UNIT_HAPPINESS'}
+    local active=false;local suspended=false
+    local rangeEvents={'PLAYER_TARGET_CHANGED','SPELLS_CHANGED','LEARNED_SPELL_IN_SKILL_LINE','PLAYER_ENTERING_WORLD',
+        'PLAYER_LEAVING_WORLD','PLAYER_DEAD','PLAYER_ALIVE','PLAYER_UNGHOST','PLAYER_EQUIPMENT_CHANGED','UNIT_FLAGS','UNIT_TARGET','UNIT_NAME_UPDATE','UNIT_PORTRAIT_UPDATE','BAG_UPDATE_DELAYED','UNIT_INVENTORY_CHANGED','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED','UNIT_HEALTH','UNIT_MAXHEALTH','UNIT_PET','UNIT_AURA','UNIT_HAPPINESS'}
     local function Refresh()
         frame:SetScript('OnUpdate',nil)
         frame:SetShown(db.enabled)
@@ -353,6 +361,7 @@ function Range.Create(host, db)
             for _,event in ipairs(rangeEvents) do frame:RegisterEvent(event) end
             active=true;Discover()
         end
+        if suspended or Core.PlayerDead() then frame:Hide();return end
         UpdateAmmo();UpdateAspect();UpdateHappiness()
         local hasTarget=Call(UnitExists,'target')==true
         local inCombat=Call(UnitAffectingCombat,'player')==true
@@ -362,6 +371,8 @@ function Range.Create(host, db)
             ClearContext(); Paint('unknown','Target dead or unavailable'); return
         end
         Update(); elapsed=0
+        if db.showRange==false and db.showAngle==false and db.showTargetTarget==false and db.petGuide==false
+            and db.markWarning==false and db.aspectWarning==false and db.petHappinessWarning==false then return end
         frame:SetScript('OnUpdate',function(_,delta)
             elapsed=elapsed+delta
             if elapsed>=0.15 then
@@ -372,6 +383,11 @@ function Range.Create(host, db)
     end
     frame:SetScript('OnEvent',function(_,event,unit)
         if not db.enabled then return end
+        if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then
+            suspended=true;frame:SetScript('OnUpdate',nil);aspectIcon:Hide();aspectBorder:Hide();mood:Hide();ClearContext();frame:Hide();return
+        end
+        if event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_ALIVE' or event=='PLAYER_UNGHOST' then suspended=false end
+        if suspended or Core.PlayerDead() then return end
         if event=='UNIT_HAPPINESS' and (not Core.IsReadable(unit) or unit~='pet') then return end
         if event=='UNIT_AURA' and (not Core.IsReadable(unit) or (unit~='target' and unit~='player')) then return end
         if (event=='UNIT_HEALTH' or event=='UNIT_MAXHEALTH') and
@@ -382,10 +398,7 @@ function Range.Create(host, db)
         if event=='UNIT_TARGET' and (not Core.IsReadable(unit) or unit~='target') then return end
         if (event=='UNIT_NAME_UPDATE' or event=='UNIT_PORTRAIT_UPDATE') and (not Core.IsReadable(unit) or (unit~='target' and unit~='targettarget')) then return end
         if event=='UNIT_FLAGS' and (not Core.IsReadable(unit) or (unit~='target' and unit~='pet')) then return end
-        if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then
-            frame:SetScript('OnUpdate',nil); aspectIcon:Hide();aspectBorder:Hide();mood:Hide();ClearContext(); Paint('unknown','Range inactive'); return
-        end
-        if event=='SPELLS_CHANGED' or event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_EQUIPMENT_CHANGED' then Discover() end
+        if event=='SPELLS_CHANGED' or event=='LEARNED_SPELL_IN_SKILL_LINE' or event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_EQUIPMENT_CHANGED' then Discover() end
         Refresh()
     end)
     frame.Status=function() return lastStatus..'; Pet guide: '..(db.petGuide==false and 'off' or (guide.hasMatch and ('inline — '..NS.PetGuide.Summary(guide.info)) or 'no supported target')) end

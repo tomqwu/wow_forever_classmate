@@ -90,7 +90,7 @@ function Context.MarkMissing(name)
         if not ok or not Core.IsReadable(aura) then return nil end
         if aura==nil then if unknown then return nil end;return true end
         if type(aura)~='table' then return nil end
-        if not Core.IsReadable(aura.name) or type(aura.name)~='string' then unknown=true
+        if not Core.IsReadable(aura.name) or type(aura.name)~='string' or aura.name=='' then unknown=true
         elseif aura.name==name then return false end
     end
     return nil
@@ -107,7 +107,7 @@ function Context.AspectMissing(names)
         if not ok or not Core.IsReadable(aura) then return nil end
         if aura==nil then if unknown then return nil end;return true end
         if type(aura)~='table' then return nil end
-        if not Core.IsReadable(aura.name) or type(aura.name)~='string' then unknown=true
+        if not Core.IsReadable(aura.name) or type(aura.name)~='string' or aura.name=='' then unknown=true
         elseif names[aura.name] then return false end
     end
     return nil

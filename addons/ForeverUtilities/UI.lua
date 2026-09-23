@@ -127,7 +127,7 @@ events:SetScript('OnEvent',function(self,_,name)
     for _,module in pairs(NS.Classes) do module.Initialize(ForeverUtilitiesDB) end
     self:UnregisterEvent('ADDON_LOADED')
     local module=Active()
-    if module then Say('Loaded '..module.name:gsub('Forever Classmate — ','')..'. '..module.command..' opens settings.') end
+    if module then Say('Loaded '..module.name:gsub('Forever Classmate — ','')..' v'..NS.Version..'. '..module.command..' opens settings.') end
 end)
 SLASH_FOREVERUTILITIES1='/fclassmate'
 SLASH_FOREVERUTILITIES2='/futils'

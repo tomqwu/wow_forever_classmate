@@ -51,7 +51,7 @@ function Hunter.Initialize(saved)
     for key,value in pairs(Hunter.defaults) do
         if type(Hunter.db[key])~=type(value) then Hunter.db[key]=value end
     end
-    saved.schemaVersion=3
+    NS.Core.EnsureSchema(saved,3)
     Hunter.Apply()
 end
 function Hunter.IsHunter()

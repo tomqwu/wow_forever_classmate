@@ -22,7 +22,7 @@ Forever Classmate detects your class and shows the compact information that clas
 
 ## Current release position
 
-Every class uses a 426-pixel rendered bar matching Forever's default desktop Main Hand swing timer. Hunter includes range, ammo, target context, pet care, and rare-beast guidance. Shaman includes live totems, imbue and shield upkeep, mana, recall, and learned-spec cues. Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock add readable resource, grouped upkeep, independently toggleable target/ability, and context-aware active-racial slots driven by the live spellbook and current client state.
+Every class uses a 426-pixel rendered bar matching Forever's default desktop Main Hand swing timer. Hunter includes range, ammo, target context, pet care, and rare-beast guidance. Shaman includes readable totem timers and explicitly marked learned-duration estimates in combat, imbue and shield upkeep, mana, recall, and learned-spec cues. Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock add readable resource, grouped upkeep, independently toggleable target/ability, and context-aware active-racial slots driven by the live spellbook and current client state.
 
 ## Keywords
 

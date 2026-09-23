@@ -126,6 +126,14 @@ check(f.shown and f.scripts.OnUpdate,'enable starts polling')
 check(f.events.PLAYER_TARGET_CHANGED and f.events.SPELLS_CHANGED,'enable restores events')
 f.scripts.OnEvent(f,'PLAYER_LEAVING_WORLD')
 check(not f.scripts.OnUpdate,'loading screen stops polling')
+f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED');f.Refresh()
+check(not f.scripts.OnUpdate and not f.shown,'queued target events and refresh stay suspended during loading')
+f.scripts.OnEvent(f,'PLAYER_ENTERING_WORLD')
+f.scripts.OnEvent(f,'PLAYER_DEAD');f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED');f.Refresh()
+check(not f.scripts.OnUpdate and not f.shown,'Hunter remains suspended after death despite queued events')
+f.scripts.OnEvent(f,'PLAYER_UNGHOST')
+check(f.scripts.OnUpdate and f.shown,'Hunter resumes after resurrection')
+
 class='PALADIN';check(NS.Range.Create({},db)~=nil,'distance utility supports other classes')
 -- Spellbook slot checks must work even when native and spell-ID queries fail.
 C_SwingTimer.IsTargetWithinSwingRange=function() return nil end
@@ -407,4 +415,9 @@ f.scripts.OnEvent(f,'PLAYER_LEAVING_WORLD')
 check(not f.petGuideBadge.hintPanel.shown and not f.petGuideBadge.shown and not GameTooltip.shown and not f.scripts.OnUpdate,'leaving world clears guide')
 f.Refresh();f.petGuideBadge.scripts.OnEnter();db.enabled=false;f.Refresh()
 check(not f.petGuideBadge.hintPanel.shown and not f.petGuideBadge.shown and not GameTooltip.shown and not next(f.events),'disable clears guide and all event listeners')
+
+db.enabled=true
+for _,key in ipairs({'showRange','showAngle','showTargetTarget','petGuide','markWarning','aspectWarning','petHappinessWarning'}) do db[key]=false end
+f.Refresh();f.scripts.OnEvent(f,'PLAYER_ENTERING_WORLD')
+check(not f.scripts.OnUpdate,'Hunter stops polling when every target widget is disabled')
 print('PASS: '..count..' distance checks')

@@ -53,7 +53,7 @@ root and packaged README aligned. Add exact-version highlights to docs/changelog
 for every addon release. release_notes.py combines them for the GitHub release;
 the CurseForge uploader uses that body as its file changelog. Project-page edits
 are separate: do not claim the website description changed merely because an
-upload succeeded. With no target the indicator uses 20% opacity; combat restores full visibility, an out-of-combat target uses 60%, and idle uses 20%. Unlocking does not override fading.
+upload succeeded. Combat restores full visibility; the Shaman bar also stays fully visible for a confirmed active totem. Otherwise an out-of-combat target uses 60% opacity and idle uses 20%. Unlocking does not override fading.
 
 Numeric distance uses UnitDistanceSquared only when checkedDistance is readable
 and true and the squared value is finite/nonnegative. Never fabricate a midpoint
@@ -73,3 +73,7 @@ ClassContext.lua and StandardClasses.lua own the Paladin, Warrior, Rogue, Druid,
 ## Bar layout
 
 Layout.lua owns Hunter visual block allocation inside its fixed 426 × 56 bar. Shaman.lua owns the Shaman grouped allocation, and StandardClasses.lua owns the five fixed standard slots in the same outer footprint. The 426-pixel width is the rendered result of Forever's default desktop swing-timer preset: stored width offset 213 plus slider minimum 213. Keep range/ammo, combat reminders, pet portrait, and control separate. Blocks do not shift with transient warning state; only feature preferences redistribute width. See docs/bar-layout.md before adding information.
+
+## Combat and warning review lessons
+
+Read `docs/class-review-2026-09-23.md` when changing class, racial, or warning behavior. Keep unknown, absent, and ready states distinct. Preserve all API return positions before checking for secrets; a nil hole must not skip later returns. Do not classify short cooldowns as ready by a duration threshold. Recognize equivalent buff families and derived aura effects without turning them into learned cast actions. Suspend updates across queued events and settings refreshes while dead or outside the world. Disabled blocks must not query their hidden data. Confirm the loaded TOC version and compare installed bytes again after publishing: another process has replaced newer local files with an older release.

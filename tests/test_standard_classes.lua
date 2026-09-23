@@ -68,7 +68,7 @@ C_Spell={
 }
 C_SpellBook={
     GetNumSpellBookSkillLines=function() return 1 end,
-    GetSpellBookSkillLineInfo=function() return {itemIndexOffset=0,numSpellBookItems=4} end,
+    GetSpellBookSkillLineInfo=function() return {itemIndexOffset=0,numSpellBookItems=#book} end,
     GetSpellBookItemInfo=function(slot) local item=book[slot];return {spellID=item.spellID,isPassive=item.isPassive,isOffSpec=false} end,
     IsSpellKnown=function() return true end,
 }
@@ -94,6 +94,7 @@ check(NS.Paladin.spells.sealRighteousness and NS.Paladin.spells.judgementCrusade
 local host=named.ForeverClassmatePaladinFrame;local indicator=named.ForeverClassmatePaladinIndicator
 check(host and host.width==426 and host.height==56 and host.shown,'standard class bar matches rendered native swing-bar width')
 check(indicator and indicator.scripts.OnUpdate~=nil,'enabled helper polls live state')
+check(indicator.events.LEARNED_SPELL_IN_SKILL_LINE and not indicator.events.LEARNED_SPELL_IN_TAB,'class discovery uses the Forever learned-spell event')
 check(indicator.cells.resource.icon.width==24 and indicator.cells.resource.top.width==41,'readable icon slots fit the native-width bar')
 check(indicator.cells.racial.x+indicator.cells.racial.width==398,'all five class slots end before the lock control')
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
@@ -150,4 +151,58 @@ UnitPowerType=savedPowerType
 local shadowProc=false
 for _,key in ipairs(NS.Priest.procKeys) do if key=='shadowform' then shadowProc=true end end
 check(not shadowProc,'persistent Shadowform is excluded from temporary proc selection')
+
+local function Fixture(module,names,activeAuras)
+    book={}
+    for i,name in ipairs(names) do book[i]={spellID=4000+i,name=name,iconID=700+i,isPassive=false} end
+    C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
+        if unit=='player' and filter=='HELPFUL' then
+            local name=activeAuras[index]
+            if name then return {name=name,icon=500,sourceUnit='player'} end
+        end
+    end
+    local frame=named[module.indicatorName]
+    frame.scripts.OnEvent(frame,'SPELLS_CHANGED')
+    return frame
+end
+local paladin=Fixture(NS.Paladin,{'Seal of Justice'},{'Seal of Justice'})
+check(paladin.cells.upkeep.top.text=='1/1' and paladin.cells.upkeep.bottom.text=='OK','Seal of Justice satisfies Paladin seal upkeep')
+paladin=Fixture(NS.Paladin,{'Seal of Fury'},{'Seal of Fury'})
+check(paladin.cells.upkeep.bottom.text=='OK','Forever Seal of Fury satisfies tank seal upkeep')
+paladin=Fixture(NS.Paladin,{'Seal of Wisdom'},{'Seal of Wisdom'})
+C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
+    if unit=='target' and filter=='HARMFUL' and index==1 then return {name='Judgement of Wisdom',sourceUnit='player',expirationTime=110} end
+end
+paladin.Update()
+check(paladin.cells.target.top.text=='10s','Paladin recognizes a judgment effect derived from its learned seal without a separate spellbook entry')
+
+local warrior=Fixture(NS.Warrior,{'Battle Shout','Rend'},{'Battle Shout'})
+check(warrior.cells.upkeep.bottom.text=='OK' and warrior.cells.target.top.text=='None','absent optional Warrior target effects are neutral rather than mandatory warnings')
+local druid=Fixture(NS.Druid,{'Mark of the Wild','Thorns'},{'Gift of the Wild','Thorns'})
+check(druid.cells.upkeep.top.text=='2/2','Druid accepts Gift of the Wild as Mark upkeep')
+local mage=Fixture(NS.Mage,{'Frost Armor','Pyroblast'},{'Frost Armor'})
+check(mage.cells.upkeep.bottom.text=='OK' and mage.cells.target.top.text=='None','Mage armor is tracked without demanding a Pyroblast on every target')
+local priest=Fixture(NS.Priest,{'Power Word: Fortitude','Divine Spirit','Inner Fire'},{'Prayer of Fortitude','Prayer of Spirit','Inner Fire'})
+check(priest.cells.upkeep.top.text=='3/3','Priest group prayers satisfy individual buff upkeep')
+local warlock=Fixture(NS.Warlock,{'Demon Skin'},{'Demon Skin'})
+check(warlock.cells.upkeep.top.text=='1/1','Warlock does not demand a demon before learning a summon')
+warlock=Fixture(NS.Warlock,{'Demon Skin','Summon Imp'},{'Demon Skin'})
+check(warlock.cells.upkeep.bottom.text=='!1','learned Warlock summon enables missing-demon warning')
+local deadTarget=false
+UnitIsDead=function(unit) return unit=='target' and deadTarget end
+UnitIsFriend=function() return false end
+deadTarget=true;warrior.Update()
+check(warrior.cells.target.top.text=='Dead','dead hostile target is not mislabeled friendly')
+deadTarget=false
+warrior.scripts.OnEvent(warrior,'PLAYER_DEAD');warrior.scripts.OnEvent(warrior,'UNIT_AURA','player');warrior.Refresh()
+check(not warrior.shown and not warrior.scripts.OnUpdate,'standard class stays suspended after death and settings refresh')
+warrior.scripts.OnEvent(warrior,'PLAYER_ALIVE')
+check(warrior.shown and warrior.scripts.OnUpdate,'standard class resumes after resurrection')
+local reads=0
+UnitPower=function() reads=reads+1;return 70 end
+C_UnitAuras.GetAuraDataByIndex=function() reads=reads+1 end
+C_Spell.GetSpellCooldown=function() reads=reads+1;return {startTime=0,duration=0,isEnabled=true} end
+for _,key in ipairs({'showResource','showUpkeep','showTarget','showAbilities','showRacial'}) do NS.Warrior.db[key]=false end
+warrior.Refresh()
+check(reads==0 and not warrior.scripts.OnUpdate,'disabled standard blocks perform no resource, aura, cooldown reads or polling')
 print('PASS: '..count..' standard class runtime checks')

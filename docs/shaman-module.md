@@ -46,3 +46,7 @@ The bar uses Forever's 426-pixel rendered desktop swing-bar width and remains 56
 | Control | Shared lock toggle |
 
 Preference changes reclaim unused space; transient combat states never resize the outer bar. Combat or a confirmed active totem keeps the bar at full opacity. With no active totem, an out-of-combat target uses 60%, and idle uses 20%.
+
+## September 23 review
+
+Passive Maelstrom Weapon is supported, and restricted stacks remain unknown. Riptide readiness comes from the shared cooldown/usability checks; personal Flame Shock uses the shared aura-owner checks. Recall hints require a learned Totemic Recall. Observed totems remain tracked across combat exit if the native slot API is still unavailable. Death/world exit suspend the bar until return. See [the class review](class-review-2026-09-23.md).

@@ -2,6 +2,7 @@ local NS={}
 local secret={}
 issecretvalue=function(value) return rawequal(value,secret) end
 assert(loadfile('addons/ForeverUtilities/Core.lua'))('ForeverUtilities',NS)
+assert(loadfile('addons/ForeverUtilities/ClassContext.lua'))('ForeverUtilities',NS)
 assert(loadfile('addons/ForeverUtilities/ShamanContext.lua'))('ForeverUtilities',NS)
 local C=NS.ShamanContext
 local count=0
@@ -76,8 +77,9 @@ auras={{name='Lightning Shield',applications=2,expirationTime=0}};UnitAffectingC
 local shieldMissing,shieldAura=C.MissingShield(names)
 check(shieldMissing==false and shieldAura.applications==2,'active shield clears warning')
 UnitCanAttack=function() return true end;UnitIsDead=function() return false end
-auras={{name='Flame Shock',expirationTime=112}}
+auras={{name='Flame Shock',expirationTime=112,sourceUnit='player'}}
 local flame=C.FlameShock('Flame Shock');check(flame.name=='Flame Shock' and flame.left==12,'target Flame Shock timer')
+auras={{name='Flame Shock',sourceUnit='party1'}};check(C.FlameShock('Flame Shock')==false,'another shaman’s Flame Shock does not satisfy personal setup')
 auras={};check(C.FlameShock('Flame Shock')==false,'readable missing Flame Shock')
 UnitCanAttack=function() return false end;check(C.FlameShock('Flame Shock')==false,'friendly target quiet')
 UnitPower=function() return 51 end;UnitPowerMax=function() return 100 end

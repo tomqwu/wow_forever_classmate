@@ -30,11 +30,13 @@ local configs={
         catalog={
             Spell('sealCommand','Seal of Command','upkeep'),Spell('sealRighteousness','Seal of Righteousness','upkeep'),
             Spell('sealCrusader','Seal of the Crusader','upkeep'),Spell('sealWisdom','Seal of Wisdom','upkeep'),Spell('sealLight','Seal of Light','upkeep'),
+            Spell('sealJustice','Seal of Justice','upkeep'),Spell('sealFury','Seal of Fury','upkeep'),
             Spell('twistLight','Twist of Light','proc',true),
-            Spell('judgementCrusader','Judgement of the Crusader','target'),Spell('judgementWisdom','Judgement of Wisdom','target'),
-            Spell('judgementLight','Judgement of Light','target'),Spell('judgementJustice','Judgement of Justice','target'),
+            Spell('judgementCrusader',{'Judgement of the Crusader','Judgment of the Crusader'},'target'),Spell('judgementWisdom',{'Judgement of Wisdom','Judgment of Wisdom'},'target'),
+            Spell('judgementLight',{'Judgement of Light','Judgment of Light'},'target'),Spell('judgementJustice',{'Judgement of Justice','Judgment of Justice'},'target'),
             Spell('holyStrike','Holy Strike','cue'),Spell('holyShock','Holy Shock','cue'),Spell('consecration','Consecration','cue'),
-        },upkeepLabel='Seal',upkeepGroups={{label='Seal',keys={'sealCommand','sealRighteousness','sealCrusader','sealWisdom','sealLight'}}},targetLabel='Judgment',powerType=0,powerLabel='Mana'},
+        },upkeepLabel='Seal',upkeepGroups={{label='Seal',keys={'sealCommand','sealRighteousness','sealCrusader','sealWisdom','sealLight','sealJustice','sealFury'}}},targetLabel='Judgment',powerType=0,powerLabel='Mana',
+        targetSources={judgementCrusader='sealCrusader',judgementWisdom='sealWisdom',judgementLight='sealLight',judgementJustice='sealJustice'}},
     WARRIOR={key='warrior',label='Warrior',command='/fwarrior',color={0.78,0.61,0.43},icon='Interface\\Icons\\Ability_Warrior_BattleShout',
         description='Rage, stance, shout upkeep, target effects, reactive abilities, and racial cooldowns.',
         catalog={
@@ -53,7 +55,7 @@ local configs={
     DRUID={key='druid',label='Druid',command='/fdruid',color={1,0.49,0.04},icon='Interface\\Icons\\Ability_Druid_CatForm',
         description='Current form and power, buff upkeep, target effects, learned spec cues, and racial cooldowns.',
         catalog={
-            Spell('markWild','Mark of the Wild','upkeep'),Spell('thorns','Thorns','upkeep'),
+            Spell('markWild',{'Mark of the Wild','Gift of the Wild'},'upkeep'),Spell('thorns','Thorns','upkeep'),
             Spell('moonfire','Moonfire','target'),Spell('insectSwarm','Insect Swarm','target'),Spell('faerieFire','Faerie Fire','target'),Spell('rip','Rip','target'),
             Spell('eclipse','Eclipse','proc',true),Spell('naturesGrace',"Nature's Grace",'proc',true),Spell('omenClarity','Omen of Clarity','proc',true),
             Spell('tigersFury',"Tiger's Fury",'cue'),Spell('berserk','Berserk','cue'),Spell('innervate','Innervate','cue'),Spell('swiftmend','Swiftmend','cue'),
@@ -69,7 +71,7 @@ local configs={
     PRIEST={key='priest',label='Priest',command='/fpriest',color={0.92,0.92,0.92},icon='Interface\\Icons\\Spell_Holy_WordFortitude',
         description='Mana, self-buff upkeep, target effects, healing or Shadow cues, and Priest racials.',
         catalog={
-            Spell('innerFire','Inner Fire','upkeep'),Spell('fortitude','Power Word: Fortitude','upkeep'),Spell('divineSpirit','Divine Spirit','upkeep'),
+            Spell('innerFire','Inner Fire','upkeep'),Spell('fortitude',{'Power Word: Fortitude','Prayer of Fortitude'},'upkeep'),Spell('divineSpirit',{'Divine Spirit','Prayer of Spirit'},'upkeep'),
             Spell('shadowPain','Shadow Word: Pain','target'),Spell('devouringPlague','Devouring Plague','target'),Spell('vampiricEmbrace','Vampiric Embrace','target'),
             Spell('shadowform','Shadowform','form'),Spell('surgeLight','Surge of Light','proc',true),
             Spell('shadowDeath','Shadow Word: Death','cue'),Spell('prayerMending','Prayer of Mending','cue'),Spell('powerInfusion','Power Infusion','cue'),
@@ -78,6 +80,7 @@ local configs={
         description='Mana and health, armor and demon state, DoT or Bane upkeep, abilities, and racial cooldowns.',
         catalog={
             Spell('demonArmor','Demon Armor','upkeep'),Spell('demonSkin','Demon Skin','upkeep'),Spell('felArmor','Fel Armor','upkeep'),
+            Spell('summon',{'Summon Imp','Summon Voidwalker','Summon Succubus','Summon Incubus','Summon Felhunter','Summon Felguard'},'summon'),
             Spell('corruption','Corruption','target'),Spell('immolate','Immolate','target'),Spell('wrack','Wrack','target'),
             Spell('baneAgony','Bane of Agony','target'),Spell('curseAgony','Curse of Agony','target'),
             Spell('nightfall','Nightfall','proc',true),Spell('backlash','Backlash','proc',true),
@@ -109,11 +112,24 @@ local function CreateIndicator(module,config,host,db)
     local resource=MakeCell(frame,7,75);local upkeep=MakeCell(frame,82,80);local target=MakeCell(frame,162,80)
     local ability=MakeCell(frame,242,80);local racial=MakeCell(frame,322,76)
     frame.cells={resource=resource,upkeep=upkeep,target=target,ability=ability,racial=racial}
-    local lastStatus='Not checked';local elapsed=0;local active=false
+    local lastStatus='Not checked';local elapsed=0;local active=false;local suspended=false
 
     local function Discover()
         local catalog={};Append(catalog,config.catalog);Append(catalog,sharedRacials)
         module.spells=Context.Discover(catalog)
+        -- Some debuffs are effects of a learned spell, not separate spellbook actions.
+        for _,entry in ipairs(config.catalog) do
+            local source=config.targetSources and module.spells[config.targetSources[entry.key]]
+            if source and not module.spells[entry.key] then
+                local names={}
+                for _,name in ipairs(entry.names) do
+                    names[name]=true
+                    local info=Core.Call(C_Spell and C_Spell.GetSpellInfo,name)
+                    if type(info)=='table' and Core.IsReadable(info.name) and type(info.name)=='string' then names[info.name]=true end
+                end
+                module.spells[entry.key]={name=entry.names[1],icon=source.icon,kind='target',auraNames=names}
+            end
+        end
         module.upkeepKeys=Keys(config.catalog,'upkeep');module.targetKeys=Keys(config.catalog,'target')
         module.procKeys=Keys(config.catalog,'proc');module.cueKeys=Keys(config.catalog,'cue')
     end
@@ -139,27 +155,30 @@ local function CreateIndicator(module,config,host,db)
     end)
 
     local function Update()
+        if suspended or Core.PlayerDead() then return end
         local inCombat=Core.Call(UnitAffectingCombat,'player')==true
         local hasTarget=Core.Call(UnitExists,'target')==true
         local hostile=hasTarget and Core.Call(UnitCanAttack,'player','target')==true and Core.Call(UnitIsDead,'target')==false
         local power
-        if config.currentPower then power=Context.CurrentPower() else power=Context.Power(config.powerType,config.powerLabel) end
+        if db.showResource~=false then
+            if config.currentPower then power=Context.CurrentPower() else power=Context.Power(config.powerType,config.powerLabel) end
+        end
         local resourceTop=power and (power.percent..'%') or '?'
         local resourceBottom=''
         local resourceLines={}
         if power then resourceLines[#resourceLines+1]=(power.label or 'Power')..': '..math.floor(power.current+0.5)..' / '..math.floor(power.maximum+0.5)
         else resourceLines[#resourceLines+1]='The client did not expose a readable resource value.' end
-        if config.showCombo then
+        if db.showResource~=false and config.showCombo then
             local cp=Context.ComboPoints();resourceBottom=cp and ('CP'..cp) or ''
             if cp then resourceLines[#resourceLines+1]='Combo points: '..cp..' / 5' end
-        elseif config.showForm then
+        elseif db.showResource~=false and config.showForm then
             local form=Context.Form();resourceBottom=form and 'Form' or 'Base'
             if form then resourceLines[#resourceLines+1]='Form or stance: '..form.name end
-        elseif config.showHealth then
+        elseif db.showResource~=false and config.showHealth then
             local hp=Context.HealthPercent('player');resourceBottom=hp and ('H'..hp) or ''
             if hp then resourceLines[#resourceLines+1]='Health: '..hp..'%' end
         end
-        if config.showShards then
+        if db.showResource~=false and config.showShards then
             local shards=Context.ItemCount('Soul Shard')
             if shards then resourceBottom=(resourceBottom~='' and (resourceBottom..'/') or '')..'S'..shards;resourceLines[#resourceLines+1]='Soul Shards: '..shards end
         end
@@ -168,7 +187,7 @@ local function CreateIndicator(module,config,host,db)
 
         local upkeepTotal,upkeepActive,upkeepMissing,upkeepUnknown=0,0,0,0
         local upkeepLines={};local upkeepIcon;local upkeepDim=false
-        if config.weaponCoatings then
+        if db.showUpkeep~=false and config.weaponCoatings then
             local coatings=Context.WeaponCoatings()
             if coatings then
                 if coatings.equipped>0 then
@@ -178,7 +197,7 @@ local function CreateIndicator(module,config,host,db)
                 else upkeepLines[#upkeepLines+1]='Weapon coatings: no equipped weapons' end
             else upkeepTotal=upkeepTotal+1;upkeepUnknown=upkeepUnknown+1;upkeepLines[#upkeepLines+1]='Weapon coatings: unavailable' end
         end
-        for _,group in ipairs(config.upkeepGroups or {{label=config.upkeepLabel,keys=module.upkeepKeys}}) do
+        for _,group in ipairs(db.showUpkeep~=false and (config.upkeepGroups or {{label=config.upkeepLabel,keys=module.upkeepKeys}}) or {}) do
             local learned=FirstSpell(module.spells,group.keys)
             if learned then
                 upkeepTotal=upkeepTotal+1
@@ -196,7 +215,7 @@ local function CreateIndicator(module,config,host,db)
                 end
             end
         end
-        if config.showPet then
+        if db.showUpkeep~=false and config.showPet and module.spells.summon then
             upkeepTotal=upkeepTotal+1
             local petExists=Core.Call(UnitExists,'pet')
             local petDead;if petExists==true then petDead=Core.Call(UnitIsDead,'pet') end
@@ -226,11 +245,19 @@ local function CreateIndicator(module,config,host,db)
             targetLines[#targetLines+1]=targetAura.name..(remaining and (' — '..remaining) or ' — active')
         elseif showTarget and hostile then
             local targetSpell=FirstSpell(module.spells,module.targetKeys)
-            if targetSpell and targetAura==false then targetText='!';targetColor={1,0.72,0.28};targetDim=true;targetLines[#targetLines+1]=targetSpell.name..': missing'
+            if targetSpell and targetAura==false then targetText='None';targetDim=true;targetLines[#targetLines+1]='No tracked effect from you is active.'
             elseif targetSpell and targetAura==nil then targetText='?';targetLines[#targetLines+1]='Target effects: unavailable'
             else targetText='—' end
             targetIcon=targetSpell and targetSpell.icon or config.icon
-        elseif showTarget then targetText=hasTarget and 'Friend' or 'None';targetIcon=config.icon;targetDim=true end
+        elseif showTarget then
+            targetText='None'
+            if hasTarget then
+                if Core.Call(UnitIsDead,'target')==true then targetText='Dead'
+                elseif Core.Call(UnitIsFriend,'player','target')==true then targetText='Friend'
+                else targetText='?' end
+            end
+            targetIcon=config.icon;targetDim=true
+        end
         if showAbilities and type(proc)=='table' then
             abilityText=proc.applications and proc.applications>1 and ('×'..proc.applications) or (Context.FormatTime(proc.left) or 'Proc')
             abilityIcon=proc.icon;abilityColor={0.3,1,0.48}
@@ -250,7 +277,7 @@ local function CreateIndicator(module,config,host,db)
         Paint(target,targetIcon or config.icon,targetText,'Effect',targetColor,targetDim);target:SetShown(showTarget)
         Paint(ability,abilityIcon or config.icon,abilityText,'Ability',abilityColor,abilityDim);ability:SetShown(showAbilities)
 
-        local racialStates=Context.RacialStates(module.spells,module.classToken);local racialState=racialStates[1];racial.state=racialState
+        local racialStates=db.showRacial~=false and Context.RacialStates(module.spells,module.classToken) or {};local racialState=racialStates[1];racial.state=racialState
         if racialState then
             local status,color
             if racialState.status=='ready' then status='Ready';color={0.3,1,0.48}
@@ -275,7 +302,7 @@ local function CreateIndicator(module,config,host,db)
     end
 
     local events={'PLAYER_ENTERING_WORLD','PLAYER_LEAVING_WORLD','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED','PLAYER_TARGET_CHANGED',
-        'PLAYER_DEAD','PLAYER_ALIVE','PLAYER_UNGHOST','SPELLS_CHANGED','LEARNED_SPELL_IN_TAB','UNIT_AURA','UNIT_POWER_UPDATE',
+        'PLAYER_DEAD','PLAYER_ALIVE','PLAYER_UNGHOST','SPELLS_CHANGED','LEARNED_SPELL_IN_SKILL_LINE','UNIT_AURA','UNIT_POWER_UPDATE',
         'UNIT_HEALTH','UPDATE_SHAPESHIFT_FORM','UPDATE_SHAPESHIFT_FORMS','PLAYER_EQUIPMENT_CHANGED','UNIT_INVENTORY_CHANGED','BAG_UPDATE_DELAYED','SPELL_UPDATE_COOLDOWN'}
     local function NeedsPoll()
         return db.showResource~=false or db.showUpkeep~=false or db.showTarget~=false or db.showAbilities~=false or db.showRacial~=false
@@ -287,15 +314,18 @@ local function CreateIndicator(module,config,host,db)
             active=false;lastStatus=config.label..' helper disabled';return
         end
         if not active then for _,event in ipairs(events) do frame:RegisterEvent(event) end;active=true;Discover() end
+        if suspended or Core.PlayerDead() then frame:Hide();return end
         Update();elapsed=0
         if NeedsPoll() then frame:SetScript('OnUpdate',function(_,delta) elapsed=elapsed+delta;if elapsed>=0.25 then elapsed=0;Update() end end) end
     end
     frame:SetScript('OnEvent',function(_,event,unit)
         if not db.enabled then return end
+        if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then suspended=true;frame:SetScript('OnUpdate',nil);frame:Hide();return end
+        if event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_ALIVE' or event=='PLAYER_UNGHOST' then suspended=false end
+        if suspended or Core.PlayerDead() then return end
         if (event=='UNIT_AURA' or event=='UNIT_POWER_UPDATE' or event=='UNIT_HEALTH' or event=='UNIT_INVENTORY_CHANGED')
             and Core.IsReadable(unit) and unit~='player' and unit~='target' and unit~='pet' then return end
-        if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then frame:SetScript('OnUpdate',nil);return end
-        if event=='SPELLS_CHANGED' or event=='LEARNED_SPELL_IN_TAB' or event=='PLAYER_ENTERING_WORLD' then Discover() end
+        if event=='SPELLS_CHANGED' or event=='LEARNED_SPELL_IN_SKILL_LINE' or event=='PLAYER_ENTERING_WORLD' then Discover() end
         if event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_ALIVE' or event=='PLAYER_UNGHOST' then Refresh() else Update() end
     end)
     frame.Refresh=Refresh;frame.Update=Update;frame.Status=function() return lastStatus end
@@ -331,7 +361,7 @@ for token,config in pairs(configs) do
         if type(saved[config.key])~='table' then saved[config.key]={} end
         module.db=saved[config.key]
         for key,value in pairs(module.defaults) do if type(module.db[key])~=type(value) then module.db[key]=value end end
-        saved.schemaVersion=4;module.Apply()
+        Core.EnsureSchema(saved,4);module.Apply()
     end
     function module.IsClass() return NS.ActiveClass()==module end
     function module.Apply()

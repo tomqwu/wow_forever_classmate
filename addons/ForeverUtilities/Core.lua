@@ -1,7 +1,6 @@
-local _, NS = ...
+local addon, NS = ...
 local Core = {}
 NS.Core = Core
-NS.Version = '0.21.11'
 NS.Classes = {}
 -- Forever stores the desktop swing-timer preset width as an offset from the
 -- 213px slider minimum. The preset value 213 therefore renders as 426px.
@@ -19,10 +18,21 @@ end
 
 function Core.Call(fn,...)
     if type(fn)~='function' then return nil end
-    local values={pcall(fn,...)}
-    if not table.remove(values,1) then return nil end
-    for _,value in ipairs(values) do if not Core.IsReadable(value) then return nil end end
-    return unpack(values)
+    local function Pack(...) return {n=select('#',...),...} end
+    local values=Pack(pcall(fn,...))
+    if not values[1] then return nil end
+    for index=2,values.n do if not Core.IsReadable(values[index]) then return nil end end
+    return unpack(values,2,values.n)
+end
+
+NS.Version=Core.Call(C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata,addon,'Version') or 'unknown'
+
+function Core.PlayerDead()
+    return Core.Call(UnitIsDeadOrGhost or UnitIsDead,'player')==true
+end
+
+function Core.EnsureSchema(saved,minimum)
+    saved.schemaVersion=Core.IsNumber(saved.schemaVersion) and math.max(saved.schemaVersion,minimum) or minimum
 end
 
 function NS.RegisterClass(token,module)

@@ -109,6 +109,7 @@ C_UnitAuras={GetAuraDataByIndex=function(unit,i,filter) assert(unit=='player' an
 check(C.AspectMissing(aspects),'no aspect in combat warns')
 buffs={{name='Aspect of the Monkey'}};check(C.AspectMissing(aspects)==false,'any learned aspect clears warning')
 buffs={{name=secret}};check(C.AspectMissing(aspects)==nil,'restricted buff stays quiet')
+buffs={{name=''}};check(C.AspectMissing(aspects)==nil,'empty aura name is unknown rather than missing aspect')
 buffs={};UnitAffectingCombat=function() return false end
 check(C.AspectMissing(aspects)==false,'out of combat quiet')
 UnitAffectingCombat=function() return true end;UnitIsDead=function() return true end
