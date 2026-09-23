@@ -129,10 +129,19 @@ now=105;indicator.scripts.OnEvent(indicator,'PLAYER_REGEN_DISABLED')
 check(earth.state.cached and earth.timer.text=='15s' and earth.icon.shown and indicator.helperText.text~='Recall 1 totem','readable precombat totem counts down through secret combat reads')
 now=125;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
 check(not earth.state or not earth.state.active,'totem update clears expired cached state')
-now=130;indicator.scripts.OnEvent(indicator,'UNIT_SPELLCAST_SUCCEEDED','player','cast-guid',1004)
-check(earth.state.castObserved and earth.state.name=='Stoneclaw Totem' and earth.timer.text=='' and indicator.Status():find('Totems 1/4',1,true),'player totem cast appears and counts in combat without an invented timer')
+UnitAffectingCombat=function() return false end
+GetTotemInfo=function(slot) if slot==2 then return true,'Stoneclaw Totem',125,30,504,1,1004 end return false,'',0,0,0 end
+GetTotemTimeLeft=function(slot) return slot==2 and 30 or 0 end
 indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
-check(earth.state.castObserved,'placement update preserves a matching recent cast')
+check(db.totemDurations[1004]==30,'readable duration is remembered for the exact totem spell')
+GetTotemInfo=function() return secret,secret,secret,secret,secret end;GetTotemTimeLeft=function() return secret end
+UnitAffectingCombat=function() return true end
+now=130;indicator.scripts.OnEvent(indicator,'UNIT_SPELLCAST_SUCCEEDED','player','cast-guid',1004)
+check(earth.state.castObserved and earth.state.name=='Stoneclaw Totem' and earth.timer.text=='~30s' and indicator.Status():find('Totems 1/4',1,true),'combat cast uses an explicitly estimated learned duration')
+indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
+check(earth.state.castObserved and earth.timer.text=='~30s','placement update preserves the estimated countdown')
+now=132;indicator.scripts.OnUpdate(indicator,0.25)
+check(earth.timer.text=='~28s','estimated combat timer counts down')
 now=135;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
 check(earth.state==nil,'later totem removal event clears combat cast')
 UnitAffectingCombat=function() return false end

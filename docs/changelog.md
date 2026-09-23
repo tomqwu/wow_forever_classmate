@@ -1,3 +1,10 @@
+## 0.21.12
+
+- Shaman totems cast in combat now show a countdown after the addon has observed a readable duration for that exact learned spell. The `~` prefix marks it as estimated while Forever restricts live timing; a readable slot timer takes over when available.
+- Learned durations persist across reloads. A totem with no readable duration yet continues to show its icon without a numeric guess.
+
+Use `/reload` after updating.
+
 ## 0.21.11
 
 - Replaced the large Earth/Fire/Water/Air placeholder letters with subdued totem icons on dark tiles. Thin colored edges still identify each element.

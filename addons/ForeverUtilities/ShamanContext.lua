@@ -20,7 +20,7 @@ end
 
 function Context.Totem(slot)
     if type(GetTotemInfo)~='function' then return nil end
-    local ok,have,name,start,duration,icon=pcall(GetTotemInfo,slot)
+    local ok,have,name,start,duration,icon,_,spellID=pcall(GetTotemInfo,slot)
     if not ok then return nil end
     local left=Call(GetTotemTimeLeft,slot)
     local readableName=Core.IsReadable(name) and type(name)=='string'
@@ -38,6 +38,7 @@ function Context.Totem(slot)
         if Core.IsNumber(now) then left=math.max(0,start+duration-now) end
     end
     return {active=true,slot=slot,name=readableName and name or '',icon=Core.IsNumber(icon) and icon or nil,
+        spellID=Core.IsNumber(spellID) and spellID or nil,
         start=Core.IsNumber(start) and start or nil,duration=Core.IsNumber(duration) and duration or nil,
         left=Core.IsNumber(left) and math.max(0,left) or nil}
 end

@@ -80,8 +80,9 @@ local function CreateIndicator(host,db)
             GameTooltip:SetOwner(self,'ANCHOR_TOP')
             if cell.state==nil then GameTooltip:SetText(info.label..' element: status unavailable')
             else GameTooltip:SetText(cell.state.active and (cell.state.name~='' and cell.state.name or (info.label..' totem active')) or (info.label..' element: no active totem')) end
-            if cell.state and cell.state.cached then GameTooltip:AddLine('Last readable state; live combat data unavailable.',0.75,0.85,1) end
-            if cell.state and cell.state.castObserved then GameTooltip:AddLine('Cast observed; timer unavailable.',0.75,0.85,1) end
+            if cell.state and cell.state.estimated then GameTooltip:AddLine('Estimated from this spell\'s last readable duration.',0.75,0.85,1)
+            elseif cell.state and cell.state.cached then GameTooltip:AddLine('Last readable state; live combat data unavailable.',0.75,0.85,1)
+            elseif cell.state and cell.state.castObserved then GameTooltip:AddLine('Cast observed; timer unavailable until duration is learned.',0.75,0.85,1) end
             if info.slot==1 and Shaman.spells and Shaman.spells.fireNova then GameTooltip:AddLine('Fire Nova requires an active Fire totem.',1,0.75,0.35) end
             GameTooltip:Show()
         end)
@@ -153,6 +154,23 @@ local function CreateIndicator(host,db)
         end
     end
 
+    local function RememberDuration(state)
+        if not state or not state.active or not Core.IsNumber(state.duration)
+            or state.duration<=0 or state.duration>3600 then return end
+        local id=state.spellID
+        if not id then
+            for spellID,totem in pairs(totemBySpellID) do
+                if totem.slot==state.slot and totem.name==state.name then
+                    if id then return end -- Multiple learned ranks: the name cannot identify one duration.
+                    id=spellID
+                end
+            end
+        end
+        if Core.IsNumber(id) and totemBySpellID[id] and totemBySpellID[id].slot==state.slot then
+            db.totemDurations[id]=state.duration
+        end
+    end
+
     weapon.button:SetScript('OnEnter',function(self)
         if not GameTooltip or not weapon.state then return end
         GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(weapon.state.active and 'Main-hand weapon imbue active' or 'Main-hand weapon imbue missing')
@@ -199,13 +217,14 @@ local function CreateIndicator(host,db)
             local slot=cell.info.slot
             local state=Context.Totem(slot)
             if state and state.active then
+                RememberDuration(state)
                 local saved=totemCache[slot]
                 if saved and saved.name==state.name and not Core.IsNumber(state.left)
                     and Core.IsNumber(saved.start) and Core.IsNumber(saved.duration) then
                     local now=Core.Call(GetTime)
                     if Core.IsNumber(now) then
                         state.left=math.max(0,saved.start+saved.duration-now)
-                        state.start=saved.start;state.duration=saved.duration;state.cached=true
+                        state.start=saved.start;state.duration=saved.duration;state.cached=true;state.estimated=saved.estimated
                     end
                 end
                 totemCache[slot]=state
@@ -216,7 +235,8 @@ local function CreateIndicator(host,db)
                     local now=Core.Call(GetTime)
                     local left=Core.IsNumber(now) and math.max(0,saved.start+saved.duration-now) or nil
                     if left and left>0 then
-                        state={active=true,slot=slot,name=saved.name,icon=saved.icon,left=left,start=saved.start,duration=saved.duration,cached=true}
+                        state={active=true,slot=slot,name=saved.name,icon=saved.icon,left=left,start=saved.start,duration=saved.duration,
+                            cached=true,estimated=saved.estimated,castObserved=saved.castObserved}
                     elseif left then totemCache[slot]=nil end
                 elseif saved then state=saved end
             end
@@ -225,7 +245,9 @@ local function CreateIndicator(host,db)
             cell.button:SetShown(db.showTotems~=false)
             if state and state.active then
                 activeTotems=activeTotems+1;cell.icon:SetTexture(state.icon or cell.info.fallback);cell.icon:SetVertexColor(1,1,1,1);cell.icon:SetDesaturated(false);cell.icon:Show()
-                cell.stripe:SetColorTexture(unpack(cell.info.color));cell.timer:SetText(Context.FormatTime(state.left) or '')
+                cell.stripe:SetColorTexture(unpack(cell.info.color))
+                local timer=Context.FormatTime(state.left)
+                cell.timer:SetText(timer and ((state.estimated and '~' or '')..timer) or '')
                 cell.badge:SetText('')
             else
                 local c=cell.info.color
@@ -333,8 +355,12 @@ local function CreateIndicator(host,db)
             if unit=='player' and Core.IsNumber(spellID) then
                 local totem=totemBySpellID[spellID]
                 if totem then
-                    totemCache[totem.slot]={active=true,slot=totem.slot,name=totem.name,icon=totem.icon,castObserved=true}
-                    recentCast[totem.slot]=Core.Call(GetTime)
+                    local now=Core.Call(GetTime)
+                    local duration=db.totemDurations[spellID]
+                    local timed=Core.IsNumber(now) and Core.IsNumber(duration) and duration>0 and duration<=3600
+                    totemCache[totem.slot]={active=true,slot=totem.slot,name=totem.name,icon=totem.icon,castObserved=true,
+                        start=timed and now or nil,duration=timed and duration or nil,estimated=timed or nil}
+                    recentCast[totem.slot]=now
                     Update()
                 end
             end
@@ -345,7 +371,7 @@ local function CreateIndicator(host,db)
                 local state=Context.Totem(unit)
                 local now=Core.Call(GetTime)
                 local castAt=recentCast[unit]
-                if state and state.active then totemCache[unit]=state
+                if state and state.active then RememberDuration(state);totemCache[unit]=state
                 elseif not (Core.IsNumber(now) and Core.IsNumber(castAt) and now-castAt<=1) then totemCache[unit]=nil end
             end
             Update();return
@@ -358,7 +384,7 @@ local function CreateIndicator(host,db)
             for slot,saved in pairs(totemCache) do
                 if saved.castObserved then
                     local state=Context.Totem(slot)
-                    if state and state.active then totemCache[slot]=state else totemCache[slot]=nil end
+                    if state and state.active then RememberDuration(state);totemCache[slot]=state else totemCache[slot]=nil end
                 end
             end
         end
@@ -375,6 +401,7 @@ end
 function Shaman.Initialize(saved)
     if type(saved.shaman)~='table' then saved.shaman={} end
     Shaman.db=saved.shaman
+    if type(Shaman.db.totemDurations)~='table' then Shaman.db.totemDurations={} end
     for key,value in pairs(Shaman.defaults) do if type(Shaman.db[key])~=type(value) then Shaman.db[key]=value end end
     saved.schemaVersion=3;Shaman.Apply()
 end
