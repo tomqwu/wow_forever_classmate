@@ -12,6 +12,8 @@ ForeverUtilitiesDB, and /futils commands. Preserve Hunter and Shaman settings an
 
 ## Delivery
 
+The static addon-writing guide lives in `site/` and deploys to GitHub Pages from `.github/workflows/pages.yml`. Run `python3 scripts/check_site.py` for site edits. Keep API advice sourced to the Forever client and distinguish documented signatures from beta observations. Site-only edits do not require an addon version bump or CurseForge upload.
+
 For each fix/feature: implement, add meaningful checks, bump the TOC (patch fixes,
 minor features), run python3 scripts/check.py and git diff --check, then build with
 python3 scripts/package.py. Verify the ZIP root is ForeverUtilities/. Install the

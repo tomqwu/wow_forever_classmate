@@ -15,6 +15,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y lua5.1
       - name: Check public utilities and tooling
         run: python3 scripts/check.py
+      - name: Check addon guide
+        run: python3 scripts/check_site.py
       - name: Verify standalone packages
         run: |
           python3 - <<'PYCODE'

@@ -4,6 +4,8 @@
 
 **One compact, class-aware companion for World of Warcraft: Forever.**
 
+**[Build addons for Forever](https://tomqwu.github.io/wow_forever_classmate/)** is the companion GitHub Pages guide to the client API, safe reads, beta pitfalls, testing, and release practices.
+
 Version 0.21.19 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Every class bar uses the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer.
 
 ## Class companions

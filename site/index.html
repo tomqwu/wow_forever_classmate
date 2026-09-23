@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Build reliable WoW Forever addons: a working first addon, the modern API, secret values, combat restrictions, saved settings, testing, and release practices.">
+  <meta name="theme-color" content="#0c151c">
+  <title>Build for Forever · Forever Classmate</title>
+  <link rel="icon" href="./logo.png" type="image/png">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./script.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to guide</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="#top" aria-label="Forever Classmate home"><img src="./logo.png" alt="" width="40" height="40"><span>FOREVER <strong>CLASSMATE</strong></span></a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-links">Menu <span aria-hidden="true">☰</span></button>
+      <nav id="nav-links" class="nav-links" aria-label="Main navigation">
+        <a href="#first-addon">First addon</a><a href="#api">API field guide</a><a href="#pitfalls">Pitfalls</a><a href="#workflow">Workflow</a>
+        <a class="nav-source" href="https://github.com/tomqwu/wow_forever_classmate">View source <span aria-hidden="true">↗</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="top" class="hero" aria-labelledby="hero-title">
+      <div class="hero-grid container">
+        <div>
+          <p class="eyebrow"><span class="signal-dot"></span> FIELD GUIDE · FOREVER 1.60 BETA</p>
+          <h1 id="hero-title">Build addons for <em>Forever.</em></h1>
+          <p class="hero-lead">A practical path from your first <code>.toc</code> file to a dependable in-game helper. Learn what the Forever client actually exposes, what becomes restricted in combat, and how to test without guessing.</p>
+          <div class="hero-actions"><a class="button button-primary" href="#first-addon">Start building <span aria-hidden="true">→</span></a><a class="button button-secondary" href="https://github.com/tomqwu/wow_forever_classmate/releases/latest">Get Forever Classmate <span aria-hidden="true">↗</span></a></div>
+          <p class="hero-note">Based on the <a href="https://github.com/Gethe/wow-ui-source/tree/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated">extracted Forever API</a>, this addon's tests, and observed beta behavior. Checked 23 September 2026.</p>
+        </div>
+        <div class="hero-card" aria-label="Three rules for Forever addon development">
+          <div class="card-topline"><span>THE THREE RULES</span><span class="card-mark">FC / 01</span></div>
+          <ol>
+            <li><span class="rule-number">01</span><div><strong>Read what the client gives you.</strong><p>A documented call may still return a secret or unusable value.</p></div></li>
+            <li><span class="rule-number">02</span><div><strong>Keep unknown separate from absent.</strong><p>A failed scan does not mean the buff, target, or totem is missing.</p></div></li>
+            <li><span class="rule-number">03</span><div><strong>Test the live situation.</strong><p>Mocked checks cannot prove combat behavior or saved settings.</p></div></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <div class="guide-shell container">
+      <aside class="guide-nav" aria-label="Guide sections"><p>ON THIS PAGE</p><a href="#first-addon">01 / First addon</a><a href="#safe-reads">02 / Safe reads</a><a href="#api">03 / API field guide</a><a href="#pitfalls">04 / Pitfalls</a><a href="#workflow">05 / Workflow</a><a href="#references">06 / References</a></aside>
+      <div class="guide-content">
+        <section id="first-addon" class="guide-section">
+          <div class="section-heading"><span class="section-index">01 / START HERE</span><h2>Your first Forever addon</h2><p>A tiny slash-command addon teaches the two essentials: the package manifest and initialization after <code>ADDON_LOADED</code>. Keep the folder and <code>.toc</code> basename identical.</p></div>
+          <div class="steps"><div><span>1</span><p>Create <code>Interface/AddOns/HelloForever/</code> inside the client you actually play. For this repo's beta install, that is <code>_classic_beta_/Interface/AddOns/</code>.</p></div><div><span>2</span><p>Place these two files in that folder. The interface number below matches the tested 1.60 beta build; check your current client before publishing for another build.</p></div></div>
+          <div class="code-card"><div class="code-title"><span>HelloForever.toc</span><button class="copy" type="button" data-copy="toc-example">Copy</button></div><pre id="toc-example"><code>## Interface: 16001
+## Title: Hello Forever
+## Notes: A first addon for WoW Forever
+## SavedVariables: HelloForeverDB
+HelloForever.lua</code></pre></div>
+          <div class="code-card"><div class="code-title"><span>HelloForever.lua</span><button class="copy" type="button" data-copy="lua-example">Copy</button></div><pre id="lua-example"><code>local addonName = ...
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("ADDON_LOADED")
+
+frame:SetScript("OnEvent", function(self, event, loadedName)
+    if loadedName ~= addonName then return end
+    if type(HelloForeverDB) ~= "table" then
+        HelloForeverDB = {}
+    end
+    if HelloForeverDB.enabled == nil then
+        HelloForeverDB.enabled = true
+    end
+    self:UnregisterEvent("ADDON_LOADED")
+    print("Hello Forever loaded. Type /hf")
+end)
+
+SLASH_HELLOFOREVER1 = "/hf"
+SlashCmdList.HELLOFOREVER = function()
+    HelloForeverDB.enabled = not HelloForeverDB.enabled
+    print("Hello Forever:", HelloForeverDB.enabled and "on" or "off")
+end</code></pre></div>
+          <div class="steps"><div><span>3</span><p>Load the addon in game, run <code>/hf</code>, then <code>/reload</code>. For persistence, change it again, log out normally, return, and inspect the SavedVariables file. A working command alone does not prove a saved preference survives a session.</p></div></div>
+          <div class="callout"><strong>Build the smallest useful feature first.</strong><p>Add one readable cue, such as a known player buff or power percentage. Make it optional, stop its events and polling when disabled, then test it with and without a target and in combat.</p></div>
+        </section>
+
+        <section id="safe-reads" class="guide-section">
+          <div class="section-heading"><span class="section-index">02 / THE IMPORTANT DIFFERENCE</span><h2>Read safely. Display honestly.</h2><p>Forever's modern client can hand an addon a <em>secret value</em>. Lua must not branch, calculate, format, or inspect that value. <code>pcall</code> catches errors, but a successful call can still return a secret.</p></div>
+          <div class="two-up"><div class="principle"><span class="principle-icon">≠</span><h3>Unknown is not missing</h3><p>Use three states: a readable match, a complete readable scan with no match, and unavailable. Never turn a restricted aura scan into a “missing buff” alert.</p></div><div class="principle"><span class="principle-icon">◫</span><h3>Native UI can sometimes render it</h3><p>Where the API explicitly permits secret numeric arguments, a native font string or status bar can display a value directly. The addon must not do arithmetic with it.</p></div></div>
+          <div class="code-card"><div class="code-title"><span>Guard a single numeric return</span><button class="copy" type="button" data-copy="safe-example">Copy</button></div><pre id="safe-example"><code>local function ReadNumber(fn, ...)
+    if type(fn) ~= "function" then return nil end
+    local ok, value = pcall(fn, ...)
+    if not ok or (issecretvalue and issecretvalue(value)) then
+        return nil
+    end
+    if type(value) ~= "number" or value ~= value
+        or value == math.huge or value == -math.huge then
+        return nil
+    end
+    return value
+end</code></pre></div>
+          <p class="fine-print">This helper is for a <em>single</em> return. Multi-return APIs need every return position checked, including positions after a <code>nil</code> hole. Tables need their fields checked separately. See the repo's <a href="https://github.com/tomqwu/wow_forever_classmate/blob/main/addons/ForeverUtilities/Core.lua">Core.Call</a> for a multi-return wrapper.</p>
+        </section>
+
+        <section id="api" class="guide-section">
+          <div class="section-heading"><span class="section-index">03 / WORKING WITH THE CLIENT</span><h2>API field guide</h2><p>Use these patterns as starting points, then verify the exact API and restrictions against the build you target. The <a href="https://github.com/Gethe/wow-ui-source/tree/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated">Forever UI source</a> is the reference; mainline examples alone are insufficient.</p></div>
+          <div class="api-grid">
+            <article class="api-card"><div class="api-card-heading"><span>01</span><h3>Learned spells</h3></div><p>Use <code>C_SpellBook</code> and <code>C_Spell</code> to discover what this character actually learned. Consider base spell IDs, overrides, passive entries, localized names, and ranks.</p><p class="api-detail">Refresh on <code>SPELLS_CHANGED</code> or <code>LEARNED_SPELL_IN_SKILL_LINE</code>. The user's beta client rejected <code>LEARNED_SPELL_IN_TAB</code>.</p></article>
+            <article class="api-card"><div class="api-card-heading"><span>02</span><h3>Auras &amp; ownership</h3></div><p><code>C_UnitAuras.GetAuraDataByIndex</code> can be restricted. A “missing” result requires a complete readable scan. For a target debuff, check that its source is the player.</p><p class="api-detail">If any scanned aura is unreadable, report unavailable rather than absent.</p></article>
+            <article class="api-card"><div class="api-card-heading"><span>03</span><h3>Power &amp; shields</h3></div><p>Use readable <code>UnitPower</code>/<code>UnitPowerMax</code>, or <code>UnitPowerPercent</code> for a client percentage. <code>UnitGetTotalAbsorbs</code> reports combined absorbs, not one shield's original capacity.</p><p class="api-detail">A shield meter scaled to max health means “% HP covered,” not “% shield left.”</p></article>
+            <article class="api-card"><div class="api-card-heading"><span>04</span><h3>Range &amp; facing</h3></div><p><code>UnitDistanceSquared</code> has a second <code>checkedDistance</code> return. Only a readable <code>true</code> validates exact yards. Spell-range checks give brackets.</p><p class="api-detail">A failed positive-minimum shot check may mean too close or too far. Coordinates are not a workaround for restricted combat range.</p></article>
+            <article class="api-card"><div class="api-card-heading"><span>05</span><h3>Totems</h3></div><p><code>GetTotemInfo</code> and <code>GetTotemTimeLeft</code> can become secret. In one beta observation, <code>haveTotem=true</code> accompanied an empty name and zero time while a totem was visible.</p><p class="api-detail">Treat that as unknown. A <code>~</code> timer is an estimate only after that spell's duration was previously observed.</p></article>
+            <article class="api-card"><div class="api-card-heading"><span>06</span><h3>Weapon enchants</h3></div><p><code>C_Item.GetWeaponEnchantInfo</code> returns enchant records for a weapon slot, not the old Classic tuple. Read <code>hasEnchant</code> and <code>timeLeft</code> defensively.</p><p class="api-detail">The enchant <code>timeLeft</code> is milliseconds; divide by 1,000 only when readable.</p></article>
+          </div>
+          <div class="code-card"><div class="code-title"><span>Exact distance only with a valid check</span><button class="copy" type="button" data-copy="distance-example">Copy</button></div><pre id="distance-example"><code>local ok, squared, checked = pcall(UnitDistanceSquared, "target")
+if ok and not (issecretvalue and
+    (issecretvalue(squared) or issecretvalue(checked)))
+    and checked == true and type(squared) == "number"
+    and squared == squared and squared &gt;= 0
+    and squared &lt; math.huge then
+    local yards = math.sqrt(squared)
+    -- Display yards only in this branch.
+end</code></pre></div>
+        </section>
+
+        <section id="pitfalls" class="guide-section">
+          <div class="section-heading"><span class="section-index">04 / LEARNED THE HARD WAY</span><h2>Pitfalls to catch early</h2><p>Most beta breakage looks like a plausible value that means the wrong thing. Make the uncertainty visible during development.</p></div>
+          <div class="pitfall-list">
+            <div><span>01</span><div><h3>Registering a remembered event</h3><p>The beta rejected <code>LEARNED_SPELL_IN_TAB</code>. Check the Forever event documentation before registration. A Shaman combat-log experiment also produced a blocked-action warning in the user's client.</p></div></div>
+            <div><span>02</span><div><h3>Guessing from a familiar spell ID</h3><p>Forever talents, ranks, and racials differ from older Classic versions. Discover the live spellbook and use readable metadata. Treat a selective cue catalog as a helper, not a complete spell database.</p></div></div>
+            <div><span>03</span><div><h3>Calling “not readable” zero</h3><p>Unavailable mana, aura duration, absorb amount, and range should stay unavailable. Do not calculate with a secret value or show a fake percentage.</p></div></div>
+            <div><span>04</span><div><h3>Mixing up timers</h3><p>A summoned totem's remaining lifetime differs from the spell's action-button cooldown. Enchant time-left uses milliseconds. Label observations and estimates separately.</p></div></div>
+            <div><span>05</span><div><h3>Assuming settings persisted</h3><p>A UI checkbox may work until reload but fail after logout. Check the saved global's TOC declaration, migration logic, and the actual SavedVariables file after a normal session boundary.</p></div></div>
+            <div><span>06</span><div><h3>Trusting a passing mock too much</h3><p>Unit tests can prove your decision logic. They cannot prove a restricted API is readable in combat, an event is accepted, or a bar is legible on the live client.</p></div></div>
+          </div>
+        </section>
+
+        <section id="workflow" class="guide-section">
+          <div class="section-heading"><span class="section-index">05 / SHIP SOMETHING RELIABLE</span><h2>A practical build loop</h2><p>Give each feature a clear evidence path, a small UI surface, and a way to turn it off.</p></div>
+          <div class="workflow-grid"><div><span>01 / CHECK</span><h3>Inspect the client</h3><p>Read the matching Forever API signature and its secret annotations. Confirm the actual event and return positions before coding.</p></div><div><span>02 / MODEL</span><h3>Keep states honest</h3><p>Represent present, absent, and unknown separately. Only show alerts from trustworthy observations.</p></div><div><span>03 / LIMIT</span><h3>Control the lifecycle</h3><p>Register events and poll only for the active, enabled feature. Suspend during death and world transitions; clear stale target data.</p></div><div><span>04 / TEST</span><h3>Exercise both layers</h3><p>Test logic with readable, missing, malformed, and secret values. Then test in game in and out of combat, across reload and logout.</p></div><div><span>05 / PACKAGE</span><h3>Keep upgrades safe</h3><p>Preserve stable folder, TOC, and SavedVariables names. Compare the packaged files with the installed files and keep existing settings.</p></div><div><span>06 / RELEASE</span><h3>Publish what works</h3><p>Version runtime changes, document limitations, and verify the downloaded release. Treat the user's live confirmation as separate from CI.</p></div></div>
+          <div class="callout"><strong>Explore a working example.</strong><p><a href="https://github.com/tomqwu/wow_forever_classmate/tree/main/addons/ForeverUtilities">Forever Classmate source</a> implements class selection, guarded reads, independently switchable blocks, and a release pipeline. Its <a href="https://github.com/tomqwu/wow_forever_classmate/tree/main/tests">tests</a> cover secret, missing, and malformed data. The addon itself supports all nine classes.</p></div>
+        </section>
+
+        <section id="references" class="guide-section references">
+          <div class="section-heading"><span class="section-index">06 / KEEP VERIFYING</span><h2>References &amp; scope</h2><p>This guide documents a Forever 1.60 beta snapshot. Check current client behavior before applying an example to a later build.</p></div>
+          <ul><li><a href="https://github.com/Gethe/wow-ui-source/tree/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated">Forever extracted API documentation <span aria-hidden="true">↗</span></a><span>Signatures, return fields, events, and secret annotations.</span></li><li><a href="https://worldofwarcraft.blizzard.com/en-us/news/24303313">Blizzard's Forever overview <span aria-hidden="true">↗</span></a><span>Game design and the current Forever direction.</span></li><li><a href="https://classicwowforever.com/guides/wow-forever-addons-api-compatibility/">Addon compatibility guide <span aria-hidden="true">↗</span></a><span>Community context for package, feature, and persistence checks.</span></li><li><a href="https://github.com/tomqwu/wow_forever_classmate/blob/main/AGENTS.md">This repo's development rules <span aria-hidden="true">↗</span></a><span>Concrete build, install, test, and release conventions.</span></li></ul>
+        </section>
+      </div>
+    </div>
+  </main>
+  <footer class="site-footer"><div class="container"><div><strong>FOREVER CLASSMATE</strong><p>Build for the client you have. Show only what it can tell you.</p></div><div><a href="https://github.com/tomqwu/wow_forever_classmate">GitHub</a><a href="https://github.com/tomqwu/wow_forever_classmate/releases/latest">Latest release</a><a href="#top">Back to top ↑</a></div></div></footer>
+</body>
+</html>
