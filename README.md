@@ -4,7 +4,7 @@
 
 **One compact, class-aware companion for World of Warcraft: Forever.**
 
-Version 0.21.18 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Every class bar uses the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer.
+Version 0.21.19 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Every class bar uses the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer.
 
 ## Class companions
 
@@ -16,7 +16,7 @@ Version 0.21.18 supports all nine classes. Forever Classmate detects the player 
 | Warrior | Rage, current stance, shout upkeep, Rend/Deep Wounds, and real Overpower/Execute/Victory Rush/Bloodthirst usability |
 | Rogue | Energy, combo points, both weapon coatings, Slice and Dice/Venom, target poison or bleed, and reactive abilities |
 | Druid | Current form and its live power type, Mark/Thorns, target DoTs, Eclipse/Nature's Grace/Omen, and learned spec abilities |
-| Mage | Mana, armor upkeep, personal target setup, Hot Streak/Fingers of Frost/Arcane Blast state, and learned cooldowns |
+| Mage | Live mana meter, armor and absorb-shield status, personal target setup, Hot Streak/Fingers of Frost/Arcane Blast state, and learned cooldowns |
 | Priest | Mana, self buffs, Shadow target effects, healing or Shadow abilities, and Forever's race-specific Priest spells |
 | Warlock | Mana, health, Soul Shards, armor, demon presence, target DoT/Bane/Curse, and learned abilities |
 

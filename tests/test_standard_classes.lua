@@ -28,6 +28,9 @@ function methods:StopMovingOrSizing() self.moving=false end
 function methods:SetScale(v) self.scale=v end
 function methods:EnableMouse(v) self.mouse=v end
 function methods:SetShown(v) self.shown=v end
+function methods:IsShown() return self.shown end
+function methods:SetValue(v) self.value=v end
+function methods:SetMinMaxValues(minimum,maximum) self.minimum,self.maximum=minimum,maximum end
 function methods:Show() self.shown=true end
 function methods:Hide() self.shown=false end
 function methods:SetChecked(v) self.checked=v end
@@ -52,6 +55,7 @@ UnitIsDead=function() return false end
 UnitAffectingCombat=function() return true end
 UnitPower=function() return 70 end;UnitPowerMax=function() return 100 end;UnitPowerType=function() return 0,'MANA' end
 UnitHealth=function() return 90 end;UnitHealthMax=function() return 100 end
+UnitGetTotalAbsorbs=function() return 0 end
 GetTime=function() return 100 end
 GetComboPoints=function() return 0 end
 GetShapeshiftForm=function() return 0 end
@@ -194,8 +198,8 @@ local oldExists,oldCombat=UnitExists,UnitAffectingCombat
 UnitExists=function() return false end;UnitAffectingCombat=function() return false end
 mage.Update()
 check(mage.alpha==0.75,'Mage bar remains readable with no target outside combat')
-check(not mage.cells.resource.icon.shown and mage.cells.resource.top.text=='70%' and mage.cells.resource.bottom.text=='Mana'
-    and mage.cells.resource.top.width==69,'Mage mana uses the full resource slot without an armor icon')
+check(not mage.cells.resource.icon.shown and mage.cells.resource.top.text=='70%' and mage.cells.resource.bottom.text==''
+    and mage.cells.resource.meter.value==70 and mage.cells.resource.top.width==53,'Mage mana uses a compact vertical meter and percentage without a redundant label')
 check(mage.cells.upkeep.icon.shown and mage.cells.upkeep.icon.texture==500,'active Mage armor keeps its own icon')
 check(not mage.cells.target.icon.shown and mage.cells.target.top.text=='No target'
     and not mage.cells.ability.icon.shown and mage.cells.ability.top.text=='—',
@@ -204,13 +208,14 @@ local savedPower,savedMax=UnitPower,UnitPowerMax
 UnitPower=function() return secret end;UnitPowerMax=function() return secret end
 UnitPowerPercent=function() return 0.56 end
 mage.Update()
-check(mage.cells.resource.top.text=='56%' and mage.cells.resource.bottom.text=='Mana'
+check(mage.cells.resource.top.text=='56%' and mage.cells.resource.bottom.text=='' and mage.cells.resource.meter.value==56
     and mage.cells.resource.tooltipLines[1]:find('exact values unavailable',1,true),
     'Mage shows readable mana percentage while exact current and maximum are restricted')
 CurveConstants={ScaleTo100={}}
 UnitPowerPercent=function() return secret end
 mage.Update()
 check(mage.cells.resource.top.formattedFormat=='%.0f%%' and mage.cells.resource.top.formattedValue==secret
+    and mage.cells.resource.meter.value==secret
     and mage.cells.resource.tooltipLines[1]:find('displayed by the client',1,true),
     'Mage forwards a restricted native percentage only to the documented font renderer')
 UnitPower,UnitPowerMax,UnitPowerPercent,CurveConstants=savedPower,savedMax,nil,nil
@@ -224,6 +229,30 @@ NS.Mage.spells.iceLance=nil
 UnitAffectingCombat=function() return true end;mage.Update()
 check(mage.alpha==1,'Mage bar is fully visible in combat')
 UnitExists,UnitAffectingCombat=oldExists,oldCombat
+mage=Fixture(NS.Mage,{'Frost Armor','Mana Shield'},{'Frost Armor','Mana Shield'})
+check(mage.events.UNIT_ABSORB_AMOUNT_CHANGED and NS.Mage.db.showMageShield==true,
+    'Mage subscribes to absorb changes and defaults its shield feature on')
+UnitGetTotalAbsorbs=function() return 45 end
+mage.Update()
+check(mage.cells.upkeep.top.text=='45' and mage.cells.upkeep.bottom.text=='45% HP'
+    and mage.cells.upkeep.meter.value==45 and mage.cells.upkeep.meter.maximum==100,
+    'active Mage shield shows total absorbs and gradually scaled health coverage')
+check(mage.cells.upkeep.tooltipLines[1]:find('Frost Armor',1,true)
+    and mage.cells.upkeep.tooltipLines[3]:find('all active absorb',1,true),
+    'shield display keeps armor details and explains aggregate absorbs')
+UnitGetTotalAbsorbs=function() return secret end
+mage.Update()
+check(mage.cells.upkeep.top.formattedValue==secret and mage.cells.upkeep.meter.value==secret
+    and mage.cells.upkeep.bottom.text=='Shield',
+    'restricted absorb amount is handed only to native renderers')
+NS.Mage.db.showMageShield=false;mage.Update()
+check(mage.cells.upkeep.bottom.text=='OK' and not mage.cells.upkeep.meter.shown,
+    'Mage shield toggle leaves armor upkeep intact')
+NS.Mage.db.showUpkeep=false;NS.Mage.db.showMageShield=true;mage.Update()
+check(mage.cells.upkeep.shown and mage.cells.upkeep.top.formattedValue==secret,
+    'shield indicator stays independent when armor upkeep is hidden')
+NS.Mage.db.showUpkeep=true
+NS.Mage.db.showMageShield=true;UnitGetTotalAbsorbs=function() return 0 end
 local priest=Fixture(NS.Priest,{'Power Word: Fortitude','Divine Spirit','Inner Fire'},{'Prayer of Fortitude','Prayer of Spirit','Inner Fire'})
 check(priest.cells.upkeep.top.text=='3/3','Priest group prayers satisfy individual buff upkeep')
 local warlock=Fixture(NS.Warlock,{'Demon Skin'},{'Demon Skin'})

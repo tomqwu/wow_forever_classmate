@@ -61,9 +61,10 @@ local configs={
             Spell('tigersFury',"Tiger's Fury",'cue'),Spell('berserk','Berserk','cue'),Spell('innervate','Innervate','cue'),Spell('swiftmend','Swiftmend','cue'),
         },upkeepLabel='Nature buffs',upkeepGroups={{label='Mark of the Wild',keys={'markWild'}},{label='Thorns',keys={'thorns'}}},targetLabel='Target effect',currentPower=true,showForm=true},
     MAGE={key='mage',label='Mage',command='/fmage',color={0.25,0.78,0.92},icon='Interface\\Icons\\Spell_Frost_FrostArmor02',
-        description='Mana, armor upkeep, personal damage effects, spec procs, and racial cooldowns.',
+        description='Live mana meter, armor and absorption shield upkeep, personal damage effects, spec procs, and racial cooldowns.',
         catalog={
             Spell('mageArmor','Mage Armor','upkeep'),Spell('iceArmor','Ice Armor','upkeep'),Spell('frostArmor','Frost Armor','upkeep'),Spell('moltenArmor','Molten Armor','upkeep'),
+            Spell('manaShield','Mana Shield','shield'),Spell('iceBarrier','Ice Barrier','shield'),
             Spell('improvedScorch','Improved Scorch','target',true),Spell('pyroblast','Pyroblast','target'),
             Spell('hotStreak','Hot Streak','proc',true),Spell('fingersFrost','Fingers of Frost','proc',true),Spell('arcaneBlast','Arcane Blast','proc'),
             Spell('iceLance','Ice Lance','cue'),Spell('fireBlast','Fire Blast','cue'),Spell('presenceMind','Presence of Mind','cue'),Spell('coldSnap','Cold Snap','cue'),
@@ -112,6 +113,13 @@ local function Paint(cell,icon,top,bottom,color,dim)
     cell.top:SetText(top or '');cell.bottom:SetText(bottom or '')
     cell.top:SetTextColor(unpack(color or {0.88,0.92,1}));cell.bottom:SetTextColor(0.68,0.74,0.82)
 end
+local function MakeMeter(cell,x,width,color)
+    local back=cell:CreateTexture(nil,'BACKGROUND');back:SetSize(width,36);back:SetPoint('LEFT',cell,'LEFT',x,0);back:SetColorTexture(0.08,0.14,0.22,0.9)
+    local meter=CreateFrame('StatusBar',nil,cell);meter:SetSize(width,36);meter:SetPoint('LEFT',cell,'LEFT',x,0)
+    meter:SetStatusBarTexture('Interface\\Buttons\\WHITE8X8');meter:SetStatusBarColor(unpack(color));meter:SetOrientation('VERTICAL');meter:SetMinMaxValues(0,100)
+    meter.background=back
+    return meter
+end
 
 local function CreateIndicator(module,config,host,db)
     local frame=CreateFrame('Frame',module.indicatorName,host);frame:SetSize(NS.ClassBarWidth,NS.ClassBarHeight);frame:SetPoint('TOPLEFT',host,'TOPLEFT',0,0)
@@ -119,6 +127,10 @@ local function CreateIndicator(module,config,host,db)
     local accent=frame:CreateTexture(nil,'ARTWORK');accent:SetPoint('TOPLEFT');accent:SetPoint('BOTTOMLEFT');accent:SetWidth(4);accent:SetColorTexture(unpack(config.color))
     local resource=MakeCell(frame,7,75);local upkeep=MakeCell(frame,82,80);local target=MakeCell(frame,162,80)
     local ability=MakeCell(frame,242,80);local racial=MakeCell(frame,322,76)
+    if config.key=='mage' then
+        resource.meter=MakeMeter(resource,4,9,{0.2,0.65,1})
+        upkeep.meter=MakeMeter(upkeep,72,4,{0.4,0.85,1})
+    end
     frame.cells={resource=resource,upkeep=upkeep,target=target,ability=ability,racial=racial}
     local lastStatus='Not checked';local elapsed=0;local active=false;local suspended=false
 
@@ -203,9 +215,19 @@ local function CreateIndicator(module,config,host,db)
         local resourceIcon=config.icon
         if config.resourceTextOnly then
             resourceIcon=nil
-            resourceBottom=power and (power.label or config.powerLabel) or config.powerLabel
+            resourceBottom=''
         end
         Paint(resource,resourceIcon,resourceTop,resourceBottom,config.color,power==nil and not hasProtectedPercent)
+        if config.key=='mage' then
+            resource.top:ClearAllPoints();resource.top:SetPoint('TOPLEFT',resource,'TOPLEFT',18,-17);resource.top:SetWidth(53)
+            resource.bottom:SetText('')
+            local meterValue=power and power.percent or protectedPercent
+            if power or hasProtectedPercent then
+                if not pcall(resource.meter.SetValue,resource.meter,meterValue) then resource.meter:SetValue(0) end
+            else resource.meter:SetValue(0) end
+            resource.meter:SetShown(db.showResource~=false)
+            resource.meter.background:SetShown(db.showResource~=false)
+        end
         if hasProtectedPercent then
             if pcall(resource.top.SetFormattedText,resource.top,'%.0f%%',protectedPercent) then resourceTop='client percentage'
             else resourceLines[1]='The client did not permit a readable resource percentage.' end
@@ -253,9 +275,40 @@ local function CreateIndicator(module,config,host,db)
         local upkeepTop=upkeepTotal>0 and (upkeepActive..'/'..upkeepTotal) or '—'
         local upkeepBottom=upkeepMissing>0 and ('!'..upkeepMissing) or (upkeepUnknown>0 and '?' or (upkeepTotal>0 and 'OK' or ''))
         local upkeepWarn=inCombat and upkeepMissing>0
-        upkeep.tooltipTitle=config.upkeepLabel;upkeep.tooltipLines=upkeepLines
+        local shieldAura,protectedAbsorb,hasProtectedAbsorb
+        if config.key=='mage' and db.showMageShield~=false then
+            shieldAura=Context.Aura('player','HELPFUL',Context.Names(module.spells,{'manaShield','iceBarrier'}),false)
+            if type(shieldAura)=='table' then
+                local okAbsorb,absorb=pcall(UnitGetTotalAbsorbs,'player')
+                if okAbsorb and (Core.IsNumber(absorb) and absorb>=0 or not Core.IsReadable(absorb)) then
+                    local okHealth,healthMax=pcall(UnitHealthMax,'player')
+                    local coverage=Core.IsNumber(absorb) and Core.IsNumber(healthMax) and healthMax>0
+                        and math.floor(absorb*100/healthMax+0.5) or nil
+                    upkeepTop=Core.IsNumber(absorb) and tostring(math.floor(absorb+0.5)) or ''
+                    upkeepBottom=coverage and (coverage..'% HP') or 'Shield'
+                    upkeepLines[#upkeepLines+1]=Core.IsNumber(absorb) and ('Total absorbs: '..math.floor(absorb+0.5)..(coverage and (' ('..coverage..'% of max health)') or ''))
+                        or 'Total absorbs: amount displayed by client; value is restricted.'
+                    upkeepLines[#upkeepLines+1]='Includes all active absorb effects; original shield capacity is not exposed.'
+                    upkeepIcon=shieldAura.icon or upkeepIcon
+                    upkeepDim=false;upkeepWarn=false
+                    local meterOK=okHealth and (Core.IsNumber(healthMax) and healthMax>0 or not Core.IsReadable(healthMax))
+                        and pcall(upkeep.meter.SetMinMaxValues,upkeep.meter,0,healthMax)
+                        and pcall(upkeep.meter.SetValue,upkeep.meter,absorb)
+                    upkeep.meter:SetShown(meterOK==true)
+                    if not Core.IsReadable(absorb) then protectedAbsorb=absorb;hasProtectedAbsorb=true end
+                else
+                    upkeepTop='?';upkeepBottom='Shield';upkeepIcon=shieldAura.icon or upkeepIcon
+                    upkeepLines[#upkeepLines+1]='Shield active; absorb amount unavailable.'
+                    upkeep.meter:SetShown(false)
+                end
+            else upkeep.meter:SetShown(false) end
+        elseif config.key=='mage' then upkeep.meter:SetShown(false) end
+        if config.key=='mage' then upkeep.meter.background:SetShown(upkeep.meter:IsShown()) end
+        upkeep.tooltipTitle=config.key=='mage' and 'Mage armor and absorbs' or config.upkeepLabel;upkeep.tooltipLines=upkeepLines
         Paint(upkeep,upkeepIcon or config.icon,upkeepTop,upkeepBottom,upkeepWarn and {1,0.25,0.18} or config.color,upkeepDim)
-        upkeep:SetShown(db.showUpkeep~=false)
+        if config.key=='mage' then upkeep.top:SetWidth(39);upkeep.bottom:SetWidth(39) end
+        if hasProtectedAbsorb then pcall(upkeep.top.SetFormattedText,upkeep.top,'%.0f',protectedAbsorb) end
+        upkeep:SetShown(db.showUpkeep~=false or (config.key=='mage' and db.showMageShield~=false and type(shieldAura)=='table'))
 
         local showTarget=db.showTarget~=false;local showAbilities=db.showAbilities~=false
         local proc;if showAbilities then proc=Context.Aura('player','HELPFUL',Context.Names(module.spells,module.procKeys),false) end
@@ -330,10 +383,10 @@ local function CreateIndicator(module,config,host,db)
     end
 
     local events={'PLAYER_ENTERING_WORLD','PLAYER_LEAVING_WORLD','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED','PLAYER_TARGET_CHANGED',
-        'PLAYER_DEAD','PLAYER_ALIVE','PLAYER_UNGHOST','SPELLS_CHANGED','LEARNED_SPELL_IN_SKILL_LINE','UNIT_AURA','UNIT_POWER_UPDATE',
+        'PLAYER_DEAD','PLAYER_ALIVE','PLAYER_UNGHOST','SPELLS_CHANGED','LEARNED_SPELL_IN_SKILL_LINE','UNIT_AURA','UNIT_ABSORB_AMOUNT_CHANGED','UNIT_POWER_UPDATE',
         'UNIT_HEALTH','UPDATE_SHAPESHIFT_FORM','UPDATE_SHAPESHIFT_FORMS','PLAYER_EQUIPMENT_CHANGED','UNIT_INVENTORY_CHANGED','BAG_UPDATE_DELAYED','SPELL_UPDATE_COOLDOWN'}
     local function NeedsPoll()
-        return db.showResource~=false or db.showUpkeep~=false or db.showTarget~=false or db.showAbilities~=false or db.showRacial~=false
+        return db.showResource~=false or db.showUpkeep~=false or db.showTarget~=false or db.showAbilities~=false or db.showRacial~=false or (config.key=='mage' and db.showMageShield~=false)
     end
     local function Refresh()
         frame:SetScript('OnUpdate',nil);frame:SetShown(db.enabled)
@@ -351,7 +404,7 @@ local function CreateIndicator(module,config,host,db)
         if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then suspended=true;frame:SetScript('OnUpdate',nil);frame:Hide();return end
         if event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_ALIVE' or event=='PLAYER_UNGHOST' then suspended=false end
         if suspended or Core.PlayerDead() then return end
-        if (event=='UNIT_AURA' or event=='UNIT_POWER_UPDATE' or event=='UNIT_HEALTH' or event=='UNIT_INVENTORY_CHANGED')
+        if (event=='UNIT_AURA' or event=='UNIT_ABSORB_AMOUNT_CHANGED' or event=='UNIT_POWER_UPDATE' or event=='UNIT_HEALTH' or event=='UNIT_INVENTORY_CHANGED')
             and Core.IsReadable(unit) and unit~='player' and unit~='target' and unit~='pet' then return end
         if event=='SPELLS_CHANGED' or event=='LEARNED_SPELL_IN_SKILL_LINE' or event=='PLAYER_ENTERING_WORLD' then Discover() end
         if event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_ALIVE' or event=='PLAYER_UNGHOST' then Refresh() else Update() end
@@ -372,15 +425,21 @@ local defaultOptions={
     {key='showRacial',label='Show learned racial readiness',kind='toggle'},
     {key='fadeOutOfCombat',label='Dim outside combat',kind='toggle'},
 }
+local function OptionsFor(config)
+    if config.key~='mage' then return defaultOptions end
+    local options={};Append(options,defaultOptions)
+    options[#options+1]={key='showMageShield',label='Show absorption shield',kind='toggle'}
+    return options
+end
 
 for token,config in pairs(configs) do
     local module={name='Forever Classmate — '..config.label,description=config.description,command=config.command,
         enableLabel='Enable '..config.label:lower()..' bar',width=NS.ClassBarWidth,height=NS.ClassBarHeight,
         frameName='ForeverClassmate'..config.label..'Frame',lockName='ForeverClassmate'..config.label..'Lock',
         panelName='ForeverClassmate'..config.label..'Options',minimapName='ForeverClassmate'..config.label..'Minimap',
-        indicatorName='ForeverClassmate'..config.label..'Indicator',normalize=Normalize,options=defaultOptions,
+        indicatorName='ForeverClassmate'..config.label..'Indicator',normalize=Normalize,options=OptionsFor(config),
         defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showMinimap=true,showLockButton=true,showResource=true,
-            showUpkeep=true,showTarget=true,showAbilities=true,showRacial=true,fadeOutOfCombat=true,minimapAngle=35}}
+            showUpkeep=true,showTarget=true,showAbilities=true,showRacial=true,showMageShield=true,fadeOutOfCombat=true,minimapAngle=35}}
     NS[config.label]=module
     function module.create(db)
         return NS.ClassHost.Create(module,db,function(host) return CreateIndicator(module,config,host,db) end)

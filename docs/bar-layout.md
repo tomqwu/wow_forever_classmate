@@ -60,6 +60,8 @@ before the lock control:
 | Racial | 322–398 | Best learned active-racial state |
 | Control | 400–420 | Shared lock button |
 
+Mage uses a 9px vertical mana meter in the resource slot. An active Mana Shield or Ice Barrier uses a 4px coverage meter in upkeep, showing total absorbs against maximum health when the client exposes those values. Armor details remain on hover. This coverage is not a percentage of the shield’s original capacity.
+
 Full localized spell names, exact resource values, every upkeep group, and all
 learned racial states are shown on hover. Target and ability slots remain
 independently toggleable. Restricted values use `?`; the addon does not turn an

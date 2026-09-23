@@ -1,3 +1,10 @@
+## 0.21.19
+
+- Replaced the Mage resource slot’s redundant Mana label with a compact vertical meter next to the live mana percentage. Restricted native percentages can still drive the meter without addon arithmetic.
+- Learned Mana Shield or Ice Barrier now highlights an active shield, showing the client’s total absorb amount and a slim meter for absorption relative to maximum health. The armor state stays in the tooltip, and the shield display has its own toggle. The coverage percentage is not the fraction of that specific shield remaining; the client does not expose its original capacity.
+
+Use `/reload` after updating. Automated checks use mocked APIs; live beta-client rendering still needs confirmation.
+
 ## 0.21.18
 
 - Mage and the other standard classes can display a readable resource percentage when Forever restricts exact current or maximum power. When only a restricted native percentage is available, the value is sent directly to the client's font renderer; the addon does not perform arithmetic on it or invent exact values.
