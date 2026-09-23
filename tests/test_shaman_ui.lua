@@ -20,6 +20,7 @@ function methods:SetText(v) self.text=v end
 function methods:SetFont(_,size) self.fontSize=size end
 function methods:GetStringWidth() return #(self.text or '')*(self.fontSize or 12)*(rawget(self,'measureFactor') or 0.6) end
 function methods:SetTexture(v) self.texture=v end
+function methods:SetAlpha(v) self.alpha=v end
 function methods:SetDesaturated(v) self.desaturated=v end
 function methods:SetColorTexture(r,g,b,a) self.color={r,g,b,a} end
 function methods:SetMovable(v) self.movable=v end
@@ -98,6 +99,7 @@ local host=named.ForeverClassmateShamanFrame
 local indicator=named.ForeverClassmateShamanIndicator
 check(host and host.width==426 and host.height==56 and host.shown,'rendered native-width shaman bar created')
 check(indicator and indicator.scripts.OnUpdate~=nil,'enabled info polls for live timers')
+check(indicator.alpha==0.2,'idle shaman bar dims without a target or active totem')
 check(not indicator.events.COMBAT_LOG_EVENT_UNFILTERED,'Shaman avoids Blizzard-only combat-log event registration')
 check(indicator.totemCells[1].button.width==38 and indicator.totemCells[1].button.y==-9,'totem cells use the shared square size and top edge')
 check(indicator.weaponCell.button.width==38 and indicator.weaponCell.button.y==-9 and indicator.shieldCell.button.y==-9,'totem and upkeep cells share one top edge')
@@ -118,6 +120,7 @@ GetTotemInfo=function(slot) if slot==2 then return false,'Earthbind Totem',90,30
 GetTotemTimeLeft=function(slot) return slot==2 and 20 or 0 end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 local earth=indicator.totemCells[1]
 check(earth.icon.shown and not earth.icon.desaturated and earth.badge.text=='' and earth.icon.texture==777 and earth.timer.text=='20s','active totem replaces subdued art with live icon and timer')
+check(indicator.alpha==1,'active totem keeps the shaman bar fully readable outside combat')
 check(earth.background.color[1]==0.09 and earth.stripe.color[1]==earth.info.color[1],'active totem keeps dark cell and bright element stripe')
 check(indicator.helperText.text=='Recall 1 totem' and indicator.helperText:GetStringWidth()<=indicator.helperText.width,'recall hint fits without clipping')
 indicator.helperText.measureFactor=1;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
@@ -130,6 +133,8 @@ check(earth.state.cached and earth.timer.text=='15s' and earth.icon.shown and in
 now=125;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
 check(not earth.state or not earth.state.active,'totem update clears expired cached state')
 UnitAffectingCombat=function() return false end
+indicator.scripts.OnEvent(indicator,'PLAYER_REGEN_ENABLED')
+check(indicator.alpha==0.2,'shaman bar dims again after its last known totem expires and combat ends')
 GetTotemInfo=function(slot) if slot==2 then return true,'Stoneclaw Totem',125,30,504,1,1004 end return false,'',0,0,0 end
 GetTotemTimeLeft=function(slot) return slot==2 and 30 or 0 end
 indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
@@ -146,6 +151,7 @@ now=135;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
 check(earth.state==nil,'later totem removal event clears combat cast')
 UnitAffectingCombat=function() return false end
 GetTotemInfo=function() return false,'',0,0,0 end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
+check(indicator.alpha==0.2,'removed combat totem no longer keeps the bar bright')
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')
 local slash=SlashCmdList.FOREVERUTILITIES

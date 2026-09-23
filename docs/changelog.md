@@ -1,3 +1,9 @@
+## 0.21.13
+
+- Keep the Shaman bar fully visible while a confirmed totem is active, including outside combat. It dims again when the last known totem expires or is removed.
+
+Use `/reload` after updating.
+
 ## 0.21.12
 
 - Shaman totems cast in combat now show a countdown after the addon has observed a readable duration for that exact learned spell. The `~` prefix marks it as estimated while Forever restricts live timing; a readable slot timer takes over when available.

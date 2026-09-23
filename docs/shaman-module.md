@@ -45,4 +45,4 @@ The bar uses Forever's 426-pixel rendered desktop swing-bar width and remains 56
 | Helper | Maelstrom, Flame Shock/Lava Burst, Riptide, or recall cue; mana below |
 | Control | Shared lock toggle |
 
-Preference changes reclaim unused space; transient combat states never resize the outer bar. Combat restores full opacity, an out-of-combat target uses 60%, and idle uses 20%.
+Preference changes reclaim unused space; transient combat states never resize the outer bar. Combat or a confirmed active totem keeps the bar at full opacity. With no active totem, an out-of-combat target uses 60%, and idle uses 20%.
