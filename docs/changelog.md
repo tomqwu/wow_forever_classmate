@@ -1,3 +1,10 @@
+## 0.21.14
+
+- Recognize a Shaman totem from the player’s successful cast spell ID even when Forever reports a different ID in the spellbook. This keeps the totem icon and bar visible when the slot API reports `?/4`.
+- Keep the timer blank until that exact spell ID has a readable duration; removal events still clear the observed totem.
+
+Use `/reload` after updating.
+
 ## 0.21.13
 
 - Keep the Shaman bar fully visible while a confirmed totem is active, including outside combat. It dims again when the last known totem expires or is removed.

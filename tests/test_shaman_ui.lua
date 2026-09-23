@@ -66,6 +66,7 @@ local book={
     [4]={spellID=1004,name='Stoneclaw Totem',iconID=504},
 }
 C_Spell={GetSpellInfo=function(value)
+    if value==2004 then return {name='Stoneclaw Totem',iconID=604} end
     if type(value)=='number' then local item=book[value-1000];return item and {name=item.name,iconID=item.iconID} end
     return {name=value,iconID=123}
 end}
@@ -152,6 +153,13 @@ check(earth.state==nil,'later totem removal event clears combat cast')
 UnitAffectingCombat=function() return false end
 GetTotemInfo=function() return false,'',0,0,0 end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 check(indicator.alpha==0.2,'removed combat totem no longer keeps the bar bright')
+GetTotemInfo=function() return secret,secret,secret,secret,secret end;GetTotemTimeLeft=function() return secret end
+UnitAffectingCombat=function() return false end
+now=140;indicator.scripts.OnEvent(indicator,'UNIT_SPELLCAST_SUCCEEDED','player','cast-guid',2004)
+check(earth.state and earth.state.castObserved and earth.icon.texture==604 and earth.timer.text=='' and indicator.alpha==1,
+    'observed totem cast outside spellbook IDs keeps bar visible without guessing a timer')
+now=142;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
+check(earth.state==nil and indicator.alpha==0.2,'later totem removal clears dynamically recognized cast')
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')
 local slash=SlashCmdList.FOREVERUTILITIES

@@ -96,7 +96,7 @@ local function CreateIndicator(host,db)
     helperText:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',12,'OUTLINE');helperText:SetJustifyH('LEFT');helperText:SetWordWrap(false)
     local manaText=frame:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall')
     manaText:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',11,'OUTLINE');manaText:SetJustifyH('LEFT')
-    local shieldNames,imbueNames,totemBySpellID={},{},{}
+    local shieldNames,imbueNames,totemBySpellID,totemNames={},{},{},{}
     local totemCache,recentCast={},{}
     local lastStatus='Not checked'
     frame.weaponCell=weapon;frame.shieldCell=shield;frame.helperIcon=helperIcon;frame.helperText=helperText
@@ -109,8 +109,7 @@ local function CreateIndicator(host,db)
         frostbrand={'Frostbrand Weapon','imbue'},windfury={'Windfury Weapon','imbue'},
     }
     local function Discover()
-        Shaman.spells={};shieldNames={};imbueNames={};totemBySpellID={}
-        local totemNames={}
+        Shaman.spells={};shieldNames={};imbueNames={};totemBySpellID={};totemNames={}
         for english,slot in pairs(totemCatalog) do
             totemNames[english]=slot
             local data=Core.Call(C_Spell and C_Spell.GetSpellInfo,english)
@@ -152,6 +151,20 @@ local function CreateIndicator(host,db)
                 end
             end
         end
+    end
+
+    local function ResolveTotemSpell(spellID)
+        local known=totemBySpellID[spellID]
+        if known then return known end
+        -- Forever may emit a cast spell ID that differs from the spellbook entry.
+        -- The successful player cast itself establishes that the spell is learned.
+        local data=Core.Call(C_Spell and C_Spell.GetSpellInfo,spellID)
+        if type(data)~='table' or not Core.IsReadable(data.name) or type(data.name)~='string' then return nil end
+        local slot=totemNames[data.name]
+        if not slot then return nil end
+        known={slot=slot,name=data.name,icon=Core.IsNumber(data.iconID) and data.iconID or nil}
+        totemBySpellID[spellID]=known
+        return known
     end
 
     local function RememberDuration(state)
@@ -353,7 +366,7 @@ local function CreateIndicator(host,db)
         if not db.enabled then return end
         if event=='UNIT_SPELLCAST_SUCCEEDED' then
             if unit=='player' and Core.IsNumber(spellID) then
-                local totem=totemBySpellID[spellID]
+                local totem=ResolveTotemSpell(spellID)
                 if totem then
                     local now=Core.Call(GetTime)
                     local duration=db.totemDurations[spellID]
