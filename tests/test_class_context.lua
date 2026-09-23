@@ -82,6 +82,21 @@ UnitPowerMax=function() return 100 end
 UnitPowerType=function() return 3,'ENERGY' end
 check(C.Power(1,'Rage').percent==60,'fixed power percentage')
 check(C.CurrentPower().label=='Energy' and C.CurrentPower().current==60,'current form power')
+local originalPower,originalMax=UnitPower,UnitPowerMax
+UnitPower=function() return secret end;UnitPowerMax=function() return secret end
+UnitPowerPercent=function(unit,powerType)
+    check(unit=='player' and powerType==0,'percentage fallback reads the same player power type')
+    return 0.56
+end
+local percentOnly=C.Power(0,'Mana')
+check(percentOnly and percentOnly.percent==56 and percentOnly.current==nil and percentOnly.maximum==nil,
+    'fractional percentage remains usable when exact player mana is restricted')
+CurveConstants={ScaleTo100={}}
+UnitPowerPercent=function(_,_,_,curve) check(curve==CurveConstants.ScaleTo100,'client scale curve requested');return 56 end
+check(C.Power(0,'Mana').percent==56,'scaled native percentage is not multiplied twice')
+UnitPowerPercent=function() return secret end
+check(C.Power(0,'Mana')==nil,'secret percentage is not converted to a fabricated number')
+UnitPower,UnitPowerMax,UnitPowerPercent,CurveConstants=originalPower,originalMax,nil,nil
 GetComboPoints=function() return 4 end
 check(C.ComboPoints()==4,'combo points')
 

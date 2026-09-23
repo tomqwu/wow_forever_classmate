@@ -1,4 +1,6 @@
 local NS={}
+local secret={}
+issecretvalue=function(value) return rawequal(value,secret) end
 local root='addons/ForeverUtilities/'
 local frames,named={},{}
 local methods={}
@@ -17,6 +19,7 @@ function methods:SetWidth(w) self.width=w end
 function methods:GetWidth() return self.width end
 function methods:GetHeight() return self.height end
 function methods:SetText(v) self.text=v end
+function methods:SetFormattedText(format,value) self.formattedFormat=format;self.formattedValue=value end
 function methods:SetTexture(v) self.texture=v end
 function methods:SetAlpha(v) self.alpha=v end
 function methods:SetMovable(v) self.movable=v end
@@ -197,6 +200,20 @@ check(mage.cells.upkeep.icon.shown and mage.cells.upkeep.icon.texture==500,'acti
 check(not mage.cells.target.icon.shown and mage.cells.target.top.text=='No target'
     and not mage.cells.ability.icon.shown and mage.cells.ability.top.text=='—',
     'empty target and ability slots do not duplicate the armor icon')
+local savedPower,savedMax=UnitPower,UnitPowerMax
+UnitPower=function() return secret end;UnitPowerMax=function() return secret end
+UnitPowerPercent=function() return 0.56 end
+mage.Update()
+check(mage.cells.resource.top.text=='56%' and mage.cells.resource.bottom.text=='Mana'
+    and mage.cells.resource.tooltipLines[1]:find('exact values unavailable',1,true),
+    'Mage shows readable mana percentage while exact current and maximum are restricted')
+CurveConstants={ScaleTo100={}}
+UnitPowerPercent=function() return secret end
+mage.Update()
+check(mage.cells.resource.top.formattedFormat=='%.0f%%' and mage.cells.resource.top.formattedValue==secret
+    and mage.cells.resource.tooltipLines[1]:find('displayed by the client',1,true),
+    'Mage forwards a restricted native percentage only to the documented font renderer')
+UnitPower,UnitPowerMax,UnitPowerPercent,CurveConstants=savedPower,savedMax,nil,nil
 UnitExists=function() return true end;mage.Update()
 check(mage.alpha==0.9 and mage.cells.target.icon.shown and mage.cells.target.icon.texture==702,
     'Mage target gains a learned spell icon and remains readable outside combat')

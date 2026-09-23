@@ -113,8 +113,17 @@ end
 function Context.Power(powerType,label)
     local current=Call(UnitPower,'player',powerType)
     local maximum=Call(UnitPowerMax,'player',powerType)
-    if not Core.IsNumber(current) or not Core.IsNumber(maximum) or maximum<=0 then return nil end
-    return {current=math.max(0,current),maximum=maximum,percent=math.max(0,math.min(100,math.floor(current*100/maximum+0.5))),label=label}
+    if Core.IsNumber(current) and Core.IsNumber(maximum) and maximum>0 then
+        return {current=math.max(0,current),maximum=maximum,percent=math.max(0,math.min(100,math.floor(current*100/maximum+0.5))),label=label}
+    end
+    -- The client's percentage API can remain readable when exact power values
+    -- are restricted. Its uncurved result is a fraction in [0, 1].
+    local curve=CurveConstants and CurveConstants.ScaleTo100
+    local percent=Call(UnitPowerPercent,'player',powerType,false,curve)
+    if not Core.IsNumber(percent) then return nil end
+    if not curve then percent=percent*100 end
+    if percent<0 or percent>100 then return nil end
+    return {percent=math.floor(percent+0.5),label=label}
 end
 
 function Context.CurrentPower()

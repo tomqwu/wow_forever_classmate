@@ -1,3 +1,10 @@
+## 0.21.18
+
+- Mage and the other standard classes can display a readable resource percentage when Forever restricts exact current or maximum power. When only a restricted native percentage is available, the value is sent directly to the client's font renderer; the addon does not perform arithmetic on it or invent exact values.
+- Resource tooltips state when exact values are unavailable. Mana stays labeled even when the numeric reading is restricted.
+
+Use `/reload` after updating. The screenshot case is covered by mocked API tests; the live beta client still needs confirmation.
+
 ## 0.21.17
 
 - Mage stays readable outside combat: 75% opacity with no target, 90% with a target, and full opacity in combat. The existing fade toggle still enables or disables this behavior.

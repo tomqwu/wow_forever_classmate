@@ -174,7 +174,16 @@ local function CreateIndicator(module,config,host,db)
         local resourceTop=power and (power.percent..'%') or '?'
         local resourceBottom=''
         local resourceLines={}
-        if power then resourceLines[#resourceLines+1]=(power.label or 'Power')..': '..math.floor(power.current+0.5)..' / '..math.floor(power.maximum+0.5)
+        local protectedPercent,hasProtectedPercent
+        if not power and not config.currentPower and type(UnitPowerPercent)=='function'
+            and CurveConstants and CurveConstants.ScaleTo100 then
+            local ok,value=pcall(UnitPowerPercent,'player',config.powerType,false,CurveConstants.ScaleTo100)
+            if ok and not Core.IsReadable(value) then protectedPercent=value;hasProtectedPercent=true end
+        end
+        if power and Core.IsNumber(power.current) and Core.IsNumber(power.maximum) then
+            resourceLines[#resourceLines+1]=(power.label or 'Power')..': '..math.floor(power.current+0.5)..' / '..math.floor(power.maximum+0.5)
+        elseif power then resourceLines[#resourceLines+1]=(power.label or 'Power')..': '..power.percent..'% (exact values unavailable)'
+        elseif hasProtectedPercent then resourceLines[#resourceLines+1]='Percentage is displayed by the client; exact values are restricted.'
         else resourceLines[#resourceLines+1]='The client did not expose a readable resource value.' end
         if db.showResource~=false and config.showCombo then
             local cp=Context.ComboPoints();resourceBottom=cp and ('CP'..cp) or ''
@@ -196,7 +205,12 @@ local function CreateIndicator(module,config,host,db)
             resourceIcon=nil
             resourceBottom=power and (power.label or config.powerLabel) or config.powerLabel
         end
-        Paint(resource,resourceIcon,resourceTop,resourceBottom,config.color,power==nil);resource:SetShown(db.showResource~=false)
+        Paint(resource,resourceIcon,resourceTop,resourceBottom,config.color,power==nil and not hasProtectedPercent)
+        if hasProtectedPercent then
+            if pcall(resource.top.SetFormattedText,resource.top,'%.0f%%',protectedPercent) then resourceTop='client percentage'
+            else resourceLines[1]='The client did not permit a readable resource percentage.' end
+        end
+        resource:SetShown(db.showResource~=false)
 
         local upkeepTotal,upkeepActive,upkeepMissing,upkeepUnknown=0,0,0,0
         local upkeepLines={};local upkeepIcon;local upkeepDim=false
