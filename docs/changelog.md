@@ -1,3 +1,11 @@
+## 0.21.17
+
+- Mage stays readable outside combat: 75% opacity with no target, 90% with a target, and full opacity in combat. The existing fade toggle still enables or disables this behavior.
+- The Mage resource slot now labels mana directly. Frost Armor artwork remains in the armor upkeep slot; empty target and ability slots no longer repeat it. Learned target and ability icons still appear when they have relevant information.
+- Standard class slots use their full text width when no icon is present. No learned racial shows a text-only placeholder instead of the class icon.
+
+Use `/reload` after updating. Automated checks use mocked client APIs; visual validation in the beta client remains necessary.
+
 ## 0.21.16
 
 - Put Shaman cell backgrounds on a lower draw layer so they cannot cover active totem, imbue, or shield icons. Zero/invalid icon IDs now use available spell or weapon art instead of a blank texture.

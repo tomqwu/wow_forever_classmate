@@ -67,7 +67,8 @@ local configs={
             Spell('improvedScorch','Improved Scorch','target',true),Spell('pyroblast','Pyroblast','target'),
             Spell('hotStreak','Hot Streak','proc',true),Spell('fingersFrost','Fingers of Frost','proc',true),Spell('arcaneBlast','Arcane Blast','proc'),
             Spell('iceLance','Ice Lance','cue'),Spell('fireBlast','Fire Blast','cue'),Spell('presenceMind','Presence of Mind','cue'),Spell('coldSnap','Cold Snap','cue'),
-        },upkeepLabel='Armor',upkeepGroups={{label='Armor',keys={'mageArmor','iceArmor','frostArmor','moltenArmor'}}},targetLabel='Damage setup',powerType=0,powerLabel='Mana'},
+        },upkeepLabel='Armor',upkeepGroups={{label='Armor',keys={'mageArmor','iceArmor','frostArmor','moltenArmor'}}},targetLabel='Damage setup',powerType=0,powerLabel='Mana',
+        resourceTextOnly=true,idleAlpha=0.75,targetAlpha=0.9},
     PRIEST={key='priest',label='Priest',command='/fpriest',color={0.92,0.92,0.92},icon='Interface\\Icons\\Spell_Holy_WordFortitude',
         description='Mana, self-buff upkeep, target effects, healing or Shadow cues, and Priest racials.',
         catalog={
@@ -100,7 +101,14 @@ local function MakeCell(frame,x,width)
     return cell
 end
 local function Paint(cell,icon,top,bottom,color,dim)
-    cell.icon:SetTexture(icon);cell.icon:SetVertexColor(dim and 0.42 or 1,dim and 0.42 or 1,dim and 0.45 or 1,1)
+    cell.icon:SetTexture(icon);cell.icon:SetShown(icon~=nil)
+    cell.icon:SetVertexColor(dim and 0.42 or 1,dim and 0.42 or 1,dim and 0.45 or 1,1)
+    local textX=icon and 31 or 3
+    if cell.textX~=textX then
+        cell.top:ClearAllPoints();cell.top:SetPoint('TOPLEFT',cell,'TOPLEFT',textX,-8);cell.top:SetWidth(cell:GetWidth()-textX-3)
+        cell.bottom:ClearAllPoints();cell.bottom:SetPoint('TOPLEFT',cell,'TOPLEFT',textX,-26);cell.bottom:SetWidth(cell:GetWidth()-textX-3)
+        cell.textX=textX
+    end
     cell.top:SetText(top or '');cell.bottom:SetText(bottom or '')
     cell.top:SetTextColor(unpack(color or {0.88,0.92,1}));cell.bottom:SetTextColor(0.68,0.74,0.82)
 end
@@ -183,7 +191,12 @@ local function CreateIndicator(module,config,host,db)
             if shards then resourceBottom=(resourceBottom~='' and (resourceBottom..'/') or '')..'S'..shards;resourceLines[#resourceLines+1]='Soul Shards: '..shards end
         end
         resource.tooltipTitle=config.label..' resources';resource.tooltipLines=resourceLines
-        Paint(resource,config.icon,resourceTop,resourceBottom,config.color,power==nil);resource:SetShown(db.showResource~=false)
+        local resourceIcon=config.icon
+        if config.resourceTextOnly then
+            resourceIcon=nil
+            resourceBottom=power and (power.label or config.powerLabel) or config.powerLabel
+        end
+        Paint(resource,resourceIcon,resourceTop,resourceBottom,config.color,power==nil);resource:SetShown(db.showResource~=false)
 
         local upkeepTotal,upkeepActive,upkeepMissing,upkeepUnknown=0,0,0,0
         local upkeepLines={};local upkeepIcon;local upkeepDim=false
@@ -248,15 +261,15 @@ local function CreateIndicator(module,config,host,db)
             if targetSpell and targetAura==false then targetText='None';targetDim=true;targetLines[#targetLines+1]='No tracked effect from you is active.'
             elseif targetSpell and targetAura==nil then targetText='?';targetLines[#targetLines+1]='Target effects: unavailable'
             else targetText='—' end
-            targetIcon=targetSpell and targetSpell.icon or config.icon
+            targetIcon=targetSpell and targetSpell.icon
         elseif showTarget then
-            targetText='None'
+            targetText='No target'
             if hasTarget then
                 if Core.Call(UnitIsDead,'target')==true then targetText='Dead'
                 elseif Core.Call(UnitIsFriend,'player','target')==true then targetText='Friend'
                 else targetText='?' end
             end
-            targetIcon=config.icon;targetDim=true
+            targetDim=true
         end
         if showAbilities and type(proc)=='table' then
             abilityText=proc.applications and proc.applications>1 and ('×'..proc.applications) or (Context.FormatTime(proc.left) or 'Proc')
@@ -274,8 +287,8 @@ local function CreateIndicator(module,config,host,db)
         end
         target.tooltipTitle=config.targetLabel;target.tooltipLines=targetLines
         ability.tooltipTitle=config.label..' ability';ability.tooltipLines=abilityLines
-        Paint(target,targetIcon or config.icon,targetText,'Effect',targetColor,targetDim);target:SetShown(showTarget)
-        Paint(ability,abilityIcon or config.icon,abilityText,'Ability',abilityColor,abilityDim);ability:SetShown(showAbilities)
+        Paint(target,targetIcon,targetText,hostile and 'Effect' or '',targetColor,targetDim);target:SetShown(showTarget)
+        Paint(ability,abilityIcon,abilityText or '—','Ability',abilityColor,abilityDim or not abilityIcon);ability:SetShown(showAbilities)
 
         local racialStates=db.showRacial~=false and Context.RacialStates(module.spells,module.classToken) or {};local racialState=racialStates[1];racial.state=racialState
         if racialState then
@@ -292,11 +305,12 @@ local function CreateIndicator(module,config,host,db)
             Paint(racial,racialState.spell.icon,status,'Racial',color,not racialState.ready)
         else
             racial.tooltipTitle='Racial ability';racial.tooltipLines={'No learned active racial was found.'}
-            Paint(racial,config.icon,'None','Racial',{0.55,0.6,0.68},true)
+            Paint(racial,nil,'None','Racial',{0.55,0.6,0.68},true)
         end
         racial:SetShown(db.showRacial~=false)
 
-        frame:SetAlpha((db.fadeOutOfCombat==false or inCombat) and 1 or (hasTarget and 0.6 or 0.2))
+        frame:SetAlpha((db.fadeOutOfCombat==false or inCombat) and 1
+            or (hasTarget and (config.targetAlpha or 0.6) or (config.idleAlpha or 0.2)))
         lastStatus=string.format('%s; upkeep %s; target %s; ability %s; racial %s',resourceTop,upkeepBottom or 'off',targetText or 'off',abilityText or 'off',
             racialState and (racialState.spell.name..' '..(racialState.status=='cooldown' and (Context.FormatTime(racialState.left) or 'cooldown') or racialState.status)) or 'unavailable')
     end

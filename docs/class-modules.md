@@ -1,6 +1,6 @@
 # Standard class modules
 
-Version 0.21.16 supports Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock alongside the existing Hunter and Shaman companions. The standard modules share `ClassContext.lua` and `StandardClasses.lua`, but each has an independent `ForeverUtilitiesDB.<class>` table and command.
+Version 0.21.17 supports Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock alongside the existing Hunter and Shaman companions. The standard modules share `ClassContext.lua` and `StandardClasses.lua`, but each has an independent `ForeverUtilitiesDB.<class>` table and command.
 
 ## Display model
 
@@ -20,7 +20,7 @@ The bar does not select a specialization from a talent guess. It discovers learn
 - **Warrior:** rage and stance changes, shout upkeep, Rend/Deep Wounds, Bloodthrill, and reactive or execute abilities. The game has its own swing display, so this module does not restore the retired swing bar.
 - **Rogue:** both temporary weapon coatings, energy, combo points, Slice and Dice, Forever's Venom buff, target poison/bleed effects, and Riposte or other learned cooldowns.
 - **Druid:** power changes with form, Mark of the Wild or Thorns, Moonfire/Insect Swarm/Faerie Fire/Rip, Eclipse and other learned procs, plus spec abilities such as Tiger's Fury or Swiftmend.
-- **Mage:** armor upkeep, personal Improved Scorch or Pyroblast effects, Forever Hot Streak stacks, Fingers of Frost, Arcane Blast, and learned cooldowns.
+- **Mage:** a text-only mana slot, armor upkeep, personal Improved Scorch or Pyroblast effects, Forever Hot Streak stacks, Fingers of Frost, Arcane Blast, and learned cooldowns. Its bar remains readable at 75% idle opacity or 90% with a target outside combat; empty target and ability slots do not repeat the armor icon.
 - **Priest:** self-buff upkeep, Shadow DoTs, Shadowform or Surge of Light, Shadow Word: Death and healing tools, plus all twelve documented Forever Priest racial spells.
 - **Warlock:** mana, health, Soul Shards, armor, demon presence, Corruption/Immolate/Wrack/Banes/Curses, and learned Affliction, Demonology, or Destruction abilities.
 

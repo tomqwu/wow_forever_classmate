@@ -18,6 +18,7 @@ function methods:GetWidth() return self.width end
 function methods:GetHeight() return self.height end
 function methods:SetText(v) self.text=v end
 function methods:SetTexture(v) self.texture=v end
+function methods:SetAlpha(v) self.alpha=v end
 function methods:SetMovable(v) self.movable=v end
 function methods:StartMoving() self.moving=true end
 function methods:StopMovingOrSizing() self.moving=false end
@@ -186,6 +187,26 @@ local druid=Fixture(NS.Druid,{'Mark of the Wild','Thorns'},{'Gift of the Wild','
 check(druid.cells.upkeep.top.text=='2/2','Druid accepts Gift of the Wild as Mark upkeep')
 local mage=Fixture(NS.Mage,{'Frost Armor','Pyroblast'},{'Frost Armor'})
 check(mage.cells.upkeep.bottom.text=='OK' and mage.cells.target.top.text=='None','Mage armor is tracked without demanding a Pyroblast on every target')
+local oldExists,oldCombat=UnitExists,UnitAffectingCombat
+UnitExists=function() return false end;UnitAffectingCombat=function() return false end
+mage.Update()
+check(mage.alpha==0.75,'Mage bar remains readable with no target outside combat')
+check(not mage.cells.resource.icon.shown and mage.cells.resource.top.text=='70%' and mage.cells.resource.bottom.text=='Mana'
+    and mage.cells.resource.top.width==69,'Mage mana uses the full resource slot without an armor icon')
+check(mage.cells.upkeep.icon.shown and mage.cells.upkeep.icon.texture==500,'active Mage armor keeps its own icon')
+check(not mage.cells.target.icon.shown and mage.cells.target.top.text=='No target'
+    and not mage.cells.ability.icon.shown and mage.cells.ability.top.text=='—',
+    'empty target and ability slots do not duplicate the armor icon')
+UnitExists=function() return true end;mage.Update()
+check(mage.alpha==0.9 and mage.cells.target.icon.shown and mage.cells.target.icon.texture==702,
+    'Mage target gains a learned spell icon and remains readable outside combat')
+NS.Mage.spells.iceLance={id=4900,name='Ice Lance',icon=703,kind='cue'};mage.Update()
+check(mage.cells.ability.icon.shown and mage.cells.ability.icon.texture==703,
+    'learned Mage ability restores its own icon when available')
+NS.Mage.spells.iceLance=nil
+UnitAffectingCombat=function() return true end;mage.Update()
+check(mage.alpha==1,'Mage bar is fully visible in combat')
+UnitExists,UnitAffectingCombat=oldExists,oldCombat
 local priest=Fixture(NS.Priest,{'Power Word: Fortitude','Divine Spirit','Inner Fire'},{'Prayer of Fortitude','Prayer of Spirit','Inner Fire'})
 check(priest.cells.upkeep.top.text=='3/3','Priest group prayers satisfy individual buff upkeep')
 local warlock=Fixture(NS.Warlock,{'Demon Skin'},{'Demon Skin'})

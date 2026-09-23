@@ -53,7 +53,7 @@ root and packaged README aligned. Add exact-version highlights to docs/changelog
 for every addon release. release_notes.py combines them for the GitHub release;
 the CurseForge uploader uses that body as its file changelog. Project-page edits
 are separate: do not claim the website description changed merely because an
-upload succeeded. Combat restores full visibility; the Shaman bar also stays fully visible for a confirmed active totem. Otherwise an out-of-combat target uses 60% opacity and idle uses 20%. Unlocking does not override fading.
+upload succeeded. Combat restores full visibility; the Shaman bar also stays fully visible for a confirmed active totem. Mage uses 90% opacity with a target and 75% while idle outside combat so the resource and armor remain readable. Other classes use 60% with a target and 20% while idle. Unlocking does not override fading.
 
 Numeric distance uses UnitDistanceSquared only when checkedDistance is readable
 and true and the squared value is finite/nonnegative. Never fabricate a midpoint
@@ -79,3 +79,5 @@ Layout.lua owns Hunter visual block allocation inside its fixed 426 × 56 bar. S
 Read `docs/class-review-2026-09-23.md` when changing class, racial, or warning behavior. Keep unknown, absent, and ready states distinct. Preserve all API return positions before checking for secrets; a nil hole must not skip later returns. Do not classify short cooldowns as ready by a duration threshold. Recognize equivalent buff families and derived aura effects without turning them into learned cast actions. Suspend updates across queued events and settings refreshes while dead or outside the world. Disabled blocks must not query their hidden data. Confirm the loaded TOC version and compare installed bytes again after publishing: another process has replaced newer local files with an older release.
 
 Keep cell backgrounds below icon artwork in explicit draw layers. Zero texture IDs are unavailable, and partial native totem fields must not overwrite usable observations. Merge slot reads through one path for polling and events; a different summon must not inherit the previous timer. Distinguish summoned lifetime from cast cooldown in UI copy and diagnostics. Regression mocks must reject removed events such as `LEARNED_SPELL_IN_TAB`.
+
+Do not fill empty standard-class slots with the class icon: it can make one buff appear active in several unrelated blocks. Mage mana is text-only, the real armor icon belongs to upkeep, and target/ability icons appear only from their own readable state or learned spell. Keep Mage readable outside combat while retaining its fade toggle.
