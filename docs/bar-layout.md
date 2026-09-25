@@ -1,6 +1,6 @@
 # Class bar layouts
 
-Every class bar is 426 × 56 UI pixels before the user's saved scale. This is the
+Full class bars are 426 × 56 UI pixels before the user's saved scale. Hunter also offers a 42 × 42 icon-only range mode. The full width is the
 rendered width of Forever's default desktop Main Hand swing timer. Forever's Edit
 Mode data stores slider offsets rather than final display values: the desktop
 preset stores width `213`, and `ConvertValueDiffFromMin` adds the 213-pixel slider
@@ -24,13 +24,15 @@ preferences:
 | Pet | 352–400 | Target-of-target portrait; mend border; mood and pet-guide badges |
 | Control | 400–420 | Shared lock button |
 
+An optional 20px Inspect slot sits between the pet and lock slots in the full Hunter bar, reducing range-text space by 20px. It appears only for an inspectable player target. Icon-only mode removes all other blocks and the lock button; `/fhunter unlock` makes the icon visible for dragging without a target. A confirmed ranged check colors it green, a confirmed negative colors it red, and insufficient information stays neutral.
+
 The range block expands when combat, pet, or lock features are disabled. Full
 range wording remains visible at the default width, and color still identifies
 the attack state. The complete diagnostic remains available through
 `/fhunter status`.
 
-Pet recommendations stay between range and ammo. Their tooltip retains family,
-ability, role, level, rare origin, and location details. Blocks depend only on
+Pet family guidance stays between range and ammo. Its tooltip identifies guide-listed skills as unverified for the selected target, and retains family,
+role, level, possible rare origin, and location details. Blocks depend only on
 preferences, so applying Hunter's Mark or changing targets never shifts the bar.
 
 ## Shaman

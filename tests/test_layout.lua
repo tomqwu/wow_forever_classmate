@@ -9,7 +9,7 @@ for mask=0,255 do
     local l=NS.Layout.Compute(db)
     check(l.width==426 and l.height==56,'rendered native swing-width footprint')
     local last=l.range.x+l.range.width
-    for _,key in ipairs({'combat','pet','control'}) do
+    for _,key in ipairs({'combat','pet','inspect','control'}) do
         if l[key] then
             check(l[key].x>=last,'blocks do not overlap')
             last=l[key].x+l[key].width
@@ -23,6 +23,10 @@ local minimal=NS.Layout.Compute({petGuide=false,petHappinessWarning=false,showAn
 local guideOnly=NS.Layout.Compute({petGuide=true,petHappinessWarning=false,showTargetTarget=false})
 check(guideOnly.pet and guideOnly.pet.width==48,'pet guide reserves its visual slot without portrait or mood')
 check(minimal.text.width>full.text.width,'hidden blocks return text space')
+local inspect=NS.Layout.Compute({showInspect=true})
+check(inspect.inspect and inspect.inspect.width==20 and inspect.text.width==full.text.width-20,'optional inspect slot uses available width')
+local icon=NS.Layout.Compute({rangeIconOnly=true})
+check(icon.iconOnly and icon.width==42 and icon.height==42 and not icon.inspect and not icon.pet and not icon.combat,'icon-only layout contains no extra blocks')
 local rows=NS.Layout.Rows(true)
 check(-rows.range.y+rows.range.height<=-rows.intel.y,'range ends before intel')
 check(-rows.intel.y+rows.intel.height<=-rows.ammo.y,'intel ends before ammo')

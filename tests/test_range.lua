@@ -124,6 +124,28 @@ check(f.label.text==disabledText and not f.scripts.OnUpdate,'disabled ignores qu
 db.enabled=true;f.Refresh()
 check(f.shown and f.scripts.OnUpdate,'enable starts polling')
 check(f.events.PLAYER_TARGET_CHANGED and f.events.SPELLS_CHANGED,'enable restores events')
+-- Compact mode reads attack reach without leaking the hidden distance/guide widgets.
+db.rangeIconOnly=true;distance=20;f.Refresh()
+check(f.width==42 and f.height==42 and f.rangeIcon.shown and not f.label.shown and not f.petGuideBadge.shown,'compact mode shows only the 42px weapon icon')
+check(f.rangeBorder.color[2]==1,'confirmed ranged reach is green')
+local distanceReads=0
+UnitDistanceSquared=function() distanceReads=distanceReads+1;return 400,true end
+distance=50;f.scripts.OnUpdate(f,0.15)
+check(f.rangeBorder.color[1]==1 and f.rangeBorder.color[2]==0.15,'confirmed out of range is red')
+check(distanceReads==0,'compact mode does not query hidden numeric yards')
+C_SwingTimer.IsTargetWithinSwingRange=function() return nil end
+C_Spell.IsRangedAutoAttackSpell=function() return false end
+f.scripts.OnEvent(f,'SPELLS_CHANGED')
+check(f.rangeBorder.color[1]==0.8 and f.rangeBorder.color[2]==0.8,'unverified range stays neutral instead of false red')
+C_Spell.IsRangedAutoAttackSpell=function(id) return id==9001 end
+C_SwingTimer.IsTargetWithinSwingRange=function(kind) if kind==0 then return distance<=5 end;return distance>=8 and distance<=35 end
+f.scripts.OnEvent(f,'SPELLS_CHANGED')
+target=false;f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
+check(not f.shown and not f.scripts.OnUpdate,'compact icon disappears without a target when locked')
+db.locked=false;f.Refresh()
+check(f.shown and f.alpha==0.2 and not f.scripts.OnUpdate,'unlocked compact icon remains dim for dragging without polling')
+db.locked=true;db.rangeIconOnly=false;target=true;distance=20;UnitDistanceSquared=nil;f.Refresh()
+check(f.width==426 and f.height==56 and f.label.shown,'full bar returns after compact mode')
 f.scripts.OnEvent(f,'PLAYER_LEAVING_WORLD')
 check(not f.scripts.OnUpdate,'loading screen stops polling')
 f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED');f.Refresh()
@@ -338,19 +360,19 @@ UnitLevel=function() return 10 end
 f.Refresh()
 check(f.petGuideBadge.shown and f.moodBadge.shown and not portrait.shown,'guide and mood coexist independently of range and portrait')
 check(f.petGuideBadge.info.notable.name=='Timber','target produces exact watch-list match')
-check(f.petGuideBadge.hintPanel.shown and f.petGuideBadge.hintTitle.text:find('Furious Howl',1,true),'matching target shows family ability without hovering')
+check(f.petGuideBadge.hintPanel.shown and f.petGuideBadge.hintTitle.text:find('Wolf guide',1,true),'matching target shows family guidance without claiming target skill')
 check(f.petGuideBadge.hintTitle.text:find('Rare',1,true),'inline intel shows live rare status')
 UnitCreatureFamily=function() return 'Hyena',25 end
 UnitCreatureID=function() return 4127 end;UnitName=function() return 'Hecklefang Hyena' end
 UnitClassification=function() return 'normal' end;UnitLevel=function(unit) return unit=='player' and 17 or 16 end
 f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
-check(f.petGuideBadge.hintPanel.shown and f.petGuideBadge.hintTitle.text=='Hyena: Tendon Rip','screenshot target displays automatic hyena hint')
+check(f.petGuideBadge.hintPanel.shown and f.petGuideBadge.hintTitle.text=='Hyena family guide','target displays family guide without target ability claim')
 check(f.petGuideBadge.hintTitle.shown,'recommendation text itself is explicitly visible')
 local intel=f.petGuideBadge.hintTitle
 check(intel.parent==f and intel.y==-23 and intel.height==16,'intel draws directly inside bar')
 check(f.labels[1].y==-3 and f.labels[1].height==20 and f.labels[3].y==-39,'range and ammo leave space for recommendation')
 check(-f.labels[3].y+f.labels[3].height<=56,'ammo remains inside original bar height')
-check(f.Status():find('Pet guide: inline — Hyena: Tendon Rip',1,true),'status reports loaded inline recommendation')
+check(f.Status():find('Pet guide: inline — Hyena family guide',1,true),'status reports loaded inline recommendation')
 for _,locked in ipairs({true,false}) do
  db.locked=locked;f.Refresh()
  check(intel.shown and f.alpha==0.6,'locked and movable modes both keep inline intel and fading')
@@ -371,8 +393,8 @@ check(GameTooltip.shown and GameTooltip.text:find('Timber',1,true),'hover shows 
 UnitCreatureID=function() return 999999 end;UnitName=function() return 'Forest Spider' end
 UnitCreatureFamily=function() return 'Spider',3 end;f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
 check(not f.petGuideBadge.info.notable and GameTooltip.text:find('Forest Spider',1,true),'target swap updates hovered tooltip without stale named pet')
-check(table.concat(GameTooltip.lines,' '):find('Web',1,true),'family guide includes signature ability')
-check(f.petGuideBadge.hintTitle.text=='Spider: Web','automatic hint changes with target')
+check(not table.concat(GameTooltip.lines,' '):find('Web',1,true),'Spider guide omits unverified Web claim')
+check(f.petGuideBadge.hintTitle.text=='Spider family guide','automatic hint changes with target')
 f.petGuideBadge.scripts.OnLeave()
 f.petGuideBadge.hintPanel.scripts.OnEnter()
 check(GameTooltip.shown and GameTooltip.owner==f.petGuideBadge.hintPanel,'automatic hint itself can be hovered for full guide')
@@ -385,7 +407,7 @@ UnitCreatureID=function() return 5807 end;UnitName=function() return 'The Rake' 
 UnitLevel=function(unit) return unit=='player' and 17 or 60 end
 UnitDistanceSquared=function() return nil,false end
 f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
-check(f.label.text=='Friendly target' and intel.shown and intel.text=='Rare The Rake | Cat: Claw / Prowl','friendly rare pet has identity and advice inline')
+check(f.label.text=='Friendly target' and intel.shown and intel.text=='Name match The Rake | Cat guide','friendly pet has qualified name match and family guidance inline')
 check(f.petGuideBadge.info.owned and f.petGuideBadge.info.rare.name=='The Rake' and not f.petGuideBadge.info.notable and not f.petGuideBadge.info.tooHigh,'friendly rare pet uses name origin without wild tame claims')
 check(table.concat(GameTooltip.lines,' '):find('Mulgore',1,true) and table.concat(GameTooltip.lines,' '):find('Player-controlled pet',1,true),'hovered guide includes rare origin and owned-pet limit')
 UnitName=function() return 'My pet' end
@@ -394,6 +416,21 @@ f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
 check(intel.shown and f.petGuideBadge.info.owned and not f.petGuideBadge.info.rare,'renamed own pet keeps family advice without a false rare match')
 UnitIsPlayer=function() return true end;f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
 check(not intel.shown and not GameTooltip.shown,'switching from pet to player clears guide')
+db.showInspect=true
+CanInspect=function() return true end
+local inspectCalls=0
+InspectUnit=function(unit) if unit=='target' then inspectCalls=inspectCalls+1 end end
+f.Refresh()
+check(f.inspectButton.shown,'optional inspect button appears for an inspectable player')
+check(f.portrait.x+19<f.inspectButton.x,'inspect button does not overlap the target-of-target portrait slot')
+f.inspectButton.scripts.OnClick()
+check(inspectCalls==1,'inspect button opens the native Inspect window on click')
+CanInspect=function() return secret end;f.Refresh()
+check(not f.inspectButton.shown,'restricted inspect eligibility hides button')
+f.inspectButton.scripts.OnClick()
+check(inspectCalls==1,'restricted eligibility also blocks a stale click')
+CanInspect=function() return true end;db.showInspect=false;f.Refresh()
+check(not f.inspectButton.shown,'inspect toggle hides button')
 UnitIsPlayer=function() return false end;UnitPlayerControlled=function() return false end
 UnitCanAttack=function() return true end;UnitIsFriend=function() return false end
 UnitCreatureFamily=function() return 'Humanoid',0 end;f.scripts.OnUpdate(f,0.15)

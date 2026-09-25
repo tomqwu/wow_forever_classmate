@@ -2,13 +2,13 @@
 
 **One compact, class-aware companion for World of Warcraft: Forever.**
 
-Version 0.21.19 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Every class bar uses the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer.
+Version 0.22.0 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
 
 ## Class companions
 
 | Class | Live helper |
 | --- | --- |
-| Hunter | Range brackets and validated yards, ammo, target of target, facing, Hunter's Mark, aspect, pet care, and notable beast intelligence |
+| Hunter | Range brackets and validated yards or an optional red/green range icon; ammo, target of target, facing, Hunter's Mark, aspect, pet care, family guidance, and optional player Inspect |
 | Shaman | Four totem slots with live or marked estimated timers, weapon imbue, elemental shield, mana, Totemic Recall, and learned Maelstrom/Lava Burst/Riptide cues |
 | Paladin | Mana, active seal, target judgments, Twist of Light aura, and learned Holy Strike/Holy Shock/Consecration readiness |
 | Warrior | Rage, current stance, shout upkeep, Rend/Deep Wounds, and real Overpower/Execute/Victory Rush/Bloodthirst usability |
@@ -31,6 +31,8 @@ Use `/fclassmate` or `/futils`, or the active class command: `/fhunter`, `/fsham
 Subcommands: `unlock`, `lock`, `scale 0.5..2`, `on`, `off`, `reset`, and `status`.
 
 Each information block can be switched independently. Bars use full opacity in combat; the Shaman bar also stays fully visible while a totem is active. Mage uses 90% opacity with a target and 75% while idle outside combat. Without an active totem, the other bars use 60% with a target and 20% while idle.
+
+For a minimal Hunter display, enable **Icon-only range display** in `/fhunter` settings. Green means the client confirms ranged reach, red means it confirms you cannot shoot, and gray means the result is unknown. The icon hides without a valid hostile target while locked. Use `/fhunter unlock` to move it. The optional **Inspect button for player targets** appears in the full bar only when WoW allows inspection. Pet hints describe family guidance; the selected pet's learned abilities remain unknown unless checked with Beast Lore.
 
 Designed for the Forever 1.60.1 beta client. Automated checks use mocked APIs; live in-game validation remains ongoing as the beta changes.
 

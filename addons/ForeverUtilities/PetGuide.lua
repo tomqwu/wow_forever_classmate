@@ -59,22 +59,25 @@ end
 function Guide.Lines(info)
     local family=info.family
     local lines={family.name..(info.level and (' | Level '..info.level) or '')..(info.classification and (' | '..info.classification) or ''),
-        'Suggested use: '..family.role,
-        'Family ability: '..family.ability,
-        family.effect}
+        'Family guide: '..family.role}
+    if family.ability then
+        lines[#lines+1]='Guide-listed family skill to verify: '..family.ability
+        if family.effect then lines[#lines+1]=family.effect end
+    else lines[#lines+1]='No guide-listed family skill here.' end
+    lines[#lines+1]='Actual abilities of this individual target are unknown.'
     if info.rare then
-        local detail='Rare origin: '..info.rare.name..' — '..info.rare.zone
+        local detail=(info.rareNameMatch and 'Possible rare origin: ' or 'Roster match: ')..info.rare.name..' — '..info.rare.zone
         if info.rare.level then detail=detail..' | Wild level '..info.rare.level end
         lines[#lines+1]=detail
         if info.rareNameMatch then
-            lines[#lines+1]='Rare identity is an exact English name + family match; renamed pets cannot be identified.'
+            lines[#lines+1]='Name + family match only; a renamed pet can have the same name.'
         end
     elseif info.notable then
         lines[#lines+1]='Watch list: '..info.notable.name..' — '..info.notable.zone
     end
     if info.tooHigh then lines[#lines+1]='Above your level — cannot tame yet.' end
     if info.owned then
-        lines[#lines+1]='Player-controlled pet. Family advice, not a wild tame target or a list of its learned skills.'
+        lines[#lines+1]='Player-controlled pet. This guide cannot read its learned skills or confirm wild origin.'
     elseif info.wild then
         lines[#lines+1]='Family guide only. Use Beast Lore to check tameability and actual skills.'
     else
@@ -85,14 +88,15 @@ function Guide.Lines(info)
 end
 function Guide.Summary(info)
     if info.rare then
-        return 'Rare '..info.rare.name..' | '..info.family.name..': '..info.family.ability
+        return (info.rareNameMatch and 'Name match ' or (info.special and (info.classification..' ') or ''))
+            ..info.rare.name..' | '..info.family.name..' guide'
     end
     local prefix=info.special and (info.classification..' ') or ''
-    return prefix..info.family.name..': '..info.family.ability
+    return prefix..info.family.name..' family guide'
 end
 function Guide.CompactSummary(info)
-    if info.rare then return info.rare.name..': '..info.family.ability end
-    return info.family.name..': '..info.family.ability
+    if info.rare then return info.rare.name..' | '..info.family.name..' guide' end
+    return info.family.name..' guide'
 end
 function Guide.Create(parent)
     local badge=CreateFrame('Button',nil,parent)
@@ -143,7 +147,7 @@ function Guide.Create(parent)
         badge.hasMatch=true
         local r,g,b=0.2,0.85,1
         if info.tooHigh then r,g,b=1,0.25,0.15
-        elseif info.special or info.notable or info.rare then r,g,b=1,0.75,0.15 end
+        elseif info.special then r,g,b=1,0.75,0.15 end
         border:SetColorTexture(r,g,b,1)
         label:SetTextColor(1,info.tooHigh and 0.4 or 0.88,info.tooHigh and 0.3 or 0.55)
         label:SetText(width<100 and Guide.CompactSummary(info) or Guide.Summary(info))

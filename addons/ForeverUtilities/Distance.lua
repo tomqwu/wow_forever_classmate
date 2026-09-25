@@ -11,10 +11,12 @@ end
 NS.Hunter = {
     name="Forever Classmate — Hunter",
     description='Hunter range, ammunition, pet care, and target awareness.',
-    command='/fhunter',enableLabel='Enable hunter bar',width=NS.ClassBarWidth,height=function(db) return NS.TargetContext.Height(db) end,
+    command='/fhunter',enableLabel='Enable hunter bar',width=function(db) return db.rangeIconOnly and 42 or NS.ClassBarWidth end,
+    height=function(db) return db.rangeIconOnly and 42 or NS.TargetContext.Height(db) end,
+    lockVisible=function(db) return not db.rangeIconOnly end,
     frameName='ForeverUtilitiesDistanceFrame',lockName='ForeverHunterFriendLock',
     panelName='ForeverHunterFriendOptions',minimapName='ForeverHunterFriendMinimap',
-    defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showTargetTarget=true,showAngle=true,showRange=true,showAmmo=true,lowAmmoWarning=true,petMendWarning=true,petHappinessWarning=true,petGuide=true,markWarning=true,aspectWarning=true,fadeOutOfCombat=true,showMinimap=true,showLockButton=true,minimapAngle=35}, normalize=Normalize,
+    defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showTargetTarget=true,showAngle=true,showRange=true,rangeIconOnly=false,showInspect=false,showAmmo=true,lowAmmoWarning=true,petMendWarning=true,petHappinessWarning=true,petGuide=true,markWarning=true,aspectWarning=true,fadeOutOfCombat=true,showMinimap=true,showLockButton=true,minimapAngle=35}, normalize=Normalize,
     options={
         {key='showMinimap',label='Show minimap settings button',kind='toggle'},
         {key='showLockButton',label='Show lock button on bar',kind='toggle'},
@@ -23,6 +25,8 @@ NS.Hunter = {
         {key='showTargetTarget',label='Show target-of-target portrait',kind='toggle'},
         {key='showAngle',label='Show facing angle',kind='toggle'},
         {key='showRange',label='Show range text and weapon icon',kind='toggle'},
+        {key='rangeIconOnly',label='Icon-only range display',kind='toggle'},
+        {key='showInspect',label='Inspect button for player targets',kind='toggle'},
         {key='showAmmo',label='Show ammo count',kind='toggle'},
         {key='lowAmmoWarning',label='Low-ammo warning (200 or fewer)',kind='toggle'},
         {key='petGuide',label='Target pet guide / notable beasts',kind='toggle'},

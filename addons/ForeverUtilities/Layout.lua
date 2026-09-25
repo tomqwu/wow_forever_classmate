@@ -3,6 +3,9 @@ local Layout={}
 NS.Layout=Layout
 -- Stable slots while playing. Only preference changes redistribute space.
 function Layout.Compute(db)
+    if db.rangeIconOnly==true then
+        return {width=42,height=42,iconOnly=true,range={x=0,width=42},text={x=0,width=0}}
+    end
     local result={width=NS.ClassBarWidth or 426,height=NS.ClassBarHeight or 56}
     local right=result.width-6
     local function Reserve(key,width,enabled)
@@ -12,6 +15,7 @@ function Layout.Compute(db)
         end
     end
     Reserve('control',20,db.showLockButton~=false)
+    Reserve('inspect',20,db.showInspect==true)
     Reserve('pet',48,db.showTargetTarget~=false or db.petHappinessWarning~=false or db.petGuide~=false)
     Reserve('combat',56,db.markWarning~=false or db.aspectWarning~=false or db.showAngle~=false)
     result.range={x=6,width=right-6}

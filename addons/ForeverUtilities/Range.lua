@@ -88,6 +88,7 @@ function Range.Create(host, db)
     local icon = frame:CreateTexture(nil,'ARTWORK',nil,1)
     icon:SetSize(38,38); icon:SetPoint('CENTER',iconBorder,'CENTER',0,0)
     icon:SetTexture('Interface\\Icons\\Ability_Marksmanship')
+    frame.rangeIcon=icon;frame.rangeBorder=iconBorder
     local label = frame:CreateFontString(nil,'OVERLAY','GameFontNormalLarge')
     label:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',16,'OUTLINE')
     label:SetShadowColor(0,0,0,1)
@@ -152,6 +153,26 @@ function Range.Create(host, db)
     ammoLabel:SetJustifyH('LEFT');ammoLabel:SetWordWrap(false);ammoLabel:SetSize(110,14)
     local guide=NS.PetGuide.Create(frame)
     frame.petGuideBadge=guide
+    local inspect=CreateFrame('Button',nil,frame)
+    inspect:SetSize(18,24);inspect:EnableMouse(true);inspect:Hide()
+    local inspectIcon=inspect:CreateTexture(nil,'ARTWORK')
+    inspectIcon:SetSize(16,16);inspectIcon:SetPoint('CENTER');inspectIcon:SetTexture('Interface\\Icons\\INV_Misc_Spyglass_03')
+    inspect:SetScript('OnClick',function()
+        if db.showInspect==true and Call(UnitIsPlayer,'target')==true and Call(CanInspect,'target')==true
+            and type(InspectUnit)=='function' then pcall(InspectUnit,'target') end
+    end)
+    inspect:SetScript('OnEnter',function(self)
+        if GameTooltip then
+            GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText('Inspect player')
+            GameTooltip:AddLine('Open the game\'s Inspect window for this target.',1,1,1);GameTooltip:Show()
+        end
+    end)
+    inspect:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
+    frame.inspectButton=inspect
+    local function UpdateInspect()
+        inspect:SetShown(db.showInspect==true and not db.rangeIconOnly and Call(UnitIsPlayer,'target')==true
+            and Call(CanInspect,'target')==true and type(InspectUnit)=='function')
+    end
     local warnedLowAmmo=false
     local function UpdateAmmo()
         ammoLabel:SetShown(db.showAmmo~=false)
@@ -173,13 +194,14 @@ function Range.Create(host, db)
         end
     end
     local separators={}
-    for _,key in ipairs({'combat','pet','control'}) do
+    for _,key in ipairs({'combat','pet','inspect','control'}) do
         local line=frame:CreateTexture(nil,'ARTWORK',nil,0)
         line:SetSize(1,36);line:SetColorTexture(0.65,0.75,0.8,0.18)
         separators[key]=line
     end
     local layout
     local function ReadoutLayout()
+        if layout.iconOnly then label:Hide();ammoLabel:Hide();guide.Clear();return end
         local rows=NS.Layout.Rows(guide.hasMatch)
         label:ClearAllPoints();label:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.text.x,rows.range.y)
         label:SetSize(layout.text.width,rows.range.height)
@@ -190,8 +212,20 @@ function Range.Create(host, db)
     local function ContextLayout()
         layout=NS.Layout.Compute(db)
         frame:SetSize(layout.width,layout.height)
-        label:SetShown(db.showRange~=false);icon:SetShown(db.showRange~=false)
-        iconBorder:SetShown(db.showRange~=false);accent:SetShown(db.showRange~=false)
+        label:SetShown(db.showRange~=false and not layout.iconOnly)
+        icon:SetShown(db.showRange~=false or layout.iconOnly)
+        iconBorder:SetShown(db.showRange~=false or layout.iconOnly)
+        accent:SetShown(db.showRange~=false and not layout.iconOnly)
+        iconBorder:ClearAllPoints()
+        if layout.iconOnly then
+            iconBorder:SetSize(40,40);iconBorder:SetPoint('TOPLEFT',frame,'TOPLEFT',1,-1)
+            icon:SetSize(36,36)
+            markIcon:Hide();markBorder:Hide();aspectIcon:Hide();aspectBorder:Hide()
+            angleLabel:Hide();portrait:Hide();petHighlight:Hide();mood:Hide();guide.Clear();inspect:Hide()
+        else
+            iconBorder:SetSize(44,44);iconBorder:SetPoint('TOPLEFT',frame,'TOPLEFT',10,-6)
+            icon:SetSize(38,38)
+        end
         ReadoutLayout()
         for key,line in pairs(separators) do
             local block=layout[key]
@@ -205,8 +239,14 @@ function Range.Create(host, db)
             angleLabel:ClearAllPoints();angleLabel:SetPoint('TOPLEFT',frame,'TOPLEFT',x+3,-34)
             angleLabel:SetWidth(50);angleLabel:SetJustifyH('CENTER')
         end
-        angleLabel:SetShown(db.showAngle~=false)
+        angleLabel:SetShown(db.showAngle~=false and not layout.iconOnly)
+        if layout.inspect then
+            inspect:ClearAllPoints();inspect:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.inspect.x+1,-16)
+        else inspect:Hide() end
+        if layout.iconOnly then return end
         if layout.pet then
+            portrait:ClearAllPoints();portrait:SetPoint('CENTER',frame,'TOPLEFT',layout.pet.x+24,-28)
+            petHighlight:ClearAllPoints();petHighlight:SetPoint('CENTER',frame,'TOPLEFT',layout.pet.x+24,-28)
             guide:ClearAllPoints();guide:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.pet.x+3,-31)
             mood:ClearAllPoints();mood:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.pet.x+27,-31)
             portrait:ClearAllPoints();portrait:SetPoint('TOPLEFT',frame,'TOPLEFT',layout.pet.x+5,-9)
@@ -215,10 +255,12 @@ function Range.Create(host, db)
     end
     local function ClearContext()
         guide.Clear();ReadoutLayout()
-        markIcon:Hide();markBorder:Hide();petHighlight:Hide();portrait:Hide();portrait:SetTexture(nil);angleLabel:SetText('')
+        markIcon:Hide();markBorder:Hide();petHighlight:Hide();portrait:Hide();portrait:SetTexture(nil);angleLabel:SetText('');inspect:Hide()
     end
     local function UpdateContext()
+        if db.rangeIconOnly then return end
         UpdateAspect();UpdateHappiness();guide.Update(db.petGuide~=false);ReadoutLayout()
+        UpdateInspect()
         -- Clear first: an absent/restricted new unit must never retain the old portrait.
         petHighlight:Hide();portrait:Hide();portrait:SetTexture(nil)
         if db.showTargetTarget~=false and Call(UnitExists,'targettarget')==true
@@ -294,11 +336,17 @@ function Range.Create(host, db)
     end
     local function Paint(state,text)
         local c=colors[state]
+        if db.rangeIconOnly then
+            c=state=='shoot' and colors.shoot
+                or (state=='close' or state=='far' or state=='out' or state=='melee') and colors.out
+                or colors.unknown
+        end
         icon:SetVertexColor(unpack(c))
         iconBorder:SetColorTexture(c[1],c[2],c[3],1)
         accent:SetColorTexture(c[1],c[2],c[3],1)
         label:SetTextColor(1,1,1,1)
         label:SetText(text)
+        if db.rangeIconOnly then return end
         -- Keep long range estimates inside their block without wrapping over ammo.
         for size=16,12,-1 do
             label:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',size,'OUTLINE')
@@ -315,9 +363,10 @@ function Range.Create(host, db)
     local lastStatus='Not checked'
     local function Update()
         UpdateContext()
-        if db.showRange==false then lastStatus='Range display disabled';return end
-        local yards=Range.ReadDistance('target')
+        if db.showRange==false and not db.rangeIconOnly then lastStatus='Range display disabled';return end
+        local yards=not db.rangeIconOnly and Range.ReadDistance('target') or nil
         if Call(UnitCanAttack,'player','target')~=true then
+            if db.rangeIconOnly then frame:SetShown(not db.locked) end
             local state,text=Range.WithDistance('unknown','Range unavailable',yards)
             if yards==nil and Call(UnitIsFriend,'player','target')==true then
                 text='Friendly target'
@@ -339,6 +388,7 @@ function Range.Create(host, db)
             probes[#probes+1]={min=shot.min,max=shot.max,inside=shot.inside}
         end
         local state,text=Range.Measure(probes,melee,ranged,shot)
+        if db.rangeIconOnly then frame:Show() end
         state,text=Range.WithDistance(state,text,yards)
         lastStatus='Numeric distance: '..(yards and 'available' or 'unavailable')..'; Spells: '..#spells..'; Auto Shot: '..(shot and 'found' or 'not found')
             ..'; native melee/ranged: '..tostring(melee)..'/'..tostring(ranged)..'; '..text
@@ -362,16 +412,23 @@ function Range.Create(host, db)
             active=true;Discover()
         end
         if suspended or Core.PlayerDead() then frame:Hide();return end
-        UpdateAmmo();UpdateAspect();UpdateHappiness()
+        if not db.rangeIconOnly then UpdateAmmo();UpdateAspect();UpdateHappiness() end
         local hasTarget=Call(UnitExists,'target')==true
         local inCombat=Call(UnitAffectingCombat,'player')==true
-        frame:SetAlpha((db.fadeOutOfCombat==false or inCombat) and 1 or (hasTarget and 0.6 or 0.2))
-        if not hasTarget then ClearContext(); Paint('unknown','No target'); return end
+        frame:SetAlpha(db.rangeIconOnly and (hasTarget and 1 or 0.2)
+            or ((db.fadeOutOfCombat==false or inCombat) and 1 or (hasTarget and 0.6 or 0.2)))
+        if not hasTarget then
+            ClearContext();Paint('unknown','No target')
+            if db.rangeIconOnly then frame:SetShown(not db.locked) end
+            return
+        end
         if Call(UnitIsDead,'target')~=false then
-            ClearContext(); Paint('unknown','Target dead or unavailable'); return
+            ClearContext();Paint('unknown','Target dead or unavailable')
+            if db.rangeIconOnly then frame:SetShown(not db.locked) end
+            return
         end
         Update(); elapsed=0
-        if db.showRange==false and db.showAngle==false and db.showTargetTarget==false and db.petGuide==false
+        if not db.rangeIconOnly and db.showRange==false and db.showAngle==false and db.showTargetTarget==false and db.petGuide==false
             and db.markWarning==false and db.aspectWarning==false and db.petHappinessWarning==false then return end
         frame:SetScript('OnUpdate',function(_,delta)
             elapsed=elapsed+delta
@@ -394,14 +451,20 @@ function Range.Create(host, db)
             (not Core.IsReadable(unit) or (unit~='pet' and unit~='targettarget')) then return end
         if event=='UNIT_PET' and (not Core.IsReadable(unit) or unit~='player') then return end
         if event=='UNIT_INVENTORY_CHANGED' and (not Core.IsReadable(unit) or unit~='player') then return end
-        if event=='BAG_UPDATE_DELAYED' or event=='UNIT_INVENTORY_CHANGED' then UpdateAmmo();return end
+        if event=='BAG_UPDATE_DELAYED' or event=='UNIT_INVENTORY_CHANGED' then
+            if not db.rangeIconOnly then UpdateAmmo() end
+            return
+        end
         if event=='UNIT_TARGET' and (not Core.IsReadable(unit) or unit~='target') then return end
         if (event=='UNIT_NAME_UPDATE' or event=='UNIT_PORTRAIT_UPDATE') and (not Core.IsReadable(unit) or (unit~='target' and unit~='targettarget')) then return end
         if event=='UNIT_FLAGS' and (not Core.IsReadable(unit) or (unit~='target' and unit~='pet')) then return end
         if event=='SPELLS_CHANGED' or event=='LEARNED_SPELL_IN_SKILL_LINE' or event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_EQUIPMENT_CHANGED' then Discover() end
         Refresh()
     end)
-    frame.Status=function() return lastStatus..'; Pet guide: '..(db.petGuide==false and 'off' or (guide.hasMatch and ('inline — '..NS.PetGuide.Summary(guide.info)) or 'no supported target')) end
+    frame.Status=function()
+        if db.rangeIconOnly then return lastStatus..'; compact range icon' end
+        return lastStatus..'; Pet guide: '..(db.petGuide==false and 'off' or (guide.hasMatch and ('inline — '..NS.PetGuide.Summary(guide.info)) or 'no supported target'))
+    end
     frame.Refresh=Refresh
     Refresh()
     return frame

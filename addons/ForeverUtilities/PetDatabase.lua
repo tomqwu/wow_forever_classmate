@@ -1,15 +1,17 @@
 local _, NS = ...
--- Curated Forever beta guide, reviewed 2026-09-20. See docs/pet-guide-sources.md.
+-- Curated Forever beta guide, reviewed 2026-09-25. See docs/pet-guide-sources.md.
 -- These are family recommendations, NOT this creature's innate/teachable skills.
 -- Numeric keys are creature family/NPC IDs, never IDs used for spell detection.
-local DB={reviewed='2026-09-20',version='Forever 1.60.1 beta',families={},notable={},rareByID={},rareByName={}}
+local DB={reviewed='2026-09-25',version='Forever 1.60.1 beta',families={},notable={},rareByID={},rareByName={}}
 NS.PetDatabase=DB
 local function Family(id,name,role,ability,effect)
     DB.families[id]={name=name,role=role,ability=ability,effect=effect}
 end
 Family(1,'Wolf','Group melee support','Furious Howl','Party melee attack power buff.')
 Family(2,'Cat','Single-target damage / stealth','Claw / Prowl','Direct damage; stealth approach when trained.')
-Family(3,'Spider','PvP control / kiting','Web','Root with Nature damage over time.')
+-- A player observed several Forever spiders, including ROL spiders, without Web.
+-- Do not infer any target skill from family identity.
+Family(3,'Spider','Varies by individual pet',nil,nil)
 Family(4,'Bear','Solo multi-target fighting','Swipe / Savage Rend','Multi-target attack; bleed support.')
 Family(5,'Boar','Solo pulls / closing gaps','Rushing Charge','Burst movement and a stronger opening attack.')
 Family(6,'Crocolisk','PvP healing pressure','Dismember','Damage with reduced healing received.')

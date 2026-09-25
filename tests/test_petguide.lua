@@ -23,10 +23,10 @@ local info=NS.PetGuide.ReadTarget()
 check(info.notable.name=='Timber' and info.family.name=='Wolf','numeric NPC and family match')
 check(info.tooHigh and info.classification=='Rare' and info.special,'live level and rarity')
 local heading=NS.PetGuide.Summary(info)
-check(heading=='Rare Timber | Wolf: Furious Howl','inline summary includes rare identity, family ability, and rarity')
+check(heading=='Rare Timber | Wolf guide','inline summary identifies rarity and guide without claiming a target skill')
 local lines=table.concat(NS.PetGuide.Lines(info),'\n')
-check(lines:find('Furious Howl',1,true) and lines:find('Above your level',1,true),'recommended family skill and level warning')
-check(lines:find('Rare origin: Timber',1,true) and lines:find('Wild level 10',1,true),'known rare includes origin location and wild level')
+check(lines:find('Guide-listed family skill to verify: Furious Howl',1,true) and lines:find('Above your level',1,true),'family skill is explicitly unverified for this target')
+check(lines:find('Roster match: Timber',1,true) and lines:find('Wild level 10',1,true),'known rare includes origin location and wild level')
 check(lines:find('Family guide only',1,true) and lines:find('actual skills',1,true),'family recommendation not presented as known skill')
 UnitCreatureFamily=function() return '狼',1 end
 check(NS.PetGuide.ReadTarget().family.name=='Wolf','family ID works on non-English clients')
@@ -68,9 +68,9 @@ UnitName=function() return 'The Rake' end
 UnitCreatureID=function() error('identity lookup should not run for an owned pet') end
 local rarePet=NS.PetGuide.ReadTarget()
 check(rarePet.owned and rarePet.rare and rarePet.rare.name=='The Rake' and rarePet.rareNameMatch,'owned rare pet matches exact name and family')
-check(NS.PetGuide.Summary(rarePet)=='Rare The Rake | Cat: Claw / Prowl','owned rare summary includes identity and family advice')
+check(NS.PetGuide.Summary(rarePet)=='Name match The Rake | Cat guide','owned pet summary marks unverified name match')
 local rareLines=table.concat(NS.PetGuide.Lines(rarePet),' ')
-check(rareLines:find('Mulgore',1,true) and rareLines:find('Wild level 10',1,true) and rareLines:find('exact English name',1,true),'owned rare tooltip explains origin and match limit')
+check(rareLines:find('Mulgore',1,true) and rareLines:find('Wild level 10',1,true) and rareLines:find('Name + family match only',1,true),'owned rare tooltip explains origin and match limit')
 UnitCreatureFamily=function() return 'Wolf',1 end
 check(not NS.PetGuide.ReadTarget().rare,'wrong family rejects controlled rare-name match')
 -- Friendly/owned pets provide the same advice without wild-beast claims.
@@ -79,10 +79,10 @@ UnitName=function() return 'My renamed pet' end
 UnitIsFriend=function() return true end
 local pet=NS.PetGuide.ReadTarget()
 check(pet and pet.owned and not pet.wild,'another player pet is eligible')
-check(pet.family.name=='Wolf' and NS.PetGuide.Summary(pet):find('Furious Howl',1,true),'owned pet keeps family recommendation')
+check(pet.family.name=='Wolf' and NS.PetGuide.Summary(pet):find('Wolf family guide',1,true),'owned pet keeps family guidance without claiming learned skills')
 check(not pet.notable and not pet.tooHigh,'owned pet ID and level never imply a tame opportunity')
 local petLines=table.concat(NS.PetGuide.Lines(pet),' ')
-check(petLines:find('Player-controlled pet',1,true) and not petLines:find('Beast Lore',1,true) and not petLines:find('Watch list',1,true),'owned pet tooltip distinguishes advice from spawn intel')
+check(petLines:find('Player-controlled pet',1,true) and petLines:find('Actual abilities of this individual target are unknown',1,true) and not petLines:find('Beast Lore',1,true) and not petLines:find('Watch list',1,true),'owned pet tooltip distinguishes advice from spawn intel')
 UnitCreatureID=function() error('identity lookup should not run for an owned pet') end
 check(NS.PetGuide.ReadTarget().owned,'owned advice does not need an NPC ID')
 UnitIsFriend=function() return false end
@@ -98,6 +98,10 @@ for _,mode in ipairs({'secret','error','nil','absent'}) do
 end
 Reset();UnitIsFriend=function() return true end
 check(NS.PetGuide.ReadTarget().wild,'friendly wild beasts remain eligible')
+Reset();UnitCreatureFamily=function() return 'Spider',3 end
+local spider=NS.PetGuide.ReadTarget()
+local spiderLines=table.concat(NS.PetGuide.Lines(spider),' ')
+check(NS.PetGuide.Summary(spider)=='Rare Spider family guide' and not spiderLines:find('Web',1,true),'Spider guidance does not assert an unverified Web ability')
 Reset();UnitCreatureFamily=function() return 'Wolf',secret end
 check(not NS.PetGuide.ReadTarget(),'secret family ID not bypassed through name')
 Reset();UnitName=function() return '|cffff0000Test\nName' end
