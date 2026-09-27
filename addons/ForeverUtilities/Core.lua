@@ -36,6 +36,17 @@ function Core.PlayerDead()
     return Core.Call(UnitIsDeadOrGhost or UnitIsDead,'player')==true
 end
 
+function Core.CanInspectTarget()
+    return Core.Call(UnitIsPlayer,'target')==true and Core.Call(CanInspect,'target')==true
+        and type(InspectUnit)=='function'
+end
+
+function Core.InspectTarget()
+    if not Core.CanInspectTarget() then return false end
+    local ok=pcall(InspectUnit,'target')
+    return ok
+end
+
 function Core.EnsureSchema(saved,minimum)
     saved.schemaVersion=Core.IsNumber(saved.schemaVersion) and math.max(saved.schemaVersion,minimum) or minimum
 end

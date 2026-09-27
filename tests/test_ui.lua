@@ -11,6 +11,7 @@ local methods={}
 local function object() return setmetatable({scripts={},events={},shown=true},{__index=methods}) end
 function methods:SetScript(k,v) self.scripts[k]=v end
 function methods:RegisterEvent(e) self.events[e]=true end
+function methods:RegisterForClicks(...) self.clicks={...} end
 function methods:UnregisterEvent(e) self.events[e]=nil end
 function methods:CreateFontString() return object() end
 function methods:CreateTexture() return object() end
@@ -102,7 +103,24 @@ local mini=named.ForeverHunterFriendMinimap
 check(mini and mini.shown,'minimap button available even when bar disabled')
 check(mini.width==28 and mini.height==28,'compact minimap button')
 check(math.abs(math.sqrt(mini.x^2+mini.y^2)-103)<0.01,'button sits on minimap rim')
-mini.scripts.OnClick();check(panel.shown,'minimap opens settings')
+check(mini.clicks[1]=='LeftButtonUp' and mini.clicks[2]=='RightButtonUp','minimap registers both click buttons')
+mini.scripts.OnClick(mini,'LeftButton');check(panel.shown,'minimap left-click opens settings')
+local inspected=0
+UnitIsPlayer=function() return true end;CanInspect=function() return true end
+InspectUnit=function(unit) if unit=='target' then inspected=inspected+1 end end
+mini.scripts.OnClick(mini,'RightButton')
+check(inspected==1 and panel.shown,'right-click inspects eligible target without changing settings')
+db.rangeIconOnly=true;NS.Hunter.Apply();mini.scripts.OnClick(mini,'RightButton')
+check(inspected==2,'icon-only Hunter still has Inspect via minimap')
+db.rangeIconOnly=false;NS.Hunter.Apply()
+local shortcut=panel.controls.minimapInspect
+shortcut:SetChecked(false);shortcut.scripts.OnClick(shortcut)
+mini.scripts.OnClick(mini,'RightButton')
+check(inspected==2,'right-click Inspect obeys its independent toggle')
+shortcut:SetChecked(true);shortcut.scripts.OnClick(shortcut)
+CanInspect=function() return false end;mini.scripts.OnClick(mini,'RightButton')
+check(inspected==2,'ineligible target is not inspected')
+CanInspect=function() return true end
 local cursorX,cursorY=60,280
 GetCursorPosition=function() return cursorX,cursorY end
 Minimap.GetEffectiveScale=function() return 2 end

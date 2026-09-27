@@ -26,6 +26,8 @@ preferences:
 
 An optional 20px Inspect slot sits between the pet and lock slots in the full Hunter bar, reducing range-text space by 20px. It appears only for an inspectable player target. Icon-only mode removes all other blocks and the lock button; `/fhunter unlock` makes the icon visible for dragging without a target. A confirmed ranged check colors it green, a confirmed negative colors it red, and insufficient information stays neutral.
 
+The shared Classmate minimap button offers Inspect without changing any bar layout: left-click opens settings, while right-click opens the native Inspect window for an eligible targeted player. This works in Hunter icon-only mode and for every other class, and each class can disable the shortcut independently.
+
 The range block expands when combat, pet, or lock features are disabled. Full
 range wording remains visible at the default width, and color still identifies
 the attack state. The complete diagnostic remains available through

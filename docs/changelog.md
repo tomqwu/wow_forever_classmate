@@ -1,3 +1,18 @@
+## 0.23.0
+
+- The Classmate minimap button now supports right-click to open WoW's native Inspect window for an eligible targeted player, for every class. Left-click still opens settings; dragging still moves the button.
+- The shortcut works while the Hunter uses icon-only range mode, so Inspect no longer requires the full bar. A separate per-class setting can disable the minimap Inspect shortcut. The existing optional Hunter full-bar Inspect button remains available.
+
+Use `/reload` after updating. Client eligibility still determines whether the player can be inspected; tests use mocked APIs.
+
+## 0.22.0
+
+- Added a Hunter icon-only range mode. The 42-pixel icon turns green when ranged reach is confirmed, red when it is confirmed unavailable, and neutral when the client cannot decide. It hides with no valid hostile target when locked; `/fhunter unlock` keeps it visible for positioning.
+- Added an optional Hunter Inspect button for inspectable player targets. It opens WoW's native Inspect window on click.
+- Pet hints now identify family guidance without presenting an ability as learned by the selected beast. Spider Web is no longer listed without verification; rare-name matches on owned pets are labeled as possible origins.
+
+Use `/reload` after updating. Automated checks use mocked APIs; live client rendering and pet facts still need beta verification.
+
 ## 0.21.19
 
 - Replaced the Mage resource slot’s redundant Mana label with a compact vertical meter next to the live mana percentage. Restricted native percentages can still drive the meter without addon arithmetic.
@@ -467,10 +482,3 @@ Use `/reload`, then `/futils status` to confirm v0.2.1. Blue still means a dista
 - GitHub release notes and CurseForge build descriptions now include the maintained feature overview and version-specific changes.
 
 Update with `/reload`. Your saved position and scale are preserved.
-## 0.22.0
-
-- Added a Hunter icon-only range mode. The 42-pixel icon turns green when ranged reach is confirmed, red when it is confirmed unavailable, and neutral when the client cannot decide. It hides with no valid hostile target when locked; `/fhunter unlock` keeps it visible for positioning.
-- Added an optional Hunter Inspect button for inspectable player targets. It opens WoW's native Inspect window on click.
-- Pet hints now identify family guidance without presenting an ability as learned by the selected beast. Spider Web is no longer listed without verification; rare-name matches on owned pets are labeled as possible origins.
-
-Use `/reload` after updating. Automated checks use mocked APIs; live client rendering and pet facts still need beta verification.

@@ -15,6 +15,17 @@ local function hole() return nil,'second',nil,'fourth' end
 local a,b,c,d=NS.Core.Call(hole)
 check(a==nil and b=='second' and c==nil and d=='fourth','safe call preserves nil holes and trailing returns')
 check(NS.Core.Call(function() return 'public',nil,secret end)==nil,'safe call rejects secret returns after a nil hole')
+local inspected=0
+UnitIsPlayer=function() return true end
+CanInspect=function() return true end
+InspectUnit=function(unit) if unit=='target' then inspected=inspected+1 end end
+check(NS.Core.CanInspectTarget() and NS.Core.InspectTarget() and inspected==1,'eligible player target opens native Inspect')
+CanInspect=function() return secret end
+check(not NS.Core.CanInspectTarget() and not NS.Core.InspectTarget() and inspected==1,'restricted inspect result cannot open window')
+CanInspect=function() return true end;UnitIsPlayer=function() return false end
+check(not NS.Core.InspectTarget() and inspected==1,'non-player target cannot open Inspect')
+UnitIsPlayer=function() return true end;InspectUnit=nil
+check(not NS.Core.InspectTarget(),'missing Inspect entry point is safe')
 
 local savedSchema={schemaVersion=4};NS.Core.EnsureSchema(savedSchema,3)
 check(savedSchema.schemaVersion==4,'initializing older class settings cannot downgrade shared schema')

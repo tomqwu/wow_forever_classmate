@@ -101,6 +101,12 @@ check(NS.Paladin.instance~=nil,'active Paladin module creates helper')
 check(NS.Warrior.instance==nil and NS.Rogue.instance==nil and NS.Druid.instance==nil and NS.Mage.instance==nil and NS.Priest.instance==nil and NS.Warlock.instance==nil,'inactive classes create no helpers')
 check(NS.Paladin.db.x==77 and NS.Paladin.db.y==-88 and NS.Paladin.db.scale==1.1 and not NS.Paladin.db.locked,'saved Paladin layout retained')
 check(ForeverUtilitiesDB.warrior and ForeverUtilitiesDB.rogue and ForeverUtilitiesDB.druid and ForeverUtilitiesDB.mage and ForeverUtilitiesDB.priest and ForeverUtilitiesDB.warlock,'independent class databases initialized')
+for _,module in pairs(NS.Classes) do
+    if module~=NS.Paladin then
+        check(module.db.minimapInspect==true,'Inspect shortcut defaults on for '..module.name)
+    end
+end
+check(NS.Paladin.db.minimapInspect==true,'Paladin Inspect shortcut defaults on')
 check(NS.Paladin.spells.sealRighteousness and NS.Paladin.spells.judgementCrusader and NS.Paladin.spells.holyStrike and NS.Paladin.spells.willToSurvive,'class and racial spells discovered')
 local host=named.ForeverClassmatePaladinFrame;local indicator=named.ForeverClassmatePaladinIndicator
 check(host and host.width==426 and host.height==56 and host.shown,'standard class bar matches rendered native swing-bar width')
@@ -120,6 +126,18 @@ for _,entry in ipairs({{'WARRIOR',NS.Warrior},{'ROGUE',NS.Rogue},{'DRUID',NS.Dru
     check(named[entry[2].frameName] and named[entry[2].indicatorName],entry[1]..' uses its own named frames')
     check(named[entry[2].indicatorName].events.LEARNED_SPELL_IN_SKILL_LINE,entry[1]..' registers the supported spell learning event')
 end
+local minimap=named.ForeverClassmatePaladinMinimap
+local inspected=0
+UnitIsPlayer=function() return true end;CanInspect=function() return true end
+InspectUnit=function(unit) if unit=='target' then inspected=inspected+1 end end
+check(minimap.module==NS.Warlock,'shared minimap follows active standard class')
+minimap.scripts.OnClick(minimap,'RightButton')
+check(inspected==1,'standard class can inspect a player through minimap')
+NS.Warlock.db.minimapInspect=false;minimap.scripts.OnClick(minimap,'RightButton')
+check(inspected==1,'standard class can disable its Inspect shortcut')
+NS.Warlock.Initialize(ForeverUtilitiesDB)
+check(NS.Warlock.db.minimapInspect==false,'Inspect preference survives class initialization')
+NS.Warlock.db.minimapInspect=true
 
 local originalAuras=C_UnitAuras.GetAuraDataByIndex
 C_UnitAuras.GetAuraDataByIndex=function() error('restricted aura') end

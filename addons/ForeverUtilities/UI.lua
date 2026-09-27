@@ -80,7 +80,8 @@ local function RefreshMinimap()
             local angle=math.rad(current.db.minimapAngle);minimapButton:ClearAllPoints()
             minimapButton:SetPoint('CENTER',Minimap,'CENTER',math.cos(angle)*(width/2+3),math.sin(angle)*(height/2+3))
         end
-        positionMinimap=Position;Position();Minimap:HookScript('OnSizeChanged',Position);minimapButton:RegisterForDrag('LeftButton')
+        positionMinimap=Position;Position();Minimap:HookScript('OnSizeChanged',Position)
+        minimapButton:RegisterForClicks('LeftButtonUp','RightButtonUp');minimapButton:RegisterForDrag('LeftButton')
         local dragged=false
         local function FollowCursor()
             local x,y=GetCursorPosition();local cx,cy=Minimap:GetCenter();local scale=Minimap:GetEffectiveScale()
@@ -93,7 +94,12 @@ local function RefreshMinimap()
         minimapButton:SetScript('OnDragStart',function(self) dragged=true;if GameTooltip then GameTooltip:Hide() end;self:SetScript('OnUpdate',FollowCursor);FollowCursor() end)
         minimapButton:SetScript('OnDragStop',function(self) self:SetScript('OnUpdate',nil) end)
         minimapButton:SetScript('OnHide',function(self) self:SetScript('OnUpdate',nil) end)
-        minimapButton:SetScript('OnClick',function() if not dragged then OpenPanel() end end)
+        minimapButton:SetScript('OnClick',function(self,button)
+            if dragged then return end
+            if button=='RightButton' then
+                if self.module.db.minimapInspect~=false then NS.Core.InspectTarget() end
+            else OpenPanel() end
+        end)
         minimapButton:SetFrameStrata('MEDIUM');minimapButton:SetFrameLevel(8)
         local function Circle(size,layer)
             local texture=minimapButton:CreateTexture(nil,layer);texture:SetSize(size,size);texture:SetPoint('CENTER')
@@ -107,7 +113,11 @@ local function RefreshMinimap()
         minimapButton:SetScript('OnEnter',function(self)
             if GameTooltip then GameTooltip:SetOwner(self,'ANCHOR_LEFT');GameTooltip:SetText('Forever Classmate')
                 GameTooltip:AddLine(self.module.name:gsub('Forever Classmate — ',''),1,0.85,0.4)
-                GameTooltip:AddLine('Click: settings | Drag: move around minimap',1,1,1);GameTooltip:Show() end
+                GameTooltip:AddLine('Left-click: settings | Drag: move around minimap',1,1,1)
+                if self.module.db.minimapInspect~=false then
+                    GameTooltip:AddLine('Right-click: inspect an eligible player target',1,1,1)
+                end
+                GameTooltip:Show() end
         end)
         minimapButton:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
     end

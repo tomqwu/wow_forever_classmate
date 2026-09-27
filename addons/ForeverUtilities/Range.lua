@@ -158,8 +158,7 @@ function Range.Create(host, db)
     local inspectIcon=inspect:CreateTexture(nil,'ARTWORK')
     inspectIcon:SetSize(16,16);inspectIcon:SetPoint('CENTER');inspectIcon:SetTexture('Interface\\Icons\\INV_Misc_Spyglass_03')
     inspect:SetScript('OnClick',function()
-        if db.showInspect==true and Call(UnitIsPlayer,'target')==true and Call(CanInspect,'target')==true
-            and type(InspectUnit)=='function' then pcall(InspectUnit,'target') end
+        if db.showInspect==true then Core.InspectTarget() end
     end)
     inspect:SetScript('OnEnter',function(self)
         if GameTooltip then
@@ -170,8 +169,7 @@ function Range.Create(host, db)
     inspect:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
     frame.inspectButton=inspect
     local function UpdateInspect()
-        inspect:SetShown(db.showInspect==true and not db.rangeIconOnly and Call(UnitIsPlayer,'target')==true
-            and Call(CanInspect,'target')==true and type(InspectUnit)=='function')
+        inspect:SetShown(db.showInspect==true and not db.rangeIconOnly and Core.CanInspectTarget())
     end
     local warnedLowAmmo=false
     local function UpdateAmmo()

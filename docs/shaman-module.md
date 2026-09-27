@@ -1,5 +1,7 @@
 # Shaman module research and behavior
 
+The shared minimap button opens Shaman settings on left-click and WoW's native Inspect window for an eligible targeted player on right-click. The Inspect shortcut has its own toggle and does not alter the totem bar.
+
 Forever's Shaman still revolves around shared upkeep—totems, a weapon imbue, an elemental shield, and mana—but each deep tree adds a different decision cue. The addon therefore tracks reliable state rather than prescribing one fixed rotation.
 
 ## Workflow behind the helper

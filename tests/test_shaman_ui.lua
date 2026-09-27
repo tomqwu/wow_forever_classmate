@@ -249,6 +249,7 @@ check(next(indicator.events)==nil,'disable unregisters shaman events')
 slash('on');check(db.enabled and host.shown,'command reenables shaman bar')
 local mini=named.ForeverClassmateShamanMinimap
 check(mini and mini.width==28 and mini.height==28,'shaman uses shared minimap launcher')
+check(db.minimapInspect and panel.controls.minimapInspect,'shaman exposes enabled Inspect shortcut setting')
 slash('reset');check(db.showTotems and db.showWeaponImbue and db.showShield and db.showSpecHelper and db.showMana,'reset restores shaman features')
 local before=#DEFAULT_CHAT_FRAME.messages;slash('status');check(#DEFAULT_CHAT_FRAME.messages>=before+2,'status reports module diagnostics')
 NS.Shaman.Initialize(ForeverUtilitiesDB);check(NS.Shaman.db.x==0 and ForeverUtilitiesDB.schemaVersion==3,'shaman preferences persist with class schema')

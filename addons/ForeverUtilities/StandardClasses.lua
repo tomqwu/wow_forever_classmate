@@ -415,6 +415,7 @@ end
 
 local defaultOptions={
     {key='showMinimap',label='Show minimap settings button',kind='toggle'},
+    {key='minimapInspect',label='Right-click minimap to inspect players',kind='toggle'},
     {key='showLockButton',label='Show lock button on bar',kind='toggle'},
     {key='locked',label='Lock indicator position',kind='toggle'},
     {key='scale',label='Indicator size',kind='number',min=0.5,max=2,step=0.1},
@@ -438,7 +439,7 @@ for token,config in pairs(configs) do
         frameName='ForeverClassmate'..config.label..'Frame',lockName='ForeverClassmate'..config.label..'Lock',
         panelName='ForeverClassmate'..config.label..'Options',minimapName='ForeverClassmate'..config.label..'Minimap',
         indicatorName='ForeverClassmate'..config.label..'Indicator',normalize=Normalize,options=OptionsFor(config),
-        defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showMinimap=true,showLockButton=true,showResource=true,
+        defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showMinimap=true,minimapInspect=true,showLockButton=true,showResource=true,
             showUpkeep=true,showTarget=true,showAbilities=true,showRacial=true,showMageShield=true,fadeOutOfCombat=true,minimapAngle=35}}
     NS[config.label]=module
     function module.create(db)

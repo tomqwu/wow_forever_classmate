@@ -6,7 +6,7 @@
 
 **[Build addons for Forever](https://tomqwu.github.io/wow_forever_classmate/)** is the companion GitHub Pages guide to the client API, safe reads, beta pitfalls, testing, and release practices.
 
-Version 0.22.0 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
+Version 0.23.0 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
 
 ## Class companions
 
@@ -30,7 +30,7 @@ Resource percentages use Forever’s native percent API when exact power values 
 
 Install the `ForeverUtilities` folder into `_classic_beta_/Interface/AddOns/`. The folder name and `ForeverUtilitiesDB` stay stable for upgrades. Restart WoW for first discovery or use `/reload` after an update.
 
-Click the round minimap button or use the active class command. Drag the minimap button around the map edge. The padlock on the bar toggles movement without disabling updates or fading.
+Left-click the round minimap button or use the active class command to open settings. Right-click it to inspect an eligible targeted player. Drag the button around the map edge. The padlock on the bar toggles movement without disabling updates or fading.
 
 | Command | Action |
 | --- | --- |
@@ -44,7 +44,7 @@ Click the round minimap button or use the active class command. Drag the minimap
 
 Each information block can be switched independently. Bars use full opacity in combat; the Shaman bar also stays fully visible while a totem is active. Mage uses 90% opacity with a target and 75% while idle outside combat. Without an active totem, the other bars use 60% with a target and 20% while idle. Unlocking does not override fading.
 
-For a minimal Hunter display, enable **Icon-only range display** in `/fhunter` settings. Green means the client confirms ranged reach, red means it confirms you cannot shoot, and gray means the result is unknown. The icon hides without a valid hostile target while locked. Use `/fhunter unlock` to move it. The optional **Inspect button for player targets** appears in the full bar only when WoW allows inspection. Pet hints describe family guidance; the selected pet's learned abilities remain unknown unless checked with Beast Lore.
+For a minimal Hunter display, enable **Icon-only range display** in `/fhunter` settings. Green means the client confirms ranged reach, red means it confirms you cannot shoot, and gray means the result is unknown. The icon hides without a valid hostile target while locked. Use `/fhunter unlock` to move it. **Right-click the Classmate minimap button to inspect an eligible targeted player on any class**, including Hunter icon-only mode; left-click opens settings. The right-click shortcut has its own per-class toggle. The optional Hunter full-bar Inspect button remains available. Pet hints describe family guidance; the selected pet's learned abilities remain unknown unless checked with Beast Lore.
 
 Designed for the Forever 1.60.1 beta client. Automated checks use mocked APIs; live in-game validation remains ongoing as the beta changes.
 
