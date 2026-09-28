@@ -1,3 +1,10 @@
+## 0.24.2
+
+- A confirmed missing maintained buff or weapon coating now keeps the standard-class bar fully visible outside combat, so its upkeep warning is readable. The bar returns to its saved fade once the upkeep is confirmed or the block is turned off.
+- Unknown or restricted readings do not trigger this visibility change. Missing temporary Rogue finisher buffs do not keep the bar bright between fights; missing demons remain separate from missing buffs.
+
+Use `/reload` after updating. Automated checks use mocked APIs; the live beta appearance still needs in-game confirmation.
+
 ## 0.24.1
 
 - Warlock armor now uses out-of-combat aura checks. During combat, a previously confirmed Demon Skin, Demon Armor, or Fel Armor icon stays dimmed in the upkeep slot with unknown current status; the addon does not claim it remains active. A later readable absence clears that remembered identity.

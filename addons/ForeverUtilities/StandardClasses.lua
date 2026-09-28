@@ -51,7 +51,7 @@ local configs={
             Spell('rupture','Rupture','target'),Spell('deadlyPoison','Deadly Poison','target'),Spell('hemorrhage','Hemorrhage','target'),
             Spell('thousandCuts','Thousand Cuts','proc',true),Spell('cutthroat','Cutthroat','proc',true),
             Spell('riposte','Riposte','cue'),Spell('ambush','Ambush','cue'),Spell('bladeFlurry','Blade Flurry','cue'),Spell('coldBlood','Cold Blood','cue'),
-        },upkeepLabel='Coatings / buffs',upkeepGroups={{label='Finisher buff',keys={'sliceDice','venom'}}},targetLabel='Finisher / poison',powerType=3,powerLabel='Energy',weaponCoatings=true,showCombo=true,dotKeys={'rupture','deadlyPoison'}},
+        },upkeepLabel='Coatings / buffs',upkeepGroups={{label='Finisher buff',keys={'sliceDice','venom'},wakeOnMissing=false}},targetLabel='Finisher / poison',powerType=3,powerLabel='Energy',weaponCoatings=true,showCombo=true,dotKeys={'rupture','deadlyPoison'}},
     DRUID={key='druid',label='Druid',command='/fdruid',color={1,0.49,0.04},icon='Interface\\Icons\\Ability_Druid_CatForm',
         description='Current form and power, buff upkeep, target effects, learned spec cues, and racial cooldowns.',
         catalog={
@@ -241,13 +241,15 @@ local function CreateIndicator(module,config,host,db)
         resource:SetShown(db.showResource~=false)
 
         local upkeepTotal,upkeepActive,upkeepMissing,upkeepUnknown=0,0,0,0
+        local missingBuff=false
         local upkeepLines={};local upkeepIcon;local upkeepDim=false
         if db.showUpkeep~=false and config.weaponCoatings then
             local coatings=Context.WeaponCoatings()
             if coatings then
                 if coatings.equipped>0 then
                     upkeepTotal=upkeepTotal+1
-                    if coatings.active>=coatings.equipped then upkeepActive=upkeepActive+1 else upkeepMissing=upkeepMissing+1;upkeepDim=true end
+                    if coatings.active>=coatings.equipped then upkeepActive=upkeepActive+1
+                    else upkeepMissing=upkeepMissing+1;upkeepDim=true;missingBuff=true end
                     upkeepLines[#upkeepLines+1]='Weapon coatings: '..coatings.active..' / '..coatings.equipped..' active'
                 else upkeepLines[#upkeepLines+1]='Weapon coatings: no equipped weapons' end
             else upkeepTotal=upkeepTotal+1;upkeepUnknown=upkeepUnknown+1;upkeepLines[#upkeepLines+1]='Weapon coatings: unavailable' end
@@ -268,6 +270,7 @@ local function CreateIndicator(module,config,host,db)
                 elseif aura==false then
                     confirmedUpkeep[group.label]=nil
                     upkeepMissing=upkeepMissing+1;upkeepIcon=upkeepIcon or learned.icon;upkeepDim=true
+                    if group.wakeOnMissing~=false then missingBuff=true end
                     upkeepLines[#upkeepLines+1]=group.label..': missing'
                 else
                     local confirmed=confirmedUpkeep[group.label]
@@ -288,7 +291,7 @@ local function CreateIndicator(module,config,host,db)
         end
         local upkeepTop=upkeepUnknown>0 and '' or (upkeepTotal>0 and (upkeepActive..'/'..upkeepTotal) or '—')
         local upkeepBottom=upkeepMissing>0 and ('!'..upkeepMissing) or (upkeepUnknown>0 and '?' or (upkeepTotal>0 and 'OK' or ''))
-        local upkeepWarn=inCombat and upkeepMissing>0
+        local upkeepWarn=missingBuff or (inCombat and upkeepMissing>0)
         local shieldAura,protectedAbsorb,hasProtectedAbsorb
         if config.key=='mage' and db.showMageShield~=false then
             shieldAura=Context.Aura('player','HELPFUL',Context.Names(module.spells,{'manaShield','iceBarrier'}),false)
@@ -391,7 +394,7 @@ local function CreateIndicator(module,config,host,db)
         end
         racial:SetShown(db.showRacial~=false)
 
-        frame:SetAlpha((db.fadeOutOfCombat==false or inCombat) and 1
+        frame:SetAlpha((db.fadeOutOfCombat==false or inCombat or missingBuff) and 1
             or (hasTarget and (config.targetAlpha or 0.6) or (config.idleAlpha or 0.2)))
         lastStatus=string.format('%s; upkeep %s; target %s; ability %s; racial %s',resourceTop,upkeepBottom or 'off',targetText or 'off',abilityText or 'off',
             racialState and (racialState.spell.name..' '..(racialState.status=='cooldown' and (Context.FormatTime(racialState.left) or 'cooldown') or racialState.status)) or 'unavailable')

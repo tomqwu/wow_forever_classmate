@@ -55,7 +55,7 @@ root and packaged README aligned. Add exact-version highlights to docs/changelog
 for every addon release. release_notes.py combines them for the GitHub release;
 the CurseForge uploader uses that body as its file changelog. Project-page edits
 are separate: do not claim the website description changed merely because an
-upload succeeded. Combat restores full visibility; the Shaman bar also stays fully visible for a confirmed active totem. Mage uses 90% opacity with a target and 75% while idle outside combat so the resource and armor remain readable. Other classes use 60% with a target and 20% while idle. Unlocking does not override fading.
+upload succeeded. Combat restores full visibility; the Shaman bar also stays fully visible for a confirmed active totem. Standard-class bars stay fully visible for confirmed missing maintained buffs or weapon coatings outside combat. Unknown aura reads, missing temporary Rogue finishers, and missing pets do not override fading. Mage uses 90% opacity with a target and 75% while idle outside combat so the resource and armor remain readable. Other classes use 60% with a target and 20% while idle. Unlocking does not override fading.
 
 Numeric distance uses UnitDistanceSquared only when checkedDistance is readable
 and true and the squared value is finite/nonnegative. Never fabricate a midpoint

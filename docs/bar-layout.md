@@ -74,6 +74,6 @@ independently toggleable. Restricted values use `?`; the addon does not turn an
 unreadable state into a missing warning.
 
 Movement, scaling, fading, and saved positions apply to the whole 426 × 56 bar.
-Unlocking never changes live updates or combat opacity. Tests exercise all Hunter
+Unlocking never changes live updates or combat opacity. A standard-class bar also becomes fully visible outside combat when a maintained buff is confirmed missing; unknown aura state and temporary Rogue finisher gaps keep the normal fade. Tests exercise all Hunter
 preference combinations and each class lifecycle; live font and texture appearance
 should still be checked after `/reload` on the current beta client.

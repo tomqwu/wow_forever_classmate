@@ -175,6 +175,10 @@ end
 rogueIndicator.Update()
 check(rogueIndicator.cells.upkeep.top.text=='1/1','Rogue finisher buff is checked alongside weapon coatings')
 check(rogueIndicator.cells.upkeep.tooltipLines[2] and rogueIndicator.cells.upkeep.tooltipLines[2]:find('Slice and Dice',1,true),'Rogue upkeep details name the active finisher buff')
+C_UnitAuras.GetAuraDataByIndex=function() return nil end
+rogueIndicator.Update()
+check(rogueIndicator.cells.upkeep.bottom.text=='!1' and rogueIndicator.alpha==0.6,
+    'a missing temporary Rogue finisher does not keep the bar bright between fights')
 
 local druidIndicator=named.ForeverClassmateDruidIndicator
 NS.Druid.spells={markWild={id=2101,name='Mark of the Wild',icon=62,kind='upkeep'},thorns={id=2102,name='Thorns',icon=63,kind='upkeep'}}
@@ -184,7 +188,8 @@ end
 local savedPowerType=UnitPowerType;UnitPowerType=nil
 local ok=pcall(druidIndicator.Update)
 check(ok and druidIndicator.cells.resource.top.text=='?','Druid survives an unavailable current-power API')
-check(druidIndicator.cells.upkeep.top.text=='1/2' and druidIndicator.cells.upkeep.bottom.text=='!1','Druid tracks Mark and Thorns as independent upkeep')
+check(druidIndicator.cells.upkeep.top.text=='1/2' and druidIndicator.cells.upkeep.bottom.text=='!1'
+    and druidIndicator.alpha==1,'a confirmed missing Druid buff keeps the full bar visible outside combat')
 UnitAffectingCombat=function() return true end
 C_UnitAuras.GetAuraDataByIndex=function() error('restricted combat aura') end
 druidIndicator.Update()
@@ -291,7 +296,14 @@ NS.Mage.db.showMageShield=true;UnitGetTotalAbsorbs=function() return 0 end
 local priest=Fixture(NS.Priest,{'Power Word: Fortitude','Divine Spirit','Inner Fire'},{'Prayer of Fortitude','Prayer of Spirit','Inner Fire'})
 check(priest.cells.upkeep.top.text=='3/3','Priest group prayers satisfy individual buff upkeep')
 local warlock=Fixture(NS.Warlock,{'Demon Armor','Demon Skin'},{'Demon Skin'})
-check(warlock.cells.upkeep.top.text=='1/1','Warlock does not demand a demon before learning a summon')
+check(warlock.cells.upkeep.top.text=='1/1' and warlock.alpha==0.6,
+    'confirmed Warlock armor uses the normal out-of-combat target fade')
+local observedArmorRead=C_UnitAuras.GetAuraDataByIndex
+C_UnitAuras.GetAuraDataByIndex=function() error('restricted aura') end
+warlock.Update()
+check(warlock.cells.upkeep.top.text=='' and warlock.alpha==0.6,
+    'an unavailable armor reading does not force a full-opacity missing-buff warning')
+C_UnitAuras.GetAuraDataByIndex=observedArmorRead;warlock.Update()
 local armorReads=0
 C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
     if unit=='player' and filter=='HELPFUL' then armorReads=armorReads+1 end
@@ -303,14 +315,18 @@ check(armorReads==0 and warlock.cells.upkeep.top.text=='' and warlock.cells.upke
     and warlock.cells.upkeep.tooltipLines[1]:find('Demon Skin last seen',1,true),
     'Warlock keeps the confirmed Demon Skin icon but makes no combat aura read or 0/1 claim')
 UnitAffectingCombat=function() return false end;warlock.Update()
-check(warlock.cells.upkeep.top.text=='0/1' and warlock.cells.upkeep.bottom.text=='!1',
-    'a readable out-of-combat absence clears the last observed armor')
+check(warlock.cells.upkeep.top.text=='0/1' and warlock.cells.upkeep.bottom.text=='!1'
+    and warlock.alpha==1,'a readable out-of-combat absence clears the armor and restores full visibility')
+NS.Warlock.db.showUpkeep=false;warlock.Update()
+check(warlock.alpha==0.6,'turning off upkeep removes the missing-buff fade override')
+NS.Warlock.db.showUpkeep=true
 UnitAffectingCombat=function() return true end;warlock.Update()
 check(warlock.cells.upkeep.top.text=='' and not warlock.cells.upkeep.icon.shown,
     'combat without a prior confirmed armor does not invent an armor icon')
 UnitAffectingCombat=function() return false end
 warlock=Fixture(NS.Warlock,{'Demon Skin','Summon Imp'},{'Demon Skin'})
-check(warlock.cells.upkeep.bottom.text=='!1','learned Warlock summon enables missing-demon warning')
+check(warlock.cells.upkeep.bottom.text=='!1' and warlock.alpha==0.6,
+    'missing demon warns without treating it as a missing buff for the fade override')
 local deadTarget=false
 UnitIsDead=function(unit) return unit=='target' and deadTarget end
 UnitIsFriend=function() return false end
