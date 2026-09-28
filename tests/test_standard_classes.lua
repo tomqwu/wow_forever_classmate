@@ -92,6 +92,7 @@ ForeverUtilitiesDB={paladin={x=77,y=-88,scale=1.1,locked=false}}
 assert(loadfile(root..'Core.lua'))('ForeverUtilities',NS)
 assert(loadfile(root..'ClassHost.lua'))('ForeverUtilities',NS)
 assert(loadfile(root..'ClassContext.lua'))('ForeverUtilities',NS)
+assert(loadfile(root..'DotTracker.lua'))('ForeverUtilities',NS)
 assert(loadfile(root..'StandardClasses.lua'))('ForeverUtilities',NS)
 assert(loadfile(root..'UI.lua'))('ForeverUtilities',NS)
 local count=0
@@ -111,6 +112,7 @@ check(NS.Paladin.spells.sealRighteousness and NS.Paladin.spells.judgementCrusade
 local host=named.ForeverClassmatePaladinFrame;local indicator=named.ForeverClassmatePaladinIndicator
 check(host and host.width==426 and host.height==56 and host.shown,'standard class bar matches rendered native swing-bar width')
 check(indicator and indicator.scripts.OnUpdate~=nil,'enabled helper polls live state')
+check(rawget(indicator,'dotTracker')==nil and not NS.Paladin.db.showMultiDots,'Paladin has no DoT side strip')
 check(indicator.events.LEARNED_SPELL_IN_SKILL_LINE and not indicator.events.LEARNED_SPELL_IN_TAB,'class discovery uses the Forever learned-spell event')
 check(indicator.cells.resource.icon.width==24 and indicator.cells.resource.top.width==41,'readable icon slots fit the native-width bar')
 check(indicator.cells.racial.x+indicator.cells.racial.width==398,'all five class slots end before the lock control')
@@ -126,6 +128,12 @@ for _,entry in ipairs({{'WARRIOR',NS.Warrior},{'ROGUE',NS.Rogue},{'DRUID',NS.Dru
     check(named[entry[2].frameName] and named[entry[2].indicatorName],entry[1]..' uses its own named frames')
     check(named[entry[2].indicatorName].events.LEARNED_SPELL_IN_SKILL_LINE,entry[1]..' registers the supported spell learning event')
 end
+for _,module in ipairs({NS.Warrior,NS.Rogue,NS.Druid,NS.Priest,NS.Warlock}) do
+    local dots=named[module.indicatorName].dotTracker
+    check(dots and dots.events.NAME_PLATE_UNIT_ADDED and module.db.showMultiDots,
+        module.name..' has an active, toggleable multi-target DoT strip')
+end
+check(rawget(named[NS.Mage.indicatorName],'dotTracker')==nil,'Mage keeps its existing layout without an unverified DoT list')
 local minimap=named.ForeverClassmatePaladinMinimap
 local inspected=0
 UnitIsPlayer=function() return true end;CanInspect=function() return true end
@@ -291,7 +299,8 @@ local reads=0
 UnitPower=function() reads=reads+1;return 70 end
 C_UnitAuras.GetAuraDataByIndex=function() reads=reads+1 end
 C_Spell.GetSpellCooldown=function() reads=reads+1;return {startTime=0,duration=0,isEnabled=true} end
-for _,key in ipairs({'showResource','showUpkeep','showTarget','showAbilities','showRacial'}) do NS.Warrior.db[key]=false end
+for _,key in ipairs({'showResource','showUpkeep','showTarget','showAbilities','showRacial','showMultiDots'}) do NS.Warrior.db[key]=false end
 warrior.Refresh()
 check(reads==0 and not warrior.scripts.OnUpdate,'disabled standard blocks perform no resource, aura, cooldown reads or polling')
+check(not warrior.dotTracker.shown and not next(warrior.dotTracker.events),'disabled DoT strip removes its own listeners')
 print('PASS: '..count..' standard class runtime checks')

@@ -43,7 +43,7 @@ local configs={
             Spell('battleShout','Battle Shout','upkeep'),Spell('commandingShout','Commanding Shout','upkeep'),
             Spell('rend','Rend','target'),Spell('deepWounds','Deep Wounds','target',true),Spell('bloodthrill','Bloodthrill','proc',true),
             Spell('overpower','Overpower','cue'),Spell('execute','Execute','cue'),Spell('victoryRush','Victory Rush','cue'),Spell('bloodthirst','Bloodthirst','cue'),
-        },upkeepLabel='Shout',upkeepGroups={{label='Shout',keys={'battleShout','commandingShout'}}},targetLabel='Target effect',powerType=1,powerLabel='Rage',showForm=true},
+        },upkeepLabel='Shout',upkeepGroups={{label='Shout',keys={'battleShout','commandingShout'}}},targetLabel='Target effect',powerType=1,powerLabel='Rage',showForm=true,dotKeys={'rend','deepWounds'}},
     ROGUE={key='rogue',label='Rogue',command='/frogue',color={1,0.96,0.41},icon='Interface\\Icons\\Ability_Rogue_SliceDice',
         description='Energy, combo points, weapon coatings, finishers, target effects, and racial cooldowns.',
         catalog={
@@ -51,7 +51,7 @@ local configs={
             Spell('rupture','Rupture','target'),Spell('deadlyPoison','Deadly Poison','target'),Spell('hemorrhage','Hemorrhage','target'),
             Spell('thousandCuts','Thousand Cuts','proc',true),Spell('cutthroat','Cutthroat','proc',true),
             Spell('riposte','Riposte','cue'),Spell('ambush','Ambush','cue'),Spell('bladeFlurry','Blade Flurry','cue'),Spell('coldBlood','Cold Blood','cue'),
-        },upkeepLabel='Coatings / buffs',upkeepGroups={{label='Finisher buff',keys={'sliceDice','venom'}}},targetLabel='Finisher / poison',powerType=3,powerLabel='Energy',weaponCoatings=true,showCombo=true},
+        },upkeepLabel='Coatings / buffs',upkeepGroups={{label='Finisher buff',keys={'sliceDice','venom'}}},targetLabel='Finisher / poison',powerType=3,powerLabel='Energy',weaponCoatings=true,showCombo=true,dotKeys={'rupture','deadlyPoison'}},
     DRUID={key='druid',label='Druid',command='/fdruid',color={1,0.49,0.04},icon='Interface\\Icons\\Ability_Druid_CatForm',
         description='Current form and power, buff upkeep, target effects, learned spec cues, and racial cooldowns.',
         catalog={
@@ -59,7 +59,7 @@ local configs={
             Spell('moonfire','Moonfire','target'),Spell('insectSwarm','Insect Swarm','target'),Spell('faerieFire','Faerie Fire','target'),Spell('rip','Rip','target'),
             Spell('eclipse','Eclipse','proc',true),Spell('naturesGrace',"Nature's Grace",'proc',true),Spell('omenClarity','Omen of Clarity','proc',true),
             Spell('tigersFury',"Tiger's Fury",'cue'),Spell('berserk','Berserk','cue'),Spell('innervate','Innervate','cue'),Spell('swiftmend','Swiftmend','cue'),
-        },upkeepLabel='Nature buffs',upkeepGroups={{label='Mark of the Wild',keys={'markWild'}},{label='Thorns',keys={'thorns'}}},targetLabel='Target effect',currentPower=true,showForm=true},
+        },upkeepLabel='Nature buffs',upkeepGroups={{label='Mark of the Wild',keys={'markWild'}},{label='Thorns',keys={'thorns'}}},targetLabel='Target effect',currentPower=true,showForm=true,dotKeys={'moonfire','insectSwarm','rip'}},
     MAGE={key='mage',label='Mage',command='/fmage',color={0.25,0.78,0.92},icon='Interface\\Icons\\Spell_Frost_FrostArmor02',
         description='Live mana meter, armor and absorption shield upkeep, personal damage effects, spec procs, and racial cooldowns.',
         catalog={
@@ -77,7 +77,7 @@ local configs={
             Spell('shadowPain','Shadow Word: Pain','target'),Spell('devouringPlague','Devouring Plague','target'),Spell('vampiricEmbrace','Vampiric Embrace','target'),
             Spell('shadowform','Shadowform','form'),Spell('surgeLight','Surge of Light','proc',true),
             Spell('shadowDeath','Shadow Word: Death','cue'),Spell('prayerMending','Prayer of Mending','cue'),Spell('powerInfusion','Power Infusion','cue'),
-        },upkeepLabel='Self buffs',upkeepGroups={{label='Inner Fire',keys={'innerFire'}},{label='Fortitude',keys={'fortitude'}},{label='Divine Spirit',keys={'divineSpirit'}}},targetLabel='Target / healing',powerType=0,powerLabel='Mana',showForm=true},
+        },upkeepLabel='Self buffs',upkeepGroups={{label='Inner Fire',keys={'innerFire'}},{label='Fortitude',keys={'fortitude'}},{label='Divine Spirit',keys={'divineSpirit'}}},targetLabel='Target / healing',powerType=0,powerLabel='Mana',showForm=true,dotKeys={'shadowPain','devouringPlague'}},
     WARLOCK={key='warlock',label='Warlock',command='/fwarlock',color={0.53,0.53,0.93},icon='Interface\\Icons\\Spell_Shadow_Metamorphosis',
         description='Mana and health, armor and demon state, DoT or Bane upkeep, abilities, and racial cooldowns.',
         catalog={
@@ -87,7 +87,7 @@ local configs={
             Spell('baneAgony','Bane of Agony','target'),Spell('curseAgony','Curse of Agony','target'),
             Spell('nightfall','Nightfall','proc',true),Spell('backlash','Backlash','proc',true),
             Spell('conflagrate','Conflagrate','cue'),Spell('shadowburn','Shadowburn','cue'),Spell('lifeTap','Life Tap','cue'),Spell('demonicEmpowerment','Demonic Empowerment','cue'),
-        },upkeepLabel='Armor / demon',upkeepGroups={{label='Armor',keys={'demonArmor','demonSkin','felArmor'}}},targetLabel='DoT / Bane',powerType=0,powerLabel='Mana',showPet=true,showHealth=true,showShards=true},
+        },upkeepLabel='Armor / demon',upkeepGroups={{label='Armor',keys={'demonArmor','demonSkin','felArmor'}}},targetLabel='DoT / Bane',powerType=0,powerLabel='Mana',showPet=true,showHealth=true,showShards=true,dotKeys={'corruption','immolate','wrack','baneAgony','curseAgony'}},
 }
 
 local function MakeCell(frame,x,width)
@@ -132,6 +132,8 @@ local function CreateIndicator(module,config,host,db)
         upkeep.meter=MakeMeter(upkeep,72,4,{0.4,0.85,1})
     end
     frame.cells={resource=resource,upkeep=upkeep,target=target,ability=ability,racial=racial}
+    local dots=config.dotKeys and NS.DotTracker.Create(frame,db,module,config.dotKeys,config.color)
+    frame.dotTracker=dots
     local lastStatus='Not checked';local elapsed=0;local active=false;local suspended=false
 
     local function Discover()
@@ -392,11 +394,13 @@ local function CreateIndicator(module,config,host,db)
         frame:SetScript('OnUpdate',nil);frame:SetShown(db.enabled)
         if not db.enabled then
             if active then for _,event in ipairs(events) do frame:UnregisterEvent(event) end end
+            if dots then dots.Refresh(false) end
             active=false;lastStatus=config.label..' helper disabled';return
         end
         if not active then for _,event in ipairs(events) do frame:RegisterEvent(event) end;active=true;Discover() end
-        if suspended or Core.PlayerDead() then frame:Hide();return end
+        if suspended or Core.PlayerDead() then if dots then dots.Refresh(false) end;frame:Hide();return end
         Update();elapsed=0
+        if dots then dots.Refresh(true) end
         if NeedsPoll() then frame:SetScript('OnUpdate',function(_,delta) elapsed=elapsed+delta;if elapsed>=0.25 then elapsed=0;Update() end end) end
     end
     frame:SetScript('OnEvent',function(_,event,unit)
@@ -406,7 +410,9 @@ local function CreateIndicator(module,config,host,db)
         if suspended or Core.PlayerDead() then return end
         if (event=='UNIT_AURA' or event=='UNIT_ABSORB_AMOUNT_CHANGED' or event=='UNIT_POWER_UPDATE' or event=='UNIT_HEALTH' or event=='UNIT_INVENTORY_CHANGED')
             and Core.IsReadable(unit) and unit~='player' and unit~='target' and unit~='pet' then return end
-        if event=='SPELLS_CHANGED' or event=='LEARNED_SPELL_IN_SKILL_LINE' or event=='PLAYER_ENTERING_WORLD' then Discover() end
+        if event=='SPELLS_CHANGED' or event=='LEARNED_SPELL_IN_SKILL_LINE' or event=='PLAYER_ENTERING_WORLD' then
+            Discover();if dots then dots.Scan() end
+        end
         if event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_ALIVE' or event=='PLAYER_UNGHOST' then Refresh() else Update() end
     end)
     frame.Refresh=Refresh;frame.Update=Update;frame.Status=function() return lastStatus end
@@ -427,9 +433,9 @@ local defaultOptions={
     {key='fadeOutOfCombat',label='Dim outside combat',kind='toggle'},
 }
 local function OptionsFor(config)
-    if config.key~='mage' then return defaultOptions end
     local options={};Append(options,defaultOptions)
-    options[#options+1]={key='showMageShield',label='Show absorption shield',kind='toggle'}
+    if config.dotKeys then options[#options+1]={key='showMultiDots',label='Show multi-target DoT bars',kind='toggle'} end
+    if config.key=='mage' then options[#options+1]={key='showMageShield',label='Show absorption shield',kind='toggle'} end
     return options
 end
 
@@ -441,6 +447,7 @@ for token,config in pairs(configs) do
         indicatorName='ForeverClassmate'..config.label..'Indicator',normalize=Normalize,options=OptionsFor(config),
         defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showMinimap=true,minimapInspect=true,showLockButton=true,showResource=true,
             showUpkeep=true,showTarget=true,showAbilities=true,showRacial=true,showMageShield=true,fadeOutOfCombat=true,minimapAngle=35}}
+    if config.dotKeys then module.defaults.showMultiDots=true end
     NS[config.label]=module
     function module.create(db)
         return NS.ClassHost.Create(module,db,function(host) return CreateIndicator(module,config,host,db) end)

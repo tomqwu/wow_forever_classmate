@@ -66,6 +66,8 @@ before the lock control:
 
 Mage uses a 9px vertical mana meter in the resource slot. An active Mana Shield or Ice Barrier uses a 4px coverage meter in upkeep, showing total absorbs against maximum health when the client exposes those values. Armor details remain on hover. This coverage is not a percentage of the shield’s original capacity.
 
+Warrior, Rogue, Druid, Priest, and Warlock may show a 212px-wide DoT strip immediately to the right of the standard bar. It grows vertically only for active, readable player-owned effects on the target or live nameplates, up to twelve effect rows across five enemies. The strip follows the bar when it moves or scales and uses the same combat fade. A separate setting hides it without changing the five fixed slots or the 426px main-bar width. Empty, expired, and unavailable observations do not create placeholder rows.
+
 Full localized spell names, exact resource values, every upkeep group, and all
 learned racial states are shown on hover. Target and ability slots remain
 independently toggleable. Restricted values use `?`; the addon does not turn an

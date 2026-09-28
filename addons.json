@@ -2,6 +2,7 @@
   "ForeverUtilities": {
     "path": "addons/ForeverUtilities",
     "tests": [
+      "tests/test_dot_tracker.lua",
       "tests/test_range.lua",
       "tests/test_ui.lua",
       "tests/test_targetcontext.lua",

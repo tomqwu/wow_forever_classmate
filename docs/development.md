@@ -1,6 +1,6 @@
 # Forever Classmate development
 
-Active source: `addons/ForeverUtilities/`. The folder, TOC filename, saved-variable name, and release tag prefix remain stable for upgrades. Version 0.23.0 supports all nine classes through the registry in `Core.lua`.
+Active source: `addons/ForeverUtilities/`. The folder, TOC filename, saved-variable name, and release tag prefix remain stable for upgrades. Version 0.24.0 supports all nine classes through the registry in `Core.lua`.
 
 The public [Forever addon guide](https://tomqwu.github.io/wow_forever_classmate/) is authored in `site/` and deployed by `.github/workflows/pages.yml`. Run `python3 scripts/check_site.py` before changing its links or sections. This documentation site is separate from the versioned addon package.
 
@@ -23,6 +23,7 @@ Standard class runtime:
 
 - `ClassContext.lua` owns shared spellbook discovery, aura reads, resources, forms, combo points, temporary weapon coatings, item counts, cooldowns, usability, and the active-racial catalog.
 - `StandardClasses.lua` registers Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock with independent databases and semantic spell catalogs.
+- `DotTracker.lua` draws optional slim DoT timers for Warrior, Rogue, Druid, Priest, and Warlock. It reads only current target and active nameplate aura state, and drops observations on removal, expiry, world leave, or disable. It updates the changed unit on `UNIT_AURA` instead of polling every nameplate.
 - The standard 426 × 56 strip uses fixed resource, upkeep, target, ability, and racial slots. Every slot is independently toggleable.
 - Passive proc talents are accepted only when their catalog entry explicitly permits passive discovery. Passive racial bonuses are not displayed.
 

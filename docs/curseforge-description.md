@@ -2,7 +2,7 @@
 
 **One compact, class-aware companion for World of Warcraft: Forever.**
 
-Version 0.23.0 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
+Version 0.24.0 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
 
 ## Class companions
 
@@ -21,6 +21,8 @@ Version 0.23.0 supports all nine classes. Forever Classmate detects the player c
 The seven standard class bars discover every learned active racial and surface the one most useful now, while hover details list the others. This includes Forever racials such as Will to Survive, Elune's Light, Eureka!, Shatter Curse, Read Ley Line, and Skysight, plus the twelve race-specific Priest spells. “Context” means the game currently reports the racial unusable; the addon does not guess why.
 
 Resource percentages use Forever’s native percent API when exact power values are restricted. Class cues come from the live spellbook and aura/cooldown APIs. They adapt to learned talents without hardcoded Classic spell IDs and do not infer a specialization, prescribe a fixed rotation, or cast anything. Missing, restricted, or secret values remain blank or unavailable.
+
+Warrior, Rogue, Druid, Priest, and Warlock can show **slim multi-target DoT bars** to the right of the main bar. Each row identifies an enemy, your active effect, and its readable remaining time. The strip tracks the current target and nearby enemies that have active nameplates; it clears a row when the effect expires or its nameplate disappears. It cannot continue tracking an offscreen enemy whose aura state Forever no longer exposes. Turn it off with **Show multi-target DoT bars** in your class settings. The original 426 × 56 bar stays the same size.
 
 ## Setup and commands
 

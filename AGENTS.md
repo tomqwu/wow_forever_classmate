@@ -70,7 +70,7 @@ Distance.lua owns Hunter defaults, migration, and lazy creation. `ForeverUtiliti
 
 ShamanContext.lua owns secret-safe totem, temporary-enchant, aura, and mana reads. Shaman.lua owns spellbook discovery, defaults, event lifecycle, and its fixed 426 × 56 grouped layout. `ForeverUtilitiesDB.shaman` is independent. Track Earth/Fire/Water/Air totems, main-hand imbue, an elemental shield, mana, recall, and the learned Maelstrom/Lava Burst/Riptide cue. Never turn these cues into automated actions or unverified rotation claims.
 
-ClassContext.lua and StandardClasses.lua own the Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock runtime. Each class has an independent database and a fixed resource, upkeep, target/ability, and active-racial block. Spellbook discovery controls class and racial availability. Preserve “Context” for learned abilities that the client reports unusable, keep Priest racial spells ahead of base racials, and never infer why an ability is unavailable.
+ClassContext.lua and StandardClasses.lua own the Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock runtime. Each class has an independent database and a fixed resource, upkeep, target/ability, and active-racial block. Spellbook discovery controls class and racial availability. Preserve “Context” for learned abilities that the client reports unusable, keep Priest racial spells ahead of base racials, and never infer why an ability is unavailable. DotTracker.lua owns optional multi-target DoT sidebars for Warrior, Rogue, Druid, Priest, and Warlock. Read only current target and active nameplates; never extrapolate an offscreen aura. Clear on disappearance, expiry, world leave, and disable. Keep nameplate aura updates scoped to that unit.
 
 ## Bar layout
 

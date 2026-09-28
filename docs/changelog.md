@@ -1,3 +1,10 @@
+## 0.24.0
+
+- Added optional slim multi-target DoT bars beside the unchanged 426 × 56 main bar for Warrior, Rogue, Druid, Priest, and Warlock. They show the enemy, learned player-owned effect, and readable time remaining for the current target and active nameplates.
+- Removed effects, expired timers, departed nameplates, restricted timings, and disabled settings clear their rows. Updating one unit's aura avoids rescanning all other enemies.
+
+Use `/reload` after updating. The client cannot provide persistent offscreen aura state; automated tests use mocked APIs, and live beta rendering remains to be checked.
+
 ## 0.23.0
 
 - The Classmate minimap button now supports right-click to open WoW's native Inspect window for an eligible targeted player, for every class. Left-click still opens settings; dragging still moves the button.
