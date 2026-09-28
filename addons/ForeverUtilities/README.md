@@ -2,7 +2,7 @@
 
 **One compact, class-aware companion for World of Warcraft: Forever.**
 
-Version 0.24.2 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
+Version 0.24.3 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
 
 ## Class companions
 
@@ -24,7 +24,7 @@ Resource percentages use Forever’s native percent API when exact power values 
 
 Warrior, Rogue, Druid, Priest, and Warlock can show **slim multi-target DoT bars** to the right of the main bar. Each row identifies an enemy, your active effect, and its readable remaining time. The strip tracks the current target and nearby enemies that have active nameplates; it clears a row when the effect expires or its nameplate disappears. It cannot continue tracking an offscreen enemy whose aura state Forever no longer exposes. Turn it off with **Show multi-target DoT bars** in your class settings. The original 426 × 56 bar stays the same size.
 
-Warlock armor is confirmed out of combat. If combat hides the aura, the upkeep slot keeps the last confirmed armor icon dimmed with an unknown status, without claiming it is still active or printing a misleading count. Other standard-class upkeep slots also hide their count whenever any required reading is unavailable.
+Warlock armor is confirmed out of combat. If combat hides the aura, the upkeep slot can keep the last confirmed armor icon dimmed without status text or an active claim. Other standard-class upkeep slots hide an unreadable count, and target, ability, racial, or resource slots disappear when no useful live state can be read.
 
 ## Setup and commands
 

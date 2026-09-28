@@ -151,8 +151,17 @@ NS.Warlock.db.minimapInspect=true
 local originalAuras=C_UnitAuras.GetAuraDataByIndex
 C_UnitAuras.GetAuraDataByIndex=function() error('restricted aura') end
 indicator.Update()
-check(indicator.cells.upkeep.bottom.text=='?','restricted upkeep aura is not reported as missing')
-check(indicator.cells.target.top.text=='?','restricted target aura is not reported as missing: '..tostring(indicator.cells.target.top.text))
+check(indicator.cells.upkeep.shown and indicator.cells.upkeep.icon.shown
+    and indicator.cells.upkeep.top.text=='' and indicator.cells.upkeep.bottom.text=='',
+    'restricted upkeep keeps only the previously confirmed buff icon')
+check(not indicator.cells.target.shown and indicator.cells.target.top.text=='',
+    'restricted target aura hides the effect slot rather than showing a question mark')
+local savedCooldown=C_Spell.GetSpellCooldown
+C_Spell.GetSpellCooldown=function() return nil end
+indicator.Update()
+check(not indicator.cells.racial.shown and not indicator.cells.ability.shown,
+    'unreadable cooldowns hide racial and ability slots instead of showing unknown status')
+C_Spell.GetSpellCooldown=savedCooldown;indicator.Update()
 
 local targetReads=0
 C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
@@ -187,13 +196,14 @@ C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
 end
 local savedPowerType=UnitPowerType;UnitPowerType=nil
 local ok=pcall(druidIndicator.Update)
-check(ok and druidIndicator.cells.resource.top.text=='?','Druid survives an unavailable current-power API')
+check(ok and druidIndicator.cells.resource.top.text=='' and druidIndicator.cells.resource.bottom.text=='Base',
+    'Druid keeps a readable form cue without inventing unavailable power')
 check(druidIndicator.cells.upkeep.top.text=='1/2' and druidIndicator.cells.upkeep.bottom.text=='!1'
     and druidIndicator.alpha==1,'a confirmed missing Druid buff keeps the full bar visible outside combat')
 UnitAffectingCombat=function() return true end
 C_UnitAuras.GetAuraDataByIndex=function() error('restricted combat aura') end
 druidIndicator.Update()
-check(druidIndicator.cells.upkeep.top.text=='' and druidIndicator.cells.upkeep.bottom.text=='?'
+check(druidIndicator.cells.upkeep.top.text=='' and druidIndicator.cells.upkeep.bottom.text==''
     and druidIndicator.cells.upkeep.icon.texture==63
     and druidIndicator.cells.upkeep.tooltipLines[2]:find('last seen',1,true),
     'a combat aura gap shows the last observed icon without a partial count or missing warning')
@@ -241,9 +251,8 @@ check(mage.alpha==0.75,'Mage bar remains readable with no target outside combat'
 check(not mage.cells.resource.icon.shown and mage.cells.resource.top.text=='70%' and mage.cells.resource.bottom.text==''
     and mage.cells.resource.meter.value==70 and mage.cells.resource.top.width==53,'Mage mana uses a compact vertical meter and percentage without a redundant label')
 check(mage.cells.upkeep.icon.shown and mage.cells.upkeep.icon.texture==500,'active Mage armor keeps its own icon')
-check(not mage.cells.target.icon.shown and mage.cells.target.top.text=='No target'
-    and not mage.cells.ability.icon.shown and mage.cells.ability.top.text=='—',
-    'empty target and ability slots do not duplicate the armor icon')
+check(not mage.cells.target.shown and not mage.cells.ability.shown,
+    'empty target and ability slots disappear instead of displaying placeholder status')
 local savedPower,savedMax=UnitPower,UnitPowerMax
 UnitPower=function() return secret end;UnitPowerMax=function() return secret end
 UnitPowerPercent=function() return 0.56 end
@@ -255,9 +264,12 @@ CurveConstants={ScaleTo100={}}
 UnitPowerPercent=function() return secret end
 mage.Update()
 check(mage.cells.resource.top.formattedFormat=='%.0f%%' and mage.cells.resource.top.formattedValue==secret
-    and mage.cells.resource.meter.value==secret
+    and mage.cells.resource.shown and mage.cells.resource.meter.shown and mage.cells.resource.meter.value==secret
     and mage.cells.resource.tooltipLines[1]:find('displayed by the client',1,true),
     'Mage forwards a restricted native percentage only to the documented font renderer')
+UnitPowerPercent=nil;CurveConstants=nil;mage.Update()
+check(not mage.cells.resource.shown and not mage.cells.resource.meter.shown,
+    'Mage hides resource status when neither Lua nor a native renderer can display a reading')
 UnitPower,UnitPowerMax,UnitPowerPercent,CurveConstants=savedPower,savedMax,nil,nil
 UnitExists=function() return true end;mage.Update()
 check(mage.alpha==0.9 and mage.cells.target.icon.shown and mage.cells.target.icon.texture==702,
@@ -309,7 +321,7 @@ C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
     if unit=='player' and filter=='HELPFUL' then armorReads=armorReads+1 end
 end
 UnitAffectingCombat=function() return true end;warlock.Update()
-check(armorReads==0 and warlock.cells.upkeep.top.text=='' and warlock.cells.upkeep.bottom.text=='?'
+check(armorReads==0 and warlock.cells.upkeep.top.text=='' and warlock.cells.upkeep.bottom.text==''
     and warlock.cells.upkeep.icon.shown and warlock.cells.upkeep.icon.texture==500
     and warlock.cells.upkeep.icon.vertexColor[1]==0.42
     and warlock.cells.upkeep.tooltipLines[1]:find('Demon Skin last seen',1,true),
@@ -321,17 +333,35 @@ NS.Warlock.db.showUpkeep=false;warlock.Update()
 check(warlock.alpha==0.6,'turning off upkeep removes the missing-buff fade override')
 NS.Warlock.db.showUpkeep=true
 UnitAffectingCombat=function() return true end;warlock.Update()
-check(warlock.cells.upkeep.top.text=='' and not warlock.cells.upkeep.icon.shown,
-    'combat without a prior confirmed armor does not invent an armor icon')
+check(warlock.cells.upkeep.top.text=='' and not warlock.cells.upkeep.shown,
+    'combat without a prior confirmed armor hides the unsupported upkeep slot')
 UnitAffectingCombat=function() return false end
 warlock=Fixture(NS.Warlock,{'Demon Skin','Summon Imp'},{'Demon Skin'})
 check(warlock.cells.upkeep.bottom.text=='!1' and warlock.alpha==0.6,
     'missing demon warns without treating it as a missing buff for the fade override')
+warlock=Fixture(NS.Warlock,{'Demon Skin','Corruption','Will to Survive'},{'Demon Skin'})
+local readableCooldown=C_Spell.GetSpellCooldown
+C_UnitAuras.GetAuraDataByIndex=function(unit)
+    if unit=='target' then error('restricted target auras') end
+end
+C_Spell.GetSpellCooldown=function() return nil end
+UnitAffectingCombat=function() return true end;warlock.Update()
+check(warlock.cells.resource.shown and warlock.cells.upkeep.shown and warlock.cells.upkeep.icon.shown
+    and not warlock.cells.target.shown and not warlock.cells.ability.shown and not warlock.cells.racial.shown
+    and warlock.cells.upkeep.top.text=='' and warlock.cells.upkeep.bottom.text=='',
+    'restricted Warlock combat state shows only usable resource and remembered armor identity')
+for _,cell in pairs(warlock.cells) do
+    if cell.shown then
+        check(not tostring(cell.top.text):find('?',1,true) and not tostring(cell.bottom.text):find('?',1,true),
+            'visible Warlock cells contain no unknown-status question marks')
+    end
+end
+C_Spell.GetSpellCooldown=readableCooldown;UnitAffectingCombat=function() return false end
 local deadTarget=false
 UnitIsDead=function(unit) return unit=='target' and deadTarget end
 UnitIsFriend=function() return false end
 deadTarget=true;warrior.Update()
-check(warrior.cells.target.top.text=='Dead','dead hostile target is not mislabeled friendly')
+check(not warrior.cells.target.shown,'dead targets hide effect tracking instead of showing a placeholder')
 deadTarget=false
 warrior.scripts.OnEvent(warrior,'PLAYER_DEAD');warrior.scripts.OnEvent(warrior,'UNIT_AURA','player');warrior.Refresh()
 check(not warrior.shown and not warrior.scripts.OnUpdate,'standard class stays suspended after death and settings refresh')
@@ -339,6 +369,8 @@ warrior.scripts.OnEvent(warrior,'PLAYER_ALIVE')
 check(warrior.shown and warrior.scripts.OnUpdate,'standard class resumes after resurrection')
 local reads=0
 UnitPower=function() reads=reads+1;return 70 end
+CurveConstants={ScaleTo100={}}
+UnitPowerPercent=function() reads=reads+1;return secret end
 C_UnitAuras.GetAuraDataByIndex=function() reads=reads+1 end
 C_Spell.GetSpellCooldown=function() reads=reads+1;return {startTime=0,duration=0,isEnabled=true} end
 for _,key in ipairs({'showResource','showUpkeep','showTarget','showAbilities','showRacial','showMultiDots'}) do NS.Warrior.db[key]=false end

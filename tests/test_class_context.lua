@@ -75,6 +75,14 @@ racial=C.Racial(spells,'WARRIOR');check(not racial.ready and racial.left==0,'con
 check(racial.status=='context','off-cooldown unusable spell is identified as context restricted')
 C_Spell.GetSpellCooldown=nil;C_Spell.IsSpellUsable=nil
 racial=C.Racial(spells,'WARRIOR');check(not racial.ready and racial.left==nil and racial.status=='unknown','missing readiness APIs stay unknown')
+C_Spell.GetSpellCooldown=function(id)
+    if id==1001 then return nil end
+    return {startTime=0,duration=0,isEnabled=true}
+end
+C_Spell.IsSpellUsable=function() return false,false end
+local cue=C.BestCue({first={id=1001,name='Unknown'},second={id=1003,name='Known'}},{'first','second'})
+check(cue and cue.spell.name=='Known' and cue.status=='context',
+    'a readable contextual cue wins over an earlier spell with unknown status')
 C_Spell.GetSpellCooldown=function() return {startTime=0,duration=0,isEnabled=true} end
 C_Spell.IsSpellUsable=function() return true,false end
 

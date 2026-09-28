@@ -216,17 +216,17 @@ function Context.SpellState(spell)
 end
 
 function Context.BestCue(spells,keys)
-    local ready,cooling,waiting
+    local cooling,context
     for _,key in ipairs(keys or {}) do
         local spell=spells and spells[key]
         if spell then
             local state=Context.SpellState(spell)
             if state and state.ready then return state end
             if state and Core.IsNumber(state.left) and state.left>0 and (not cooling or state.left<cooling.left) then cooling=state end
-            waiting=waiting or state
+            if state and state.status=='context' then context=context or state end
         end
     end
-    return cooling or waiting
+    return cooling or context
 end
 
 local racialCatalog={

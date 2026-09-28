@@ -58,8 +58,8 @@ before the lock control:
 | Slot | Bounds | Visible status |
 | --- | --- | --- |
 | Resource | 7–82 | Percentage plus form, combo, health, or shard state |
-| Upkeep | 82–162 | Active/required count and missing or unknown state |
-| Target | 162–242 | Own target-effect timer, stacks, missing, or unknown state |
+| Upkeep | 82–162 | Confirmed active/required count or missing state |
+| Target | 162–242 | Own confirmed target-effect timer, stacks, or absence |
 | Ability | 242–322 | Proc stacks/timer or learned ability readiness |
 | Racial | 322–398 | Best learned active-racial state |
 | Control | 400–420 | Shared lock button |
@@ -69,9 +69,10 @@ Mage uses a 9px vertical mana meter in the resource slot. An active Mana Shield 
 Warrior, Rogue, Druid, Priest, and Warlock may show a 212px-wide DoT strip immediately to the right of the standard bar. It grows vertically only for active, readable player-owned effects on the target or live nameplates, up to twelve effect rows across five enemies. The strip follows the bar when it moves or scales and uses the same combat fade. A separate setting hides it without changing the five fixed slots or the 426px main-bar width. Empty, expired, and unavailable observations do not create placeholder rows.
 
 Full localized spell names, exact resource values, every upkeep group, and all
-learned racial states are shown on hover. Target and ability slots remain
-independently toggleable. Restricted values use `?`; the addon does not turn an
-unreadable state into a missing warning.
+learned racial states are shown on hover when readable. Target and ability slots
+remain independently toggleable. Unreadable states hide their slots rather than
+showing `?` or a placeholder. A previously confirmed upkeep icon can stay dimmed
+as an identity cue without claiming the effect remains active.
 
 Movement, scaling, fading, and saved positions apply to the whole 426 × 56 bar.
 Unlocking never changes live updates or combat opacity. A standard-class bar also becomes fully visible outside combat when a maintained buff is confirmed missing; unknown aura state and temporary Rogue finisher gaps keep the normal fade. Tests exercise all Hunter

@@ -1,3 +1,10 @@
+## 0.24.3
+
+- Standard-class bars now hide unavailable target-effect, ability, racial, and resource readings instead of showing question marks or empty placeholders. Confirmed missing effects and readable cooldowns still display.
+- A previously confirmed Warlock armor icon can remain dimmed in combat as an identity cue, but carries no status text or inferred active count. When one learned cue is unreadable, the bar can show another with a confirmed state.
+
+Use `/reload` after updating. Automated checks use mocked APIs; confirm the live beta appearance in game.
+
 ## 0.24.2
 
 - A confirmed missing maintained buff or weapon coating now keeps the standard-class bar fully visible outside combat, so its upkeep warning is readable. The bar returns to its saved fade once the upkeep is confirmed or the block is turned off.

@@ -189,11 +189,11 @@ local function CreateIndicator(module,config,host,db)
         if db.showResource~=false then
             if config.currentPower then power=Context.CurrentPower() else power=Context.Power(config.powerType,config.powerLabel) end
         end
-        local resourceTop=power and (power.percent..'%') or '?'
+        local resourceTop=power and (power.percent..'%') or ''
         local resourceBottom=''
         local resourceLines={}
         local protectedPercent,hasProtectedPercent
-        if not power and not config.currentPower and type(UnitPowerPercent)=='function'
+        if db.showResource~=false and not power and not config.currentPower and type(UnitPowerPercent)=='function'
             and CurveConstants and CurveConstants.ScaleTo100 then
             local ok,value=pcall(UnitPowerPercent,'player',config.powerType,false,CurveConstants.ScaleTo100)
             if ok and not Core.IsReadable(value) then protectedPercent=value;hasProtectedPercent=true end
@@ -224,21 +224,24 @@ local function CreateIndicator(module,config,host,db)
             resourceBottom=''
         end
         Paint(resource,resourceIcon,resourceTop,resourceBottom,config.color,power==nil and not hasProtectedPercent)
+        local meterOK=false
         if config.key=='mage' then
             resource.top:ClearAllPoints();resource.top:SetPoint('TOPLEFT',resource,'TOPLEFT',18,-17);resource.top:SetWidth(53)
             resource.bottom:SetText('')
             local meterValue=power and power.percent or protectedPercent
             if power or hasProtectedPercent then
-                if not pcall(resource.meter.SetValue,resource.meter,meterValue) then resource.meter:SetValue(0) end
-            else resource.meter:SetValue(0) end
-            resource.meter:SetShown(db.showResource~=false)
-            resource.meter.background:SetShown(db.showResource~=false)
+                meterOK=pcall(resource.meter.SetValue,resource.meter,meterValue)
+            end
+            resource.meter:SetShown(db.showResource~=false and meterOK)
+            resource.meter.background:SetShown(db.showResource~=false and meterOK)
         end
+        local renderedProtectedPercent=false
         if hasProtectedPercent then
-            if pcall(resource.top.SetFormattedText,resource.top,'%.0f%%',protectedPercent) then resourceTop='client percentage'
+            renderedProtectedPercent=pcall(resource.top.SetFormattedText,resource.top,'%.0f%%',protectedPercent)
+            if renderedProtectedPercent then resourceTop='client percentage'
             else resourceLines[1]='The client did not permit a readable resource percentage.' end
         end
-        resource:SetShown(db.showResource~=false)
+        resource:SetShown(db.showResource~=false and (power~=nil or renderedProtectedPercent or meterOK or resourceBottom~=''))
 
         local upkeepTotal,upkeepActive,upkeepMissing,upkeepUnknown=0,0,0,0
         local missingBuff=false
@@ -289,8 +292,8 @@ local function CreateIndicator(module,config,host,db)
             elseif petExists==false or petDead==true then upkeepMissing=upkeepMissing+1;upkeepDim=true;upkeepLines[#upkeepLines+1]='Demon: missing'
             else upkeepUnknown=upkeepUnknown+1;upkeepLines[#upkeepLines+1]='Demon: unavailable' end
         end
-        local upkeepTop=upkeepUnknown>0 and '' or (upkeepTotal>0 and (upkeepActive..'/'..upkeepTotal) or '—')
-        local upkeepBottom=upkeepMissing>0 and ('!'..upkeepMissing) or (upkeepUnknown>0 and '?' or (upkeepTotal>0 and 'OK' or ''))
+        local upkeepTop=upkeepUnknown>0 and '' or (upkeepTotal>0 and (upkeepActive..'/'..upkeepTotal) or '')
+        local upkeepBottom=upkeepMissing>0 and ('!'..upkeepMissing) or (upkeepUnknown>0 and '' or (upkeepTotal>0 and 'OK' or ''))
         local upkeepWarn=missingBuff or (inCombat and upkeepMissing>0)
         local shieldAura,protectedAbsorb,hasProtectedAbsorb
         if config.key=='mage' and db.showMageShield~=false then
@@ -314,7 +317,7 @@ local function CreateIndicator(module,config,host,db)
                     upkeep.meter:SetShown(meterOK==true)
                     if not Core.IsReadable(absorb) then protectedAbsorb=absorb;hasProtectedAbsorb=true end
                 else
-                    upkeepTop='?';upkeepBottom='Shield';upkeepIcon=shieldAura.icon or upkeepIcon
+                    upkeepTop='';upkeepBottom='Shield';upkeepIcon=shieldAura.icon or upkeepIcon
                     upkeepLines[#upkeepLines+1]='Shield active; absorb amount unavailable.'
                     upkeep.meter:SetShown(false)
                 end
@@ -322,17 +325,17 @@ local function CreateIndicator(module,config,host,db)
         elseif config.key=='mage' then upkeep.meter:SetShown(false) end
         if config.key=='mage' then upkeep.meter.background:SetShown(upkeep.meter:IsShown()) end
         upkeep.tooltipTitle=config.key=='mage' and 'Mage armor and absorbs' or config.upkeepLabel;upkeep.tooltipLines=upkeepLines
-        Paint(upkeep,upkeepIcon or (upkeepUnknown==0 and config.icon or nil),upkeepTop,upkeepBottom,
+        Paint(upkeep,upkeepIcon,upkeepTop,upkeepBottom,
             upkeepWarn and {1,0.25,0.18} or config.color,upkeepDim or (upkeepUnknown>0 and upkeepActive==0))
         if config.key=='mage' then upkeep.top:SetWidth(39);upkeep.bottom:SetWidth(39) end
         if hasProtectedAbsorb then pcall(upkeep.top.SetFormattedText,upkeep.top,'%.0f',protectedAbsorb) end
-        upkeep:SetShown(db.showUpkeep~=false or (config.key=='mage' and db.showMageShield~=false and type(shieldAura)=='table'))
+        upkeep:SetShown((db.showUpkeep~=false and (upkeepIcon~=nil or upkeepTop~='' or upkeepBottom~=''))
+            or (config.key=='mage' and db.showMageShield~=false and type(shieldAura)=='table'))
 
         local showTarget=db.showTarget~=false;local showAbilities=db.showAbilities~=false
         local proc;if showAbilities then proc=Context.Aura('player','HELPFUL',Context.Names(module.spells,module.procKeys),false) end
         local targetAura
-        if showTarget and hostile then targetAura=Context.Aura('target','HARMFUL',Context.Names(module.spells,module.targetKeys),true)
-        elseif showTarget then targetAura=false end
+        if showTarget and hostile then targetAura=Context.Aura('target','HARMFUL',Context.Names(module.spells,module.targetKeys),true) end
         local cue=showAbilities and Context.BestCue(module.spells,module.cueKeys) or nil
         local targetText,abilityText,targetIcon,abilityIcon,targetColor,abilityColor,targetDim,abilityDim
         local targetLines,abilityLines={},{}
@@ -344,60 +347,59 @@ local function CreateIndicator(module,config,host,db)
         elseif showTarget and hostile then
             local targetSpell=FirstSpell(module.spells,module.targetKeys)
             if targetSpell and targetAura==false then targetText='None';targetDim=true;targetLines[#targetLines+1]='No tracked effect from you is active.'
-            elseif targetSpell and targetAura==nil then targetText='?';targetLines[#targetLines+1]='Target effects: unavailable'
-            else targetText='—' end
-            targetIcon=targetSpell and targetSpell.icon
-        elseif showTarget then
-            targetText='No target'
-            if hasTarget then
-                if Core.Call(UnitIsDead,'target')==true then targetText='Dead'
-                elseif Core.Call(UnitIsFriend,'player','target')==true then targetText='Friend'
-                else targetText='?' end
             end
-            targetDim=true
+            if targetText then targetIcon=targetSpell and targetSpell.icon end
         end
         if showAbilities and type(proc)=='table' then
             abilityText=proc.applications and proc.applications>1 and ('×'..proc.applications) or (Context.FormatTime(proc.left) or 'Proc')
             abilityIcon=proc.icon;abilityColor={0.3,1,0.48}
             local remaining=Context.FormatTime(proc.left)
             abilityLines[#abilityLines+1]=proc.name..(remaining and (' — '..remaining) or ' — active')
-        elseif showAbilities and cue then
+        elseif showAbilities and cue and cue.status~='unknown' then
             abilityIcon=cue.spell.icon
             if cue.status=='ready' then abilityText='Ready';abilityColor={0.3,1,0.48}
             elseif cue.status=='cooldown' then abilityText=Context.FormatTime(cue.left) or 'CD'
-            elseif cue.status=='context' then abilityText='Ctx';abilityDim=true
-            else abilityText='?';abilityDim=true end
+            elseif cue.status=='context' then abilityText='Ctx';abilityDim=true end
             local detail=cue.status=='cooldown' and (Context.FormatTime(cue.left) or 'cooldown') or cue.status
             abilityLines[#abilityLines+1]=cue.spell.name..': '..detail
         end
         target.tooltipTitle=config.targetLabel;target.tooltipLines=targetLines
         ability.tooltipTitle=config.label..' ability';ability.tooltipLines=abilityLines
-        Paint(target,targetIcon,targetText,hostile and 'Effect' or '',targetColor,targetDim);target:SetShown(showTarget)
-        Paint(ability,abilityIcon,abilityText or '—','Ability',abilityColor,abilityDim or not abilityIcon);ability:SetShown(showAbilities)
+        Paint(target,targetIcon,targetText,hostile and targetText and 'Effect' or '',targetColor,targetDim)
+        target:SetShown(showTarget and targetText~=nil)
+        Paint(ability,abilityIcon,abilityText,abilityText and 'Ability' or '',abilityColor,abilityDim or not abilityIcon)
+        ability:SetShown(showAbilities and abilityText~=nil)
 
-        local racialStates=db.showRacial~=false and Context.RacialStates(module.spells,module.classToken) or {};local racialState=racialStates[1];racial.state=racialState
+        local racialStates=db.showRacial~=false and Context.RacialStates(module.spells,module.classToken) or {}
+        local racialState
+        for _,state in ipairs(racialStates) do
+            if state.status~='unknown' then racialState=state;break end
+        end
+        racial.state=racialState
         if racialState then
             local status,color
             if racialState.status=='ready' then status='Ready';color={0.3,1,0.48}
             elseif racialState.status=='cooldown' then status=Context.FormatTime(racialState.left);color={1,0.72,0.28}
-            elseif racialState.status=='context' then status='Ctx';color={0.65,0.7,0.78}
-            else status='?';color={0.55,0.6,0.68} end
+            elseif racialState.status=='context' then status='Ctx';color={0.65,0.7,0.78} end
             racial.tooltipTitle=racialState.spell.name;racial.tooltipLines={}
             for _,state in ipairs(racialStates) do
-                local stateText=state.status=='cooldown' and (Context.FormatTime(state.left) or 'cooldown') or state.status
-                racial.tooltipLines[#racial.tooltipLines+1]=state.spell.name..': '..stateText
+                if state.status~='unknown' then
+                    local stateText=state.status=='cooldown' and (Context.FormatTime(state.left) or 'cooldown') or state.status
+                    racial.tooltipLines[#racial.tooltipLines+1]=state.spell.name..': '..stateText
+                end
             end
             Paint(racial,racialState.spell.icon,status,'Racial',color,not racialState.ready)
         else
-            racial.tooltipTitle='Racial ability';racial.tooltipLines={'No learned active racial was found.'}
-            Paint(racial,nil,'None','Racial',{0.55,0.6,0.68},true)
+            racial.tooltipTitle='Racial ability';racial.tooltipLines={}
+            Paint(racial,nil,'','',nil,true)
         end
-        racial:SetShown(db.showRacial~=false)
+        racial:SetShown(db.showRacial~=false and racialState~=nil)
 
         frame:SetAlpha((db.fadeOutOfCombat==false or inCombat or missingBuff) and 1
             or (hasTarget and (config.targetAlpha or 0.6) or (config.idleAlpha or 0.2)))
-        lastStatus=string.format('%s; upkeep %s; target %s; ability %s; racial %s',resourceTop,upkeepBottom or 'off',targetText or 'off',abilityText or 'off',
-            racialState and (racialState.spell.name..' '..(racialState.status=='cooldown' and (Context.FormatTime(racialState.left) or 'cooldown') or racialState.status)) or 'unavailable')
+        lastStatus=string.format('%s; upkeep %s; target %s; ability %s; racial %s',resourceTop~='' and resourceTop or 'hidden',
+            upkeepBottom~='' and upkeepBottom or 'hidden',targetText or 'hidden',abilityText or 'hidden',
+            racialState and (racialState.spell.name..' '..(racialState.status=='cooldown' and (Context.FormatTime(racialState.left) or 'cooldown') or racialState.status)) or 'hidden')
     end
 
     local events={'PLAYER_ENTERING_WORLD','PLAYER_LEAVING_WORLD','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED','PLAYER_TARGET_CHANGED',
