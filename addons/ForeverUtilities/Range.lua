@@ -61,14 +61,13 @@ function Range.Measure(probes, melee, ranged, shot)
     if state=='unknown' and measured then
         state=high==math.huge and 'beyond' or 'distance'
     end
-    local yards = 'yards unavailable'
-    if measured then
-        if high == math.huge then yards = string.format('>%g yd',low)
-        elseif low == 0 then yards = string.format('<=%g yd',high)
-        else yards = string.format('~%g-%g yd',low,high) end
-    end
     local labels = {melee='Melee',close='Too close',shoot='Shooting',far='Too far',distance='Distance',beyond='Out of range',out='Out of range',unknown='Range unavailable'}
     if state=='unknown' then return state, labels[state] end
+    if not measured then return state,labels[state] end
+    local yards
+    if high == math.huge then yards = string.format('>%g yd',low)
+    elseif low == 0 then yards = string.format('<=%g yd',high)
+    else yards = string.format('~%g-%g yd',low,high) end
     return state, labels[state] .. ' | ' .. yards
 end
 function Range.Create(host, db)
@@ -339,6 +338,16 @@ function Range.Create(host, db)
                 or (state=='close' or state=='far' or state=='out' or state=='melee') and colors.out
                 or colors.unknown
         end
+        local readable=state~='unknown'
+        if db.rangeIconOnly then
+            local visible=readable or not db.locked
+            frame:SetShown(visible);icon:SetShown(visible);iconBorder:SetShown(visible)
+        else
+            icon:SetShown(db.showRange~=false and readable)
+            iconBorder:SetShown(db.showRange~=false and readable)
+            accent:SetShown(db.showRange~=false and readable)
+            label:SetShown(db.showRange~=false and (readable or text=='No target' or text=='Friendly target' or text=='Target dead'))
+        end
         icon:SetVertexColor(unpack(c))
         iconBorder:SetColorTexture(c[1],c[2],c[3],1)
         accent:SetColorTexture(c[1],c[2],c[3],1)
@@ -420,8 +429,9 @@ function Range.Create(host, db)
             if db.rangeIconOnly then frame:SetShown(not db.locked) end
             return
         end
-        if Call(UnitIsDead,'target')~=false then
-            ClearContext();Paint('unknown','Target dead or unavailable')
+        local dead=Call(UnitIsDead,'target')
+        if dead~=false then
+            ClearContext();Paint('unknown',dead==true and 'Target dead' or '')
             if db.rangeIconOnly then frame:SetShown(not db.locked) end
             return
         end

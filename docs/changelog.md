@@ -1,3 +1,10 @@
+## 0.24.4
+
+- Applied the unreadable-state rule to Hunter and Shaman too. Unreadable totem slots, totals, Maelstrom stacks, and spec cues no longer occupy the bar as question-mark or generic status indicators. Confirmed active or inactive totems and event-observed casts still display.
+- Hunter hides an unsupported range readout. The locked compact icon disappears when reach cannot be verified; unlocked it remains available as a neutral drag handle. Confirmed attack reach no longer adds a “yards unavailable” suffix when no yard estimate exists.
+
+Use `/reload` after updating. Automated checks use mocked APIs; confirm the live beta appearance in game.
+
 ## 0.24.3
 
 - Standard-class bars now hide unavailable target-effect, ability, racial, and resource readings instead of showing question marks or empty placeholders. Confirmed missing effects and readable cooldowns still display.

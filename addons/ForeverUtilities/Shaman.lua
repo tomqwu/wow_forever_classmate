@@ -77,12 +77,12 @@ local function CreateIndicator(host,db)
     for i,info in ipairs(elementInfo) do
         local cell=MakeCell(38);cell.info=info;totemCells[i]=cell
         cell.button:SetScript('OnEnter',function(self)
-            if not GameTooltip then return end
+            if not GameTooltip or cell.state==nil then return end
             GameTooltip:SetOwner(self,'ANCHOR_TOP')
-            if cell.state==nil then GameTooltip:SetText(info.label..' element: status unavailable')
-            else GameTooltip:SetText(cell.state.active and (cell.state.name~='' and cell.state.name or (info.label..' totem active')) or (info.label..' element: no active totem')) end
+            GameTooltip:SetText(cell.state.active and (cell.state.name~='' and cell.state.name or (info.label..' totem active')) or (info.label..' element: no active totem'))
             if cell.state and cell.state.active then
-                GameTooltip:AddLine('Totem lifetime: '..(Context.FormatTime(cell.state.left) or 'unavailable')..' (not cast cooldown)',1,1,1)
+                local remaining=Context.FormatTime(cell.state.left)
+                if remaining then GameTooltip:AddLine('Totem lifetime: '..remaining..' (not cast cooldown)',1,1,1) end
             end
             if cell.state and cell.state.estimated then GameTooltip:AddLine('Estimated from this spell\'s last readable duration.',0.75,0.85,1)
             elseif cell.state and cell.state.cached then GameTooltip:AddLine('Last readable state; live combat data unavailable.',0.75,0.85,1)
@@ -285,7 +285,7 @@ local function CreateIndicator(host,db)
             if db.showTotems~=false or db.totemRecallHint~=false or db.showSpecHelper~=false then state=ReadTotem(slot) end
             cell.state=state
             if state==nil then unknownTotems=unknownTotems+1 end
-            cell.button:SetShown(db.showTotems~=false)
+            cell.button:SetShown(db.showTotems~=false and state~=nil)
             if state and state.active then
                 activeTotems=activeTotems+1;cell.icon:SetTexture(state.icon or cell.info.fallback);cell.icon:SetVertexColor(1,1,1,1);cell.icon:SetDesaturated(false);cell.icon:Show()
                 cell.stripe:SetColorTexture(unpack(cell.info.color))
@@ -334,27 +334,33 @@ local function CreateIndicator(host,db)
             local auraState=Context.Aura('player','HELPFUL',{[Shaman.spells.maelstrom.name]=true},false)
             local stacks
             if type(auraState)=='table' then stacks=auraState.applications elseif auraState==false then stacks=0 end
-            helper='Maelstrom '..(stacks or '?')..'/5';icon=Shaman.spells.maelstrom.icon
+            if stacks then helper='Maelstrom '..stacks..'/5';icon=Shaman.spells.maelstrom.icon end
             if stacks and stacks>=5 then color={0.25,1,0.45} end
         elseif db.showSpecHelper~=false and Shaman.spells.lava and Shaman.spells.flame then
             local flame=Context.FlameShock(Shaman.spells.flame.name);icon=Shaman.spells.flame.icon
             if type(flame)=='table' then helper='Flame '..(Context.FormatTime(flame.left) or 'active');color={1,0.55,0.2}
             elseif flame==false and inCombat and Core.Call(UnitCanAttack,'player','target')==true and Core.Call(UnitIsDead,'target')==false then helper='Flame Shock!';color={1,0.2,0.15}
-            else helper='Lava Burst';icon=Shaman.spells.lava.icon end
+            else
+                local state=NS.ClassContext.SpellState(Shaman.spells.lava)
+                icon=Shaman.spells.lava.icon
+                if state and state.status=='ready' then helper='Lava Burst ready';color={0.25,1,0.45}
+                elseif state and state.status=='cooldown' then helper='Lava Burst '..(Context.FormatTime(state.left) or 'CD')
+                elseif state and state.status=='context' then helper='Lava Burst: context' end
+            end
         elseif db.showSpecHelper~=false and Shaman.spells.riptide then
-            icon=Shaman.spells.riptide.icon
             local friendly=Core.Call(UnitIsFriend,'player','target')==true and Core.Call(UnitIsDead,'target')==false
             local tide=friendly and Context.Aura('target','HELPFUL',{[Shaman.spells.riptide.name]=true},true) or nil
-            if type(tide)=='table' then helper='Riptide '..(Context.FormatTime(tide.left) or 'active');color={0.25,0.8,1}
+            if type(tide)=='table' then helper='Riptide '..(Context.FormatTime(tide.left) or 'active');icon=Shaman.spells.riptide.icon;color={0.25,0.8,1}
             else
                 local state=NS.ClassContext.SpellState(Shaman.spells.riptide)
-                helper='Riptide'
-                if state and state.status=='ready' then helper='Riptide ready'
-                elseif state and state.status=='cooldown' then helper='Riptide '..(Context.FormatTime(state.left) or '') end
+                if state and state.status=='ready' then helper='Riptide ready';icon=Shaman.spells.riptide.icon
+                elseif state and state.status=='cooldown' then helper='Riptide '..(Context.FormatTime(state.left) or 'CD');icon=Shaman.spells.riptide.icon
+                elseif state and state.status=='context' then helper='Riptide: context';icon=Shaman.spells.riptide.icon end
             end
         elseif db.showSpecHelper~=false then
-            helper=(unknownTotems>0 and (activeTotems>0 and (activeTotems..'+/4') or '?/4') or (activeTotems..'/4'))..' totems'
-            icon='Interface\\Icons\\Spell_Nature_StoneClawTotem'
+            if unknownTotems==0 then helper=activeTotems..'/4 totems'
+            elseif activeTotems>0 then helper=activeTotems..' active totem'..(activeTotems==1 and '' or 's') end
+            if helper~='' then icon='Interface\\Icons\\Spell_Nature_StoneClawTotem' end
         end
         helperIcon:SetShown(helper~='');helperIcon:SetTexture(icon or 'Interface\\Icons\\Spell_Nature_Lightning')
         helperText:SetText(helper)

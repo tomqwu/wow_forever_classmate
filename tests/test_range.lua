@@ -18,6 +18,8 @@ measure({{min=0,max=5,inside=false},{min=0,max=35,inside=true}},false,false,'clo
 measure({{min=8,max=35,inside=true}},false,true,'shoot','~8-35 yd')
 measure({{min=0,max=35,inside=false}},false,false,'far','>35 yd')
 measure({},false,false,'out','Out of range')
+local classified,label=NS.Range.Measure({},false,true,{min=8,max=35})
+check(classified=='shoot' and label=='Shooting','confirmed attack reach omits an unavailable-yard placeholder')
 measure({{min=8,max=35,inside=false}},false,false,'out')
 measure({{min=0,max=35,inside=secret}},secret,secret,'unknown')
 measure({{min=0,max=5,inside=true},{min=0,max=35,inside=false}},false,false,'unknown')
@@ -135,8 +137,16 @@ check(f.rangeBorder.color[1]==1 and f.rangeBorder.color[2]==0.15,'confirmed out 
 check(distanceReads==0,'compact mode does not query hidden numeric yards')
 C_SwingTimer.IsTargetWithinSwingRange=function() return nil end
 C_Spell.IsRangedAutoAttackSpell=function() return false end
+local savedSpellRange=C_Spell.IsSpellInRange
+C_Spell.IsSpellInRange=function() return secret end
 f.scripts.OnEvent(f,'SPELLS_CHANGED')
-check(f.rangeBorder.color[1]==0.8 and f.rangeBorder.color[2]==0.8,'unverified range stays neutral instead of false red')
+check(not f.shown and not f.rangeIcon.shown and not f.rangeBorder.shown,
+    'locked compact icon hides when range cannot be verified')
+db.locked=false;f.Refresh()
+check(f.shown and f.alpha==1 and f.rangeIcon.shown and f.rangeBorder.color[1]==0.8,
+    'unlocked compact icon remains a neutral drag handle while range is unreadable')
+db.locked=true
+C_Spell.IsSpellInRange=savedSpellRange
 C_Spell.IsRangedAutoAttackSpell=function(id) return id==9001 end
 C_SwingTimer.IsTargetWithinSwingRange=function(kind) if kind==0 then return distance<=5 end;return distance>=8 and distance<=35 end
 f.scripts.OnEvent(f,'SPELLS_CHANGED')
@@ -202,12 +212,12 @@ check(f.label.text=='Friendly target','friendly target omits unavailable wording
 check(f.textures[2].color[1]==0.8,'friendly unavailable remains neutral gray')
 UnitIsFriend=function() return secret end
 f.Refresh()
-check(f.label.text=='Range unavailable','restricted friendliness does not invent friendly status')
+check(not f.label.shown and not f.rangeIcon.shown,'restricted friendliness hides unsupported range tracking')
 UnitCanAttack=function() return true end
 UnitDistanceSquared=nil
 class='HUNTER';C_Spell=nil;C_SpellBook=nil
 f=NS.Range.Create({hint=moveHint},db)
-check(f.label.text:find('Range unavailable',1,true),'missing APIs degrade safely')
+check(not f.label.shown and not f.rangeIcon.shown,'missing range APIs leave no placeholder readout')
 -- Portrait and numeric angle share the module lifecycle.
 UnitExists=function() return target end
 GetPlayerFacing=function() return 0 end

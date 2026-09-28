@@ -119,11 +119,13 @@ for _,cell in ipairs(indicator.totemCells) do
     check(cell.background.color[1]==0.09 and cell.stripe.width==3 and cell.stripe.color[1]<cell.info.color[1],'inactive totem stays dark with a narrow dim element stripe')
 end
 GetTotemInfo=function() return nil end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
-for _,cell in ipairs(indicator.totemCells) do check(cell.button.shown and cell.icon.shown and cell.icon.desaturated,'unavailable element keeps a subdued icon') end
+for _,cell in ipairs(indicator.totemCells) do check(not cell.button.shown,'unavailable totem hides its status cell') end
 GetTotemInfo=function(slot) if slot==2 then return true,'',0,0,0 end return false,'',0,0,0 end
 local maelstrom=NS.Shaman.spells.maelstrom;NS.Shaman.spells.maelstrom=nil
 indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
-check(indicator.totemCells[1].state==nil and indicator.helperText.text=='?/4 totems','empty Earth slot API is shown as unavailable rather than zero active')
+check(indicator.totemCells[1].state==nil and not indicator.totemCells[1].button.shown
+    and indicator.helperText.text=='' and not indicator.helperIcon.shown,
+    'unavailable Earth slot creates no totem status or speculative total')
 NS.Shaman.spells.maelstrom=maelstrom
 GetTotemInfo=function(slot) if slot==2 then return false,'Earthbind Totem',90,30,777 end return false,'',0,0,0 end
 GetTotemTimeLeft=function(slot) return slot==2 and 20 or 0 end;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
@@ -131,6 +133,14 @@ local earth=indicator.totemCells[1]
 check(earth.icon.shown and not earth.icon.desaturated and earth.badge.text=='' and earth.icon.texture==777 and earth.timer.text=='20s','active totem replaces subdued art with live icon and timer')
 check(indicator.alpha==1,'active totem keeps the shaman bar fully readable outside combat')
 check(earth.background.color[1]==0.09 and earth.stripe.color[1]==earth.info.color[1],'active totem keeps dark cell and bright element stripe')
+NS.Shaman.spells.maelstrom=nil;db.totemRecallHint=false
+GetTotemInfo=function(slot) if slot==2 then return true,'Earthbind Totem',90,30,777 end end
+indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
+check(indicator.helperText.text=='1 active totem' and not indicator.totemCells[2].button.shown,
+    'partial totem observation reports only the confirmed active count')
+NS.Shaman.spells.maelstrom=maelstrom;db.totemRecallHint=true
+GetTotemInfo=function(slot) if slot==2 then return false,'Earthbind Totem',90,30,777 end return false,'',0,0,0 end
+indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 check(indicator.helperText.text=='Recall 1 totem' and indicator.helperText:GetStringWidth()<=indicator.helperText.width,'recall hint fits without clipping')
 indicator.helperText.measureFactor=1;indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE')
 check(indicator.helperText.text=='Recall 1' and indicator.helperText:GetStringWidth()<=indicator.helperText.width,'recall hint shortens when the full label will not fit')
@@ -212,13 +222,24 @@ indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scr
 local savedAuras=C_UnitAuras.GetAuraDataByIndex
 C_UnitAuras.GetAuraDataByIndex=function() return secret end
 indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')
-check(indicator.helperText.text=='Maelstrom ?/5','restricted Maelstrom aura is not presented as zero stacks')
+check(indicator.helperText.text=='' and not indicator.helperIcon.shown,
+    'restricted Maelstrom aura hides an unreadable stack helper')
 C_UnitAuras.GetAuraDataByIndex=function(_,index) if index==1 then return {name='Maelstrom Weapon',applications=secret} end end
 indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')
-check(indicator.helperText.text=='Maelstrom ?/5','secret Maelstrom stack count remains unknown')
+check(indicator.helperText.text=='' and not indicator.helperIcon.shown,
+    'secret Maelstrom stacks do not create a question-mark helper')
 C_UnitAuras.GetAuraDataByIndex=savedAuras
 local savedSpells=NS.Shaman.spells
+NS.Shaman.spells={lava={id=2001,name='Lava Burst',icon=124},flame={id=2002,name='Flame Shock',icon=125}}
+C_Spell.GetSpellCooldown=nil
+indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')
+check(indicator.helperText.text=='' and not indicator.helperIcon.shown,
+    'unreadable Lava Burst state does not leave a generic ability label')
 NS.Shaman.spells={riptide={id=2000,name='Riptide',icon=123}}
+C_Spell.GetSpellCooldown=nil
+indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')
+check(indicator.helperText.text=='' and not indicator.helperIcon.shown,
+    'unreadable Riptide readiness hides the cue')
 C_Spell.GetSpellCooldown=function() return {startTime=140,duration=10,isEnabled=true} end
 C_Spell.IsSpellUsable=function() return true,false end
 indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')

@@ -32,7 +32,7 @@ The extracted Forever 1.60 UI source documents and uses:
 
 Totem order follows the Blizzard Shaman priority: Earth, Fire, Water, Air. `GetTotemInfo`'s first value can represent elemental reagent ownership, so the addon identifies a summoned totem from a readable name or positive time remaining instead. It never infers missing state from a secret or failed scan. Numeric timers appear only from readable API durations. Inactive class modules create no frames and perform no polling; disabling all Shaman information switches also stops its timer polling.
 
-Forever 1.60.1 has also been observed returning `true, "", 0, 0, 0` for `GetTotemInfo(2)` and `0` for `GetTotemTimeLeft(2)` while the player's Stoneskin Totem is visibly present. This is an unavailable active-state reading: the first return only confirms the elemental reagent. The bar shows `?/4 totems` when it cannot distinguish a summoned totem from an empty slot. Combat-log tracking was removed after the client blocked the addon from a Blizzard-only action; unknown states are not counted and no unverified timer is displayed.
+Forever 1.60.1 has also been observed returning `true, "", 0, 0, 0` for `GetTotemInfo(2)` and `0` for `GetTotemTimeLeft(2)` while the player's Stoneskin Totem is visibly present. This is an unavailable active-state reading: the first return only confirms the elemental reagent. The bar hides an unreadable element cell and omits the total when it cannot distinguish a summoned totem from an empty slot. Combat-log tracking was removed after the client blocked the addon from a Blizzard-only action; unknown states are not counted and no unverified timer is displayed.
 
 During combat, totem-slot values can become secret. A totem that was readable before combat keeps its last known icon and counts down from its readable start and duration until expiry. For a newly cast learned totem, the addon uses the duration last read for that exact spell ID, including a duration saved from an earlier session. Its `~` timer is an estimate based on the player’s successful cast event, and a readable slot timer replaces it when available. With no learned duration, the icon appears without a numeric guess. `PLAYER_TOTEM_UPDATE` clears a later removal. This uses only player spellcast and totem-update events, not the blocked combat-log event. If the cast spell ID differs from its spellbook entry, the addon resolves the cast ID through `C_Spell.GetSpellInfo` and the totem name catalog. Unrecognized casts remain unknown.
 
@@ -42,7 +42,7 @@ The bar uses Forever's 426-pixel rendered desktop swing-bar width and remains 56
 
 | Block | Contents |
 | --- | --- |
-| Totems | Four aligned 38px dark cells; subdued totem art and narrow colored stripes identify inactive slots, while active totems show a full-color icon and readable timer |
+| Totems | Four fixed 38px positions; subdued art identifies confirmed inactive slots, active totems show a full-color icon and readable timer, and unreadable slots remain hidden |
 | Upkeep | Dark main-hand imbue and elemental-shield icons with narrow status-colored stripes; shield charges appear as a number |
 | Helper | Maelstrom, Flame Shock/Lava Burst, Riptide, or recall cue; mana below |
 | Control | Shared lock toggle |
@@ -51,7 +51,7 @@ Preference changes reclaim unused space; transient combat states never resize th
 
 ## September 23 review
 
-Passive Maelstrom Weapon is supported, and restricted stacks remain unknown. Riptide readiness comes from the shared cooldown/usability checks; personal Flame Shock uses the shared aura-owner checks. Recall hints require a learned Totemic Recall. Observed totems remain tracked across combat exit if the native slot API is still unavailable. Death/world exit suspend the bar until return. See [the class review](class-review-2026-09-23.md).
+Passive Maelstrom Weapon is supported, and restricted stacks hide the cue rather than showing a question mark. Riptide and Lava Burst readiness come from the shared cooldown/usability checks; unreadable states hide their cue. Personal Flame Shock uses the shared aura-owner checks. Recall hints require a learned Totemic Recall. Observed totems remain tracked across combat exit if the native slot API is still unavailable. Death/world exit suspend the bar until return. See [the class review](class-review-2026-09-23.md).
 
 The 0.21.16 follow-up separates icon artwork from cell backgrounds, rejects zero texture IDs, and merges partial native readings with the current summon rather than erasing usable fields. Native remaining-only readings establish a countdown even if start/duration are missing. Successful casts get a brief placement grace period, and another spell or summon start cannot inherit the old timer. A zero duration never becomes a learned duration.
 

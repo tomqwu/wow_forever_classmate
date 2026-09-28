@@ -24,7 +24,7 @@ preferences:
 | Pet | 352–400 | Target-of-target portrait; mend border; mood and pet-guide badges |
 | Control | 400–420 | Shared lock button |
 
-An optional 20px Inspect slot sits between the pet and lock slots in the full Hunter bar, reducing range-text space by 20px. It appears only for an inspectable player target. Icon-only mode removes all other blocks and the lock button; `/fhunter unlock` makes the icon visible for dragging without a target. A confirmed ranged check colors it green, a confirmed negative colors it red, and insufficient information stays neutral.
+An optional 20px Inspect slot sits between the pet and lock slots in the full Hunter bar, reducing range-text space by 20px. It appears only for an inspectable player target. Icon-only mode removes all other blocks and the lock button; `/fhunter unlock` makes the icon visible for dragging without a target. A confirmed ranged check colors it green, a confirmed negative colors it red, and insufficient information hides the locked icon. When unlocked, its neutral artwork remains a drag handle.
 
 The shared Classmate minimap button offers Inspect without changing any bar layout: left-click opens settings, while right-click opens the native Inspect window for an eligible targeted player. This works in Hunter icon-only mode and for every other class, and each class can disable the shortcut independently.
 
@@ -47,7 +47,7 @@ The Shaman bar uses three readable groups across the same footprint:
   occupies the right group, with mana below it.
 - The shared lock button occupies the final 20px.
 
-Timers remain on their icons, and full spell or state details remain in tooltips.
+Timers remain on confirmed icons, and full spell or state details remain in tooltips. Unreadable totem cells and cues stay hidden; confirmed missing states remain visible.
 Disabling information still stops its reads and polling as before.
 
 ## Standard classes
