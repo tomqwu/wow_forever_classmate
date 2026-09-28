@@ -1,3 +1,10 @@
+## 0.24.5
+
+- Hovering any enabled class bar now reveals it at full opacity, including a locked bar and Hunter's movable compact icon. Live updates keep the bar bright under the pointer; leaving restores its combat or idle fade.
+- The shared host checks hover across child controls and stops checking when the addon is disabled. Locking still prevents dragging.
+
+Use `/reload` after updating. Automated checks use mocked APIs; confirm mouseover behavior in the live beta client.
+
 ## 0.24.4
 
 - Applied the unreadable-state rule to Hunter and Shaman too. Unreadable totem slots, totals, Maelstrom stacks, and spec cues no longer occupy the bar as question-mark or generic status indicators. Confirmed active or inactive totems and event-observed casts still display.

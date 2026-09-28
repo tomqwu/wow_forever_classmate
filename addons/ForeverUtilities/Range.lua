@@ -422,7 +422,7 @@ function Range.Create(host, db)
         if not db.rangeIconOnly then UpdateAmmo();UpdateAspect();UpdateHappiness() end
         local hasTarget=Call(UnitExists,'target')==true
         local inCombat=Call(UnitAffectingCombat,'player')==true
-        frame:SetAlpha(db.rangeIconOnly and (hasTarget and 1 or 0.2)
+        NS.ClassHost.SetFade(host,frame,db.rangeIconOnly and (hasTarget and 1 or 0.2)
             or ((db.fadeOutOfCombat==false or inCombat) and 1 or (hasTarget and 0.6 or 0.2)))
         if not hasTarget then
             ClearContext();Paint('unknown','No target')

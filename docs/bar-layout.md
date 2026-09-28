@@ -75,6 +75,6 @@ showing `?` or a placeholder. A previously confirmed upkeep icon can stay dimmed
 as an identity cue without claiming the effect remains active.
 
 Movement, scaling, fading, and saved positions apply to the whole 426 × 56 bar.
-Unlocking never changes live updates or combat opacity. A standard-class bar also becomes fully visible outside combat when a maintained buff is confirmed missing; unknown aura state and temporary Rogue finisher gaps keep the normal fade. Tests exercise all Hunter
+Hovering any enabled bar restores full opacity while the pointer is over it, including child controls and locked bars. Leaving restores its normal fade; locking still prevents dragging. A standard-class bar also becomes fully visible outside combat when a maintained buff is confirmed missing; unknown aura state and temporary Rogue finisher gaps keep the normal fade. Tests exercise all Hunter
 preference combinations and each class lifecycle; live font and texture appearance
 should still be checked after `/reload` on the current beta client.

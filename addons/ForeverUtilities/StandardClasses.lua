@@ -395,7 +395,7 @@ local function CreateIndicator(module,config,host,db)
         end
         racial:SetShown(db.showRacial~=false and racialState~=nil)
 
-        frame:SetAlpha((db.fadeOutOfCombat==false or inCombat or missingBuff) and 1
+        NS.ClassHost.SetFade(host,frame,(db.fadeOutOfCombat==false or inCombat or missingBuff) and 1
             or (hasTarget and (config.targetAlpha or 0.6) or (config.idleAlpha or 0.2)))
         lastStatus=string.format('%s; upkeep %s; target %s; ability %s; racial %s',resourceTop~='' and resourceTop or 'hidden',
             upkeepBottom~='' and upkeepBottom or 'hidden',targetText or 'hidden',abilityText or 'hidden',

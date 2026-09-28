@@ -113,6 +113,23 @@ check(NS.Paladin.spells.sealRighteousness and NS.Paladin.spells.judgementCrusade
 local host=named.ForeverClassmatePaladinFrame;local indicator=named.ForeverClassmatePaladinIndicator
 check(host and host.width==426 and host.height==56 and host.shown,'standard class bar matches rendered native swing-bar width')
 check(indicator and indicator.scripts.OnUpdate~=nil,'enabled helper polls live state')
+check(indicator.alpha==0.6,'standard bar starts at its out-of-combat target fade')
+host.scripts.OnEnter(host);check(indicator.alpha==1,'mouseover reveals the standard bar')
+indicator.Update();check(indicator.alpha==1,'live updates preserve the mouseover reveal')
+host.scripts.OnLeave(host);check(indicator.alpha==0.6,'leaving restores the standard fade')
+host.IsMouseOver=function() return true end
+host.scripts.OnUpdate(host,0.11)
+check(indicator.alpha==1,'hover check keeps the bar visible across child controls')
+host.scripts.OnLeave(host);check(indicator.alpha==1,'entering a child control does not dim the bar')
+host.IsMouseOver=function() return false end
+host.scripts.OnUpdate(host,0.11)
+check(indicator.alpha==0.6,'hover check restores fade after leaving the whole bar')
+host.IsMouseOver=nil
+NS.Paladin.db.locked=true;NS.Paladin.Apply()
+check(host.mouse==true,'locked standard bar still receives mouseover')
+host.scripts.OnEnter(host);check(indicator.alpha==1,'locked bar reveals on hover')
+host.scripts.OnDragStart(host);check(rawget(host,'moving')==nil,'locked bar remains immovable')
+host.scripts.OnLeave(host);NS.Paladin.db.locked=false;NS.Paladin.Apply()
 check(rawget(indicator,'dotTracker')==nil and not NS.Paladin.db.showMultiDots,'Paladin has no DoT side strip')
 check(indicator.events.LEARNED_SPELL_IN_SKILL_LINE and not indicator.events.LEARNED_SPELL_IN_TAB,'class discovery uses the Forever learned-spell event')
 check(indicator.cells.resource.icon.width==24 and indicator.cells.resource.top.width==41,'readable icon slots fit the native-width bar')
@@ -120,6 +137,7 @@ check(indicator.cells.racial.x+indicator.cells.racial.width==398,'all five class
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')
 NS.Paladin.SetEnabled(false);check(not host.shown and indicator.scripts.OnUpdate==nil,'disable hides helper and stops polling')
+check(host.mouse==false and host.scripts.OnUpdate==nil,'disabled bar stops hover checking')
 NS.Paladin.SetEnabled(true);check(host.shown and indicator.scripts.OnUpdate~=nil,'reenable restores helper')
 check(SLASH_FOREVERUTILITIES5=='/fpaladin' and SLASH_FOREVERUTILITIES11=='/fwarlock','all class command aliases registered')
 SlashCmdList.FOREVERUTILITIES('status');check(#DEFAULT_CHAT_FRAME.messages>=2,'status reports live class diagnostics')

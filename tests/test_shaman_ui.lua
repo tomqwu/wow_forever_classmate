@@ -106,6 +106,9 @@ local indicator=named.ForeverClassmateShamanIndicator
 check(host and host.width==426 and host.height==56 and host.shown,'rendered native-width shaman bar created')
 check(indicator and indicator.scripts.OnUpdate~=nil,'enabled info polls for live timers')
 check(indicator.alpha==0.2,'idle shaman bar dims without a target or active totem')
+host.scripts.OnEnter(host);check(indicator.alpha==1,'mouse reveals the idle Shaman bar')
+indicator.Refresh();check(indicator.alpha==1,'Shaman refresh keeps the hover reveal')
+host.scripts.OnLeave(host);check(indicator.alpha==0.2,'Shaman bar returns to idle opacity after mouse leaves')
 check(indicator.totemCells[1].background.layer=='BACKGROUND' and indicator.totemCells[1].icon.layer=='ARTWORK'
     and indicator.weaponCell.background.layer=='BACKGROUND' and indicator.shieldCell.background.layer=='BACKGROUND',
     'all Shaman cell backgrounds draw below their icons regardless of texture batching')

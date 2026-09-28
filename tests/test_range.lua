@@ -2,6 +2,7 @@ local NS={}
 local secret={}
 issecretvalue=function(v) return rawequal(v,secret) end
 assert(loadfile('addons/ForeverUtilities/Core.lua'))('ForeverUtilities',NS)
+assert(loadfile('addons/ForeverUtilities/ClassHost.lua'))('ForeverUtilities',NS)
 assert(loadfile('addons/ForeverUtilities/Range.lua'))('ForeverUtilities',NS)
 assert(loadfile('addons/ForeverUtilities/TargetContext.lua'))('ForeverUtilities',NS)
 assert(loadfile('addons/ForeverUtilities/PetDatabase.lua'))('ForeverUtilities',NS)
@@ -91,7 +92,8 @@ IsSpellInRange=function(id) local s=metadata[id-9000];return distance>=s.minRang
 local db={enabled=true,locked=true}
 local moveHint=setmetatable({}, {__index=methods})
 function moveHint:SetPoint(_,_,_,_,y) self.y=y end
-local f=NS.Range.Create({hint=moveHint},db)
+local hunterHost={hint=moveHint,hovered=false}
+local f=NS.Range.Create(hunterHost,db)
 check(f.label.text:find('~8-35 yd',1,true) and f.Status():find('Auto Shot: found',1,true),'discovered auto shot')
 distance=6;f.scripts.OnUpdate(f,0.15)
 check(f.label.text:find('~5-8 yd',1,true),'updates without swing events')
@@ -100,6 +102,10 @@ check(f.label.text:find('>35 yd',1,true),'far target')
 target=false;f.scripts.OnEvent(f,'PLAYER_TARGET_CHANGED')
 check(not f.scripts.OnUpdate and f.label.text=='No target','no target stops polling')
 check(f.alpha==0.2,'no target dims indicator')
+hunterHost.hovered=true;f.Refresh()
+check(f.alpha==1,'Hunter full bar becomes readable while hovered without a target')
+hunterHost.hovered=false;f.Refresh()
+check(f.alpha==0.2,'Hunter full bar returns to idle fade after hover')
 db.locked=false;f.Refresh()
 check(f.alpha==0.2 and not f.scripts.OnUpdate,'unlock preserves idle dimming without polling')
 db.locked=true;f.Refresh()

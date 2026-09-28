@@ -382,7 +382,7 @@ local function CreateIndicator(host,db)
         helperText:SetTextColor(unpack(color));helperText:SetShown(helper~='')
         local mana=db.showMana~=false and Context.ManaPercent() or nil
         manaText:SetText(mana and ('Mana '..mana..'%') or '');manaText:SetShown(mana~=nil)
-        frame:SetAlpha((db.fadeOutOfCombat==false or inCombat or activeTotems>0) and 1 or (hasTarget and 0.6 or 0.2))
+        NS.ClassHost.SetFade(host,frame,(db.fadeOutOfCombat==false or inCombat or activeTotems>0) and 1 or (hasTarget and 0.6 or 0.2))
         lastStatus=string.format('Totems %d/4 confirmed, %d unavailable; weapon imbue %s; shield %s; helper %s; mana %s',activeTotems,unknownTotems,
             imbue and (imbue.active and 'active' or (imbue.equipped and 'missing' or 'no weapon')) or 'unavailable',
             missingShield==nil and 'unavailable' or (missingShield and 'missing' or (aura and 'active' or 'inactive')),

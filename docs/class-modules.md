@@ -1,6 +1,6 @@
 # Standard class modules
 
-Version 0.24.4 supports Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock alongside the existing Hunter and Shaman companions. The standard modules share `ClassContext.lua` and `StandardClasses.lua`, but each has an independent `ForeverUtilitiesDB.<class>` table and command.
+Version 0.24.5 supports Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock alongside the existing Hunter and Shaman companions. The standard modules share `ClassContext.lua` and `StandardClasses.lua`, but each has an independent `ForeverUtilitiesDB.<class>` table and command.
 
 For every class, left-clicking the Classmate minimap button opens settings and right-clicking it opens WoW's native Inspect window for an eligible targeted player. The right-click shortcut has a per-class toggle and does not change the bar's information slots.
 
