@@ -87,7 +87,7 @@ local configs={
             Spell('baneAgony','Bane of Agony','target'),Spell('curseAgony','Curse of Agony','target'),
             Spell('nightfall','Nightfall','proc',true),Spell('backlash','Backlash','proc',true),
             Spell('conflagrate','Conflagrate','cue'),Spell('shadowburn','Shadowburn','cue'),Spell('lifeTap','Life Tap','cue'),Spell('demonicEmpowerment','Demonic Empowerment','cue'),
-        },upkeepLabel='Armor / demon',upkeepGroups={{label='Armor',keys={'demonArmor','demonSkin','felArmor'}}},targetLabel='DoT / Bane',powerType=0,powerLabel='Mana',showPet=true,showHealth=true,showShards=true,dotKeys={'corruption','immolate','wrack','baneAgony','curseAgony'}},
+        },upkeepLabel='Armor / demon',upkeepGroups={{label='Armor',keys={'demonArmor','demonSkin','felArmor'},observeOutOfCombat=true}},targetLabel='DoT / Bane',powerType=0,powerLabel='Mana',showPet=true,showHealth=true,showShards=true,dotKeys={'corruption','immolate','wrack','baneAgony','curseAgony'}},
 }
 
 local function MakeCell(frame,x,width)
@@ -135,8 +135,10 @@ local function CreateIndicator(module,config,host,db)
     local dots=config.dotKeys and NS.DotTracker.Create(frame,db,module,config.dotKeys,config.color)
     frame.dotTracker=dots
     local lastStatus='Not checked';local elapsed=0;local active=false;local suspended=false
+    local confirmedUpkeep={}
 
     local function Discover()
+        confirmedUpkeep={}
         local catalog={};Append(catalog,config.catalog);Append(catalog,sharedRacials)
         module.spells=Context.Discover(catalog)
         -- Some debuffs are effects of a learned spell, not separate spellbook actions.
@@ -178,7 +180,9 @@ local function CreateIndicator(module,config,host,db)
 
     local function Update()
         if suspended or Core.PlayerDead() then return end
-        local inCombat=Core.Call(UnitAffectingCombat,'player')==true
+        local combatState=Core.Call(UnitAffectingCombat,'player')
+        local inCombat=combatState==true
+        local safeOutOfCombat=combatState==false
         local hasTarget=Core.Call(UnitExists,'target')==true
         local hostile=hasTarget and Core.Call(UnitCanAttack,'player','target')==true and Core.Call(UnitIsDead,'target')==false
         local power
@@ -252,17 +256,25 @@ local function CreateIndicator(module,config,host,db)
             local learned=FirstSpell(module.spells,group.keys)
             if learned then
                 upkeepTotal=upkeepTotal+1
-                local aura=Context.Aura('player','HELPFUL',Context.Names(module.spells,group.keys),false)
+                local aura
+                if not group.observeOutOfCombat or safeOutOfCombat then
+                    aura=Context.Aura('player','HELPFUL',Context.Names(module.spells,group.keys),false)
+                end
                 if type(aura)=='table' then
                     upkeepActive=upkeepActive+1;upkeepIcon=upkeepIcon or aura.icon or learned.icon
+                    confirmedUpkeep[group.label]={name=aura.name,icon=Core.Icon(aura.icon) or Core.Icon(learned.icon)}
                     local remaining=Context.FormatTime(aura.left)
                     upkeepLines[#upkeepLines+1]=group.label..': '..aura.name..(remaining and (' '..remaining) or ' active')
                 elseif aura==false then
+                    confirmedUpkeep[group.label]=nil
                     upkeepMissing=upkeepMissing+1;upkeepIcon=upkeepIcon or learned.icon;upkeepDim=true
                     upkeepLines[#upkeepLines+1]=group.label..': missing'
                 else
-                    upkeepUnknown=upkeepUnknown+1;upkeepIcon=upkeepIcon or learned.icon
-                    upkeepLines[#upkeepLines+1]=group.label..': unavailable'
+                    local confirmed=confirmedUpkeep[group.label]
+                    upkeepUnknown=upkeepUnknown+1
+                    if confirmed then upkeepIcon=upkeepIcon or confirmed.icon end
+                    upkeepLines[#upkeepLines+1]=confirmed and (group.label..': '..confirmed.name..' last seen; current state unavailable')
+                        or (group.label..': unavailable')
                 end
             end
         end
@@ -274,7 +286,7 @@ local function CreateIndicator(module,config,host,db)
             elseif petExists==false or petDead==true then upkeepMissing=upkeepMissing+1;upkeepDim=true;upkeepLines[#upkeepLines+1]='Demon: missing'
             else upkeepUnknown=upkeepUnknown+1;upkeepLines[#upkeepLines+1]='Demon: unavailable' end
         end
-        local upkeepTop=upkeepTotal>0 and (upkeepActive..'/'..upkeepTotal) or '—'
+        local upkeepTop=upkeepUnknown>0 and '' or (upkeepTotal>0 and (upkeepActive..'/'..upkeepTotal) or '—')
         local upkeepBottom=upkeepMissing>0 and ('!'..upkeepMissing) or (upkeepUnknown>0 and '?' or (upkeepTotal>0 and 'OK' or ''))
         local upkeepWarn=inCombat and upkeepMissing>0
         local shieldAura,protectedAbsorb,hasProtectedAbsorb
@@ -307,7 +319,8 @@ local function CreateIndicator(module,config,host,db)
         elseif config.key=='mage' then upkeep.meter:SetShown(false) end
         if config.key=='mage' then upkeep.meter.background:SetShown(upkeep.meter:IsShown()) end
         upkeep.tooltipTitle=config.key=='mage' and 'Mage armor and absorbs' or config.upkeepLabel;upkeep.tooltipLines=upkeepLines
-        Paint(upkeep,upkeepIcon or config.icon,upkeepTop,upkeepBottom,upkeepWarn and {1,0.25,0.18} or config.color,upkeepDim)
+        Paint(upkeep,upkeepIcon or (upkeepUnknown==0 and config.icon or nil),upkeepTop,upkeepBottom,
+            upkeepWarn and {1,0.25,0.18} or config.color,upkeepDim or (upkeepUnknown>0 and upkeepActive==0))
         if config.key=='mage' then upkeep.top:SetWidth(39);upkeep.bottom:SetWidth(39) end
         if hasProtectedAbsorb then pcall(upkeep.top.SetFormattedText,upkeep.top,'%.0f',protectedAbsorb) end
         upkeep:SetShown(db.showUpkeep~=false or (config.key=='mage' and db.showMageShield~=false and type(shieldAura)=='table'))
@@ -395,7 +408,7 @@ local function CreateIndicator(module,config,host,db)
         if not db.enabled then
             if active then for _,event in ipairs(events) do frame:UnregisterEvent(event) end end
             if dots then dots.Refresh(false) end
-            active=false;lastStatus=config.label..' helper disabled';return
+            active=false;confirmedUpkeep={};lastStatus=config.label..' helper disabled';return
         end
         if not active then for _,event in ipairs(events) do frame:RegisterEvent(event) end;active=true;Discover() end
         if suspended or Core.PlayerDead() then if dots then dots.Refresh(false) end;frame:Hide();return end
@@ -405,7 +418,9 @@ local function CreateIndicator(module,config,host,db)
     end
     frame:SetScript('OnEvent',function(_,event,unit)
         if not db.enabled then return end
-        if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then suspended=true;frame:SetScript('OnUpdate',nil);frame:Hide();return end
+        if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then
+            suspended=true;confirmedUpkeep={};frame:SetScript('OnUpdate',nil);frame:Hide();return
+        end
         if event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_ALIVE' or event=='PLAYER_UNGHOST' then suspended=false end
         if suspended or Core.PlayerDead() then return end
         if (event=='UNIT_AURA' or event=='UNIT_ABSORB_AMOUNT_CHANGED' or event=='UNIT_POWER_UPDATE' or event=='UNIT_HEALTH' or event=='UNIT_INVENTORY_CHANGED')

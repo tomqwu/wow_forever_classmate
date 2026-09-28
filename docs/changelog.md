@@ -1,3 +1,10 @@
+## 0.24.1
+
+- Warlock armor now uses out-of-combat aura checks. During combat, a previously confirmed Demon Skin, Demon Armor, or Fel Armor icon stays dimmed in the upkeep slot with unknown current status; the addon does not claim it remains active. A later readable absence clears that remembered identity.
+- Standard-class upkeep counts disappear whenever any included aura is unavailable, so restricted combat reads no longer render a misleading `0/1` or other partial ratio. Verified missing states remain distinct from unavailable states.
+
+Use `/reload` after updating. Regression checks use mocked Forever APIs; confirm the combat appearance in the live beta client.
+
 ## 0.24.0
 
 - Added optional slim multi-target DoT bars beside the unchanged 426 × 56 main bar for Warrior, Rogue, Druid, Priest, and Warlock. They show the enemy, learned player-owned effect, and readable time remaining for the current target and active nameplates.

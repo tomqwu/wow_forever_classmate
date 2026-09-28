@@ -21,6 +21,7 @@ function methods:GetHeight() return self.height end
 function methods:SetText(v) self.text=v end
 function methods:SetFormattedText(format,value) self.formattedFormat=format;self.formattedValue=value end
 function methods:SetTexture(v) self.texture=v end
+function methods:SetVertexColor(r,g,b,a) self.vertexColor={r,g,b,a} end
 function methods:SetAlpha(v) self.alpha=v end
 function methods:SetMovable(v) self.movable=v end
 function methods:StartMoving() self.moving=true end
@@ -52,7 +53,7 @@ UnitClass=function() return currentClass,currentClass end
 UnitExists=function(unit) return unit=='target' end
 UnitCanAttack=function() return true end
 UnitIsDead=function() return false end
-UnitAffectingCombat=function() return true end
+UnitAffectingCombat=function() return false end
 UnitPower=function() return 70 end;UnitPowerMax=function() return 100 end;UnitPowerType=function() return 0,'MANA' end
 UnitHealth=function() return 90 end;UnitHealthMax=function() return 100 end
 UnitGetTotalAbsorbs=function() return 0 end
@@ -184,6 +185,14 @@ local savedPowerType=UnitPowerType;UnitPowerType=nil
 local ok=pcall(druidIndicator.Update)
 check(ok and druidIndicator.cells.resource.top.text=='?','Druid survives an unavailable current-power API')
 check(druidIndicator.cells.upkeep.top.text=='1/2' and druidIndicator.cells.upkeep.bottom.text=='!1','Druid tracks Mark and Thorns as independent upkeep')
+UnitAffectingCombat=function() return true end
+C_UnitAuras.GetAuraDataByIndex=function() error('restricted combat aura') end
+druidIndicator.Update()
+check(druidIndicator.cells.upkeep.top.text=='' and druidIndicator.cells.upkeep.bottom.text=='?'
+    and druidIndicator.cells.upkeep.icon.texture==63
+    and druidIndicator.cells.upkeep.tooltipLines[2]:find('last seen',1,true),
+    'a combat aura gap shows the last observed icon without a partial count or missing warning')
+UnitAffectingCombat=function() return false end
 UnitPowerType=savedPowerType
 
 local shadowProc=false
@@ -281,8 +290,25 @@ NS.Mage.db.showUpkeep=true
 NS.Mage.db.showMageShield=true;UnitGetTotalAbsorbs=function() return 0 end
 local priest=Fixture(NS.Priest,{'Power Word: Fortitude','Divine Spirit','Inner Fire'},{'Prayer of Fortitude','Prayer of Spirit','Inner Fire'})
 check(priest.cells.upkeep.top.text=='3/3','Priest group prayers satisfy individual buff upkeep')
-local warlock=Fixture(NS.Warlock,{'Demon Skin'},{'Demon Skin'})
+local warlock=Fixture(NS.Warlock,{'Demon Armor','Demon Skin'},{'Demon Skin'})
 check(warlock.cells.upkeep.top.text=='1/1','Warlock does not demand a demon before learning a summon')
+local armorReads=0
+C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
+    if unit=='player' and filter=='HELPFUL' then armorReads=armorReads+1 end
+end
+UnitAffectingCombat=function() return true end;warlock.Update()
+check(armorReads==0 and warlock.cells.upkeep.top.text=='' and warlock.cells.upkeep.bottom.text=='?'
+    and warlock.cells.upkeep.icon.shown and warlock.cells.upkeep.icon.texture==500
+    and warlock.cells.upkeep.icon.vertexColor[1]==0.42
+    and warlock.cells.upkeep.tooltipLines[1]:find('Demon Skin last seen',1,true),
+    'Warlock keeps the confirmed Demon Skin icon but makes no combat aura read or 0/1 claim')
+UnitAffectingCombat=function() return false end;warlock.Update()
+check(warlock.cells.upkeep.top.text=='0/1' and warlock.cells.upkeep.bottom.text=='!1',
+    'a readable out-of-combat absence clears the last observed armor')
+UnitAffectingCombat=function() return true end;warlock.Update()
+check(warlock.cells.upkeep.top.text=='' and not warlock.cells.upkeep.icon.shown,
+    'combat without a prior confirmed armor does not invent an armor icon')
+UnitAffectingCombat=function() return false end
 warlock=Fixture(NS.Warlock,{'Demon Skin','Summon Imp'},{'Demon Skin'})
 check(warlock.cells.upkeep.bottom.text=='!1','learned Warlock summon enables missing-demon warning')
 local deadTarget=false
