@@ -52,7 +52,7 @@ function Host.Create(module,db,contentFactory)
     lock:SetScript('OnEnter',function(self)
         if GameTooltip then
             GameTooltip:SetOwner(self,'ANCHOR_TOP')
-            GameTooltip:SetText(db.locked and 'Unlock bar to move' or 'Lock bar position');GameTooltip:Show()
+            GameTooltip:SetText(NS.L(db.locked and 'Unlock bar to move' or 'Lock bar position'));GameTooltip:Show()
         end
     end)
     lock:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
@@ -64,7 +64,7 @@ function Host.Create(module,db,contentFactory)
         host:EnableMouse(db.enabled)
         host:SetScript('OnUpdate',db.enabled and CheckHover or nil)
         if not db.enabled then host.hovered=false;hoverElapsed=0 end
-        host.hint:SetText(db.locked and '' or ('Drag to move | '..module.command..' lock'))
+        host.hint:SetText(db.locked and '' or (NS.L('Drag to move')..' | '..module.command..' lock'))
         lock:SetShown(db.showLockButton~=false and (not module.lockVisible or module.lockVisible(db)))
         right:SetShown(db.locked)
         for _,texture in ipairs({body,left,top,right}) do

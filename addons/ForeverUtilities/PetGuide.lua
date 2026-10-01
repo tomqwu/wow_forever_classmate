@@ -98,6 +98,16 @@ function Guide.CompactSummary(info)
     if info.rare then return info.rare.name..' | '..info.family.name..' guide' end
     return info.family.name..' guide'
 end
+local function DisplaySummary(info,compact)
+    local family=NS.L(info.family.name)
+    if info.rare then
+        local name=info.rare.name
+        local prefix=not compact and (info.rareNameMatch and NS.L('Name match')..' ' or
+            (info.special and (NS.L(info.classification)..' ') or '')) or ''
+        return prefix..name..' | '..family..NS.L(' guide')
+    end
+    return (not compact and info.special and (NS.L(info.classification)..' ') or '')..family..NS.L(' family guide')
+end
 function Guide.Create(parent)
     local badge=CreateFrame('Button',nil,parent)
     badge:SetSize(18,18);badge:EnableMouse(true);badge:Hide()
@@ -127,8 +137,8 @@ function Guide.Create(parent)
     local function ShowTooltip()
         if not hoverOwner or not badge.hasMatch or not GameTooltip then return end
         GameTooltip:SetOwner(hoverOwner,'ANCHOR_TOP')
-        GameTooltip:SetText('Pet guide: '..badge.info.name)
-        for _,line in ipairs(Guide.Lines(badge.info)) do GameTooltip:AddLine(line,1,1,1,true) end
+        GameTooltip:SetText(NS.L('Pet guide: '..badge.info.name))
+        for _,line in ipairs(Guide.Lines(badge.info)) do GameTooltip:AddLine(NS.L(line),1,1,1,true) end
         GameTooltip:Show()
     end
     for _,surface in ipairs({badge,hit}) do
@@ -150,7 +160,7 @@ function Guide.Create(parent)
         elseif info.special then r,g,b=1,0.75,0.15 end
         border:SetColorTexture(r,g,b,1)
         label:SetTextColor(1,info.tooHigh and 0.4 or 0.88,info.tooHigh and 0.3 or 0.55)
-        label:SetText(width<100 and Guide.CompactSummary(info) or Guide.Summary(info))
+        label:SetText(DisplaySummary(info,width<100))
         label:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',11,'OUTLINE')
         local measured=label:GetStringWidth()
         if Core.IsNumber(measured) and measured>width then

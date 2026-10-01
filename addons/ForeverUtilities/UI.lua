@@ -1,17 +1,18 @@
 local addon, NS = ...
+local L=NS.L
 local events=CreateFrame('Frame')
 local panel
 local minimapButton,positionMinimap
-local function Say(text) DEFAULT_CHAT_FRAME:AddMessage('|cff66ff88Forever Classmate:|r '..text) end
+local function Say(text) DEFAULT_CHAT_FRAME:AddMessage('|cff66ff88'..L('Forever Classmate')..':|r '..L(text)) end
 local function Text(parent,text,x,y,font)
     local label=parent:CreateFontString(nil,'OVERLAY',font or 'GameFontHighlight')
-    label:SetPoint('TOPLEFT',parent,'TOPLEFT',x,y);label:SetText(text)
+    label:SetPoint('TOPLEFT',parent,'TOPLEFT',x,y);label:SetText(L(text))
     return label
 end
 local function Button(parent,text,x,y,width,callback)
     local button=CreateFrame('Button',nil,parent,'UIPanelButtonTemplate')
     button:SetSize(width,26);button:SetPoint('TOPLEFT',parent,'TOPLEFT',x,y)
-    button:SetText(text);button:SetScript('OnClick',callback)
+    button:SetText(L(text));button:SetScript('OnClick',callback)
     return button
 end
 local function Check(parent,label,x,y,callback)
@@ -111,11 +112,11 @@ local function RefreshMinimap()
         local icon=Circle(19,'OVERLAY');icon:SetTexture('Interface\\AddOns\\ForeverUtilities\\Textures\\ForeverClassmate');icon:SetTexCoord(0,1,0,1)
         Circle(24,'HIGHLIGHT'):SetColorTexture(1,0.85,0.4,0.22)
         minimapButton:SetScript('OnEnter',function(self)
-            if GameTooltip then GameTooltip:SetOwner(self,'ANCHOR_LEFT');GameTooltip:SetText('Forever Classmate')
-                GameTooltip:AddLine(self.module.name:gsub('Forever Classmate — ',''),1,0.85,0.4)
-                GameTooltip:AddLine('Left-click: settings | Drag: move around minimap',1,1,1)
+            if GameTooltip then GameTooltip:SetOwner(self,'ANCHOR_LEFT');GameTooltip:SetText(L('Forever Classmate'))
+                GameTooltip:AddLine(L(self.module.name:gsub('Forever Classmate — ','')),1,0.85,0.4)
+                GameTooltip:AddLine(L('Left-click: settings | Drag: move around minimap'),1,1,1)
                 if self.module.db.minimapInspect~=false then
-                    GameTooltip:AddLine('Right-click: inspect an eligible player target',1,1,1)
+                    GameTooltip:AddLine(L('Right-click: inspect an eligible player target'),1,1,1)
                 end
                 GameTooltip:Show() end
         end)
@@ -137,7 +138,7 @@ events:SetScript('OnEvent',function(self,_,name)
     for _,module in pairs(NS.Classes) do module.Initialize(ForeverUtilitiesDB) end
     self:UnregisterEvent('ADDON_LOADED')
     local module=Active()
-    if module then Say('Loaded '..module.name:gsub('Forever Classmate — ','')..' v'..NS.Version..'. '..module.command..' opens settings.') end
+    if module then Say(L('Loaded')..' '..L(module.name:gsub('Forever Classmate — ',''))..' v'..NS.Version..'. '..module.command..' '..L('opens settings.')) end
 end)
 SLASH_FOREVERUTILITIES1='/fclassmate'
 SLASH_FOREVERUTILITIES2='/futils'

@@ -110,7 +110,7 @@ local function Paint(cell,icon,top,bottom,color,dim)
         cell.bottom:ClearAllPoints();cell.bottom:SetPoint('TOPLEFT',cell,'TOPLEFT',textX,-26);cell.bottom:SetWidth(cell:GetWidth()-textX-3)
         cell.textX=textX
     end
-    cell.top:SetText(top or '');cell.bottom:SetText(bottom or '')
+    cell.top:SetText(NS.L(top or ''));cell.bottom:SetText(NS.L(bottom or ''))
     cell.top:SetTextColor(unpack(color or {0.88,0.92,1}));cell.bottom:SetTextColor(0.68,0.74,0.82)
 end
 local function MakeMeter(cell,x,width,color)
@@ -160,11 +160,11 @@ local function CreateIndicator(module,config,host,db)
     local function Tooltip(cell,title,detail)
         cell:SetScript('OnEnter',function(self)
             if not GameTooltip then return end
-            GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(self.tooltipTitle or title())
+            GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(NS.L(self.tooltipTitle or title()))
             if type(self.tooltipLines)=='table' then
-                for _,line in ipairs(self.tooltipLines) do if line and line~='' then GameTooltip:AddLine(line,1,1,1,true) end end
+                for _,line in ipairs(self.tooltipLines) do if line and line~='' then GameTooltip:AddLine(NS.L(line),1,1,1,true) end end
             else
-                local line=detail and detail();if line and line~='' then GameTooltip:AddLine(line,1,1,1,true) end
+                local line=detail and detail();if line and line~='' then GameTooltip:AddLine(NS.L(line),1,1,1,true) end
             end
             GameTooltip:Show()
         end)

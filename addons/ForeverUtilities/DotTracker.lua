@@ -20,7 +20,7 @@ function Tracker.ReadUnit(unit,names,now)
     local guid=Core.Call(UnitGUID,unit)
     if type(guid)~='string' or guid=='' then guid=nil end
     local name=Core.Call(UnitName,unit)
-    if type(name)~='string' or name=='' then name=unit=='target' and 'Target' or 'Enemy' end
+    if type(name)~='string' or name=='' then name=NS.L(unit=='target' and 'Target' or 'Enemy') end
     name=name:gsub('|','||'):gsub('[\r\n]',' ')
     local result={unit=unit,guid=guid,name=name,effects={}}
     -- Positive observations only; an unseen effect is never called missing.
@@ -104,7 +104,7 @@ function Tracker.Create(parent,db,module,keys,color)
             bar:SetMinMaxValues(0,entry.duration)
             bar:SetValue(math.min(entry.duration,left))
             bar.label:SetText(entry.unitName..' · '..entry.name)
-            bar.time:SetText(math.ceil(left)..'s')
+            bar.time:SetText(NS.L(math.ceil(left)..'s'))
         end
         if expired then frame.Scan(false) end
     end
@@ -156,7 +156,7 @@ function Tracker.Create(parent,db,module,keys,color)
         end
         visible=entries
         if #entries==0 then Hide();return end
-        heading:SetText('DoTs'..(total>#entries and (' · +'..(total-#entries)..' more') or ''))
+        heading:SetText(NS.L('DoTs')..(total>#entries and (' · +'..(total-#entries)..NS.L(' more')) or ''))
         frame:SetSize(212,20+#entries*19)
         for index,bar in ipairs(bars) do bar:SetShown(index<=#entries) end
         frame:Show();Tick();elapsed=0

@@ -1,3 +1,10 @@
+## 0.25.0
+
+- Added Simplified Chinese (`zhCN`) interface text selected from the WoW client locale. Hunter range, target and ammo labels; class bars; settings; warnings; pet guidance; and tooltips now use a shared locale lookup. English remains the fallback for other locales.
+- Added a localized TOC title and description. Client-provided spell and character names remain native; curated rare-pet data may still contain English names. Saved settings and slash commands are unchanged.
+
+Use `/reload` after updating. Automated checks use mocked APIs; confirm the live Chinese client layout in game.
+
 ## 0.24.5
 
 - Hovering any enabled class bar now reveals it at full opacity, including a locked bar and Hunter's movable compact icon. Live updates keep the bar bright under the pointer; leaving restores its combat or idle fade.

@@ -134,3 +134,6 @@ Rare(5349,'Arash-ethis',27,'Feralas',49)
 DB.familyNames={}
 for id,family in pairs(DB.families) do DB.familyNames[family.name]=id end
 DB.familyNames.Owl=26;DB.familyNames['Bird of Prey']=26
+-- Keep family identification working when Forever supplies a localized name
+-- but no readable family ID. Never use translation to infer an individual skill.
+for id,family in pairs(DB.families) do DB.familyNames[NS.L(family.name)]=id end

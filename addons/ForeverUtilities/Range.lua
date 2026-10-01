@@ -131,8 +131,8 @@ function Range.Create(host, db)
     mood:SetScript('OnEnter',function(self)
         if GameTooltip and moodValue then
             GameTooltip:SetOwner(self,'ANCHOR_TOP')
-            GameTooltip:SetText(moodValue==1 and 'Pet unhappy' or 'Pet content — not fully happy')
-            GameTooltip:AddLine('Feed your pet when safe.',1,1,1);GameTooltip:Show()
+            GameTooltip:SetText(NS.L(moodValue==1 and 'Pet unhappy' or 'Pet content — not fully happy'))
+            GameTooltip:AddLine(NS.L('Feed your pet when safe.'),1,1,1);GameTooltip:Show()
         end
     end)
     mood:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
@@ -161,8 +161,8 @@ function Range.Create(host, db)
     end)
     inspect:SetScript('OnEnter',function(self)
         if GameTooltip then
-            GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText('Inspect player')
-            GameTooltip:AddLine('Open the game\'s Inspect window for this target.',1,1,1);GameTooltip:Show()
+            GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(NS.L('Inspect player'))
+            GameTooltip:AddLine(NS.L('Open the game\'s Inspect window for this target.'),1,1,1);GameTooltip:Show()
         end
     end)
     inspect:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
@@ -175,14 +175,14 @@ function Range.Create(host, db)
         ammoLabel:SetShown(db.showAmmo~=false)
         if db.showAmmo==false and db.lowAmmoWarning==false then ammoLabel:SetText('');return end
         local count=NS.TargetContext.AmmoCount()
-        ammoLabel:SetText(count and ('Ammo: '..count) or '')
+        ammoLabel:SetText(count and NS.L('Ammo: '..count) or '')
         local low=db.lowAmmoWarning~=false and count~=nil and count<=200
         if low then ammoLabel:SetTextColor(1,0.25,0.2)
         else ammoLabel:SetTextColor(0.9,0.93,1) end
         if count and count>200 then warnedLowAmmo=false end
         if low and not warnedLowAmmo then
             warnedLowAmmo=true
-            local message="Forever Classmate: Low ammo — "..count.." remaining!"
+            local message=NS.L('Forever Classmate')..': '..NS.L('Low ammo — '..count..' remaining!')
             if UIErrorsFrame and type(UIErrorsFrame.AddMessage)=='function' then
                 pcall(UIErrorsFrame.AddMessage,UIErrorsFrame,message,1,0.25,0.2,1)
             elseif DEFAULT_CHAT_FRAME and type(DEFAULT_CHAT_FRAME.AddMessage)=='function' then
@@ -352,7 +352,7 @@ function Range.Create(host, db)
         iconBorder:SetColorTexture(c[1],c[2],c[3],1)
         accent:SetColorTexture(c[1],c[2],c[3],1)
         label:SetTextColor(1,1,1,1)
-        label:SetText(text)
+        label:SetText(NS.L(text))
         if db.rangeIconOnly then return end
         -- Keep long range estimates inside their block without wrapping over ammo.
         for size=16,12,-1 do

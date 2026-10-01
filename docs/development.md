@@ -1,8 +1,10 @@
 # Forever Classmate development
 
-Active source: `addons/ForeverUtilities/`. The folder, TOC filename, saved-variable name, and release tag prefix remain stable for upgrades. Version 0.24.5 supports all nine classes through the registry in `Core.lua`.
+Active source: `addons/ForeverUtilities/`. The folder, TOC filename, saved-variable name, and release tag prefix remain stable for upgrades. Version 0.25.0 supports all nine classes through the registry in `Core.lua`.
 
 The public [Forever addon guide](https://tomqwu.github.io/wow_forever_classmate/) is authored in `site/` and deployed by `.github/workflows/pages.yml`. Run `python3 scripts/check_site.py` before changing its links or sections. This documentation site is separate from the versioned addon package.
+
+`Locale.lua` selects Simplified Chinese on `GetLocale() == 'zhCN'`; other locales use English. Addon-authored labels pass through `NS.L` at the UI boundary. Keep client-provided spell/unit names, saved-variable keys, and slash commands unchanged. Add a locale check for new visible English text, including dynamic counters and tooltips. Curated pet names and ability labels may still be English where the client cannot supply them.
 
 `ClassHost.lua` owns the shared movable 426 × 56 host, lock button, scale, and position. The 426-pixel rendered width matches Forever's default desktop Main Hand swing timer. Forever stores that preset as a 213-pixel offset above the 213-pixel slider minimum. `UI.lua` owns class-aware settings, minimap, commands, and initialization. Inactive class modules may initialize saved defaults but must not create frames, register events, or poll.
 

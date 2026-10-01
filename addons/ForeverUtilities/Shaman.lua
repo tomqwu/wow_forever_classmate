@@ -56,10 +56,10 @@ local function CreateIndicator(host,db)
     for i=1,2 do local line=frame:CreateTexture(nil,'ARTWORK');line:SetSize(1,36);line:SetColorTexture(0.7,0.7,0.72,0.22);separators[i]=line end
 
     local elementInfo={
-        {slot=2,label='E',color={0.72,0.55,0.3},fallback='Interface\\Icons\\Spell_Nature_StoneClawTotem'},
-        {slot=1,label='F',color={1,0.32,0.12},fallback='Interface\\Icons\\Spell_Fire_SearingTotem'},
-        {slot=3,label='W',color={0.2,0.65,1},fallback='Interface\\Icons\\Spell_Nature_ManaRegenTotem'},
-        {slot=4,label='A',color={0.65,0.85,1},fallback='Interface\\Icons\\Spell_Nature_GroundingTotem'},
+        {slot=2,label='Earth',color={0.72,0.55,0.3},fallback='Interface\\Icons\\Spell_Nature_StoneClawTotem'},
+        {slot=1,label='Fire',color={1,0.32,0.12},fallback='Interface\\Icons\\Spell_Fire_SearingTotem'},
+        {slot=3,label='Water',color={0.2,0.65,1},fallback='Interface\\Icons\\Spell_Nature_ManaRegenTotem'},
+        {slot=4,label='Air',color={0.65,0.85,1},fallback='Interface\\Icons\\Spell_Nature_GroundingTotem'},
     }
     local totemCells={}
     local function MakeCell(size)
@@ -79,15 +79,15 @@ local function CreateIndicator(host,db)
         cell.button:SetScript('OnEnter',function(self)
             if not GameTooltip or cell.state==nil then return end
             GameTooltip:SetOwner(self,'ANCHOR_TOP')
-            GameTooltip:SetText(cell.state.active and (cell.state.name~='' and cell.state.name or (info.label..' totem active')) or (info.label..' element: no active totem'))
+            GameTooltip:SetText(NS.L(cell.state.active and (cell.state.name~='' and cell.state.name or (info.label..' totem active')) or (info.label..' element: no active totem')))
             if cell.state and cell.state.active then
                 local remaining=Context.FormatTime(cell.state.left)
-                if remaining then GameTooltip:AddLine('Totem lifetime: '..remaining..' (not cast cooldown)',1,1,1) end
+                if remaining then GameTooltip:AddLine(NS.L('Totem lifetime: '..remaining..' (not cast cooldown)'),1,1,1) end
             end
-            if cell.state and cell.state.estimated then GameTooltip:AddLine('Estimated from this spell\'s last readable duration.',0.75,0.85,1)
-            elseif cell.state and cell.state.cached then GameTooltip:AddLine('Last readable state; live combat data unavailable.',0.75,0.85,1)
-            elseif cell.state and cell.state.castObserved then GameTooltip:AddLine('Cast observed; timer unavailable until duration is learned.',0.75,0.85,1) end
-            if info.slot==1 and Shaman.spells and Shaman.spells.fireNova then GameTooltip:AddLine('Fire Nova requires an active Fire totem.',1,0.75,0.35) end
+            if cell.state and cell.state.estimated then GameTooltip:AddLine(NS.L('Estimated from this spell\'s last readable duration.'),0.75,0.85,1)
+            elseif cell.state and cell.state.cached then GameTooltip:AddLine(NS.L('Last readable state; live combat data unavailable.'),0.75,0.85,1)
+            elseif cell.state and cell.state.castObserved then GameTooltip:AddLine(NS.L('Cast observed; timer unavailable until duration is learned.'),0.75,0.85,1) end
+            if info.slot==1 and Shaman.spells and Shaman.spells.fireNova then GameTooltip:AddLine(NS.L('Fire Nova requires an active Fire totem.'),1,0.75,0.35) end
             GameTooltip:Show()
         end)
         cell.button:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
@@ -239,8 +239,8 @@ local function CreateIndicator(host,db)
 
     weapon.button:SetScript('OnEnter',function(self)
         if not GameTooltip or not weapon.state then return end
-        GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(weapon.state.active and 'Main-hand weapon imbue active' or 'Main-hand weapon imbue missing')
-        if weapon.state.left then GameTooltip:AddLine('Remaining: '..(Context.FormatTime(weapon.state.left) or ''),1,1,1) end
+        GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(NS.L(weapon.state.active and 'Main-hand weapon imbue active' or 'Main-hand weapon imbue missing'))
+        if weapon.state.left then GameTooltip:AddLine(NS.L('Remaining: '..(Context.FormatTime(weapon.state.left) or '')),1,1,1) end
         GameTooltip:Show()
     end)
     weapon.button:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
@@ -248,7 +248,7 @@ local function CreateIndicator(host,db)
         if not GameTooltip then return end
         GameTooltip:SetOwner(self,'ANCHOR_TOP')
         if shield.state and shield.state.name then GameTooltip:SetText(shield.state.name)
-        else GameTooltip:SetText('No elemental shield active') end
+        else GameTooltip:SetText(NS.L('No elemental shield active')) end
         GameTooltip:Show()
     end)
     shield.button:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
@@ -290,7 +290,7 @@ local function CreateIndicator(host,db)
                 activeTotems=activeTotems+1;cell.icon:SetTexture(state.icon or cell.info.fallback);cell.icon:SetVertexColor(1,1,1,1);cell.icon:SetDesaturated(false);cell.icon:Show()
                 cell.stripe:SetColorTexture(unpack(cell.info.color))
                 local timer=Context.FormatTime(state.left)
-                cell.timer:SetText(timer and ((state.estimated and '~' or '')..timer) or '')
+                cell.timer:SetText(timer and NS.L((state.estimated and '~' or '')..timer) or '')
                 cell.badge:SetText('')
             else
                 local c=cell.info.color
@@ -307,7 +307,7 @@ local function CreateIndicator(host,db)
         if imbue and imbue.equipped then
             weapon.icon:SetTexture(imbue.icon or 'Interface\\Icons\\INV_Mace_02')
             weapon.icon:SetVertexColor(imbue.active and 1 or 0.45,imbue.active and 1 or 0.45,imbue.active and 1 or 0.45,1)
-            weapon.timer:SetText(imbue.active and (Context.FormatTime(imbue.left) or '') or '')
+            weapon.timer:SetText(imbue.active and NS.L(Context.FormatTime(imbue.left) or '') or '')
             local warn=next(imbueNames)~=nil and not imbue.active
             weapon.stripe:SetColorTexture(warn and 1 or 0.25,warn and 0.15 or 0.75,warn and 0.1 or 1,1)
         end
@@ -321,7 +321,7 @@ local function CreateIndicator(host,db)
             shield.icon:SetVertexColor(type(aura)=='table' and 1 or 0.4,type(aura)=='table' and 1 or 0.4,type(aura)=='table' and 1 or 0.45,1)
             local count=type(aura)=='table' and aura.applications or 0
             shield.badge:SetText(count and count>0 and tostring(count) or '')
-            shield.timer:SetText(type(aura)=='table' and (Context.FormatTime(aura.left) or '') or '')
+            shield.timer:SetText(type(aura)=='table' and NS.L(Context.FormatTime(aura.left) or '') or '')
             shield.stripe:SetColorTexture(missingShield and 1 or 0.25,missingShield and 0.15 or 0.75,missingShield and 0.1 or 1,1)
         end
         local inCombat=Core.Call(UnitAffectingCombat,'player')==true
@@ -363,7 +363,7 @@ local function CreateIndicator(host,db)
             if helper~='' then icon='Interface\\Icons\\Spell_Nature_StoneClawTotem' end
         end
         helperIcon:SetShown(helper~='');helperIcon:SetTexture(icon or 'Interface\\Icons\\Spell_Nature_Lightning')
-        helperText:SetText(helper)
+        helperText:SetText(NS.L(helper))
         -- The default layout leaves a narrow helper slot beside the lock.
         -- Fit the measured text, then shorten only when the client font still
         -- cannot draw the full cue inside that slot.
@@ -375,13 +375,13 @@ local function CreateIndicator(host,db)
         local width=helperText:GetStringWidth()
         if Core.IsNumber(width) and width>helperText:GetWidth() then
             local compact=helper:match('^Recall (%d+) totems?$')
-            if compact then helperText:SetText('Recall '..compact)
-            elseif helper:match('^Maelstrom ') then helperText:SetText((helper:gsub('^Maelstrom ', 'MW ')))
-            elseif helper=='Riptide ready' then helperText:SetText('Riptide') end
+            if compact then helperText:SetText(NS.L('Recall '..compact))
+            elseif helper:match('^Maelstrom ') then helperText:SetText(NS.L(helper:gsub('^Maelstrom ', 'MW ')))
+            elseif helper=='Riptide ready' then helperText:SetText(NS.L('Riptide')) end
         end
         helperText:SetTextColor(unpack(color));helperText:SetShown(helper~='')
         local mana=db.showMana~=false and Context.ManaPercent() or nil
-        manaText:SetText(mana and ('Mana '..mana..'%') or '');manaText:SetShown(mana~=nil)
+        manaText:SetText(mana and NS.L('Mana '..mana..'%') or '');manaText:SetShown(mana~=nil)
         NS.ClassHost.SetFade(host,frame,(db.fadeOutOfCombat==false or inCombat or activeTotems>0) and 1 or (hasTarget and 0.6 or 0.2))
         lastStatus=string.format('Totems %d/4 confirmed, %d unavailable; weapon imbue %s; shield %s; helper %s; mana %s',activeTotems,unknownTotems,
             imbue and (imbue.active and 'active' or (imbue.equipped and 'missing' or 'no weapon')) or 'unavailable',

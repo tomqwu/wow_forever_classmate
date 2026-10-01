@@ -1,11 +1,14 @@
 ## Interface: 16001
 ## Title: Forever Classmate
+## Title-zhCN: 永恒战友
 ## Notes: Class-aware companion bars for every WoW Forever class, with learned racial support.
+## Notes-zhCN: 为魔兽世界：永恒各职业提供战斗信息条，支持已学种族技能。
 ## IconTexture: Interface\AddOns\ForeverUtilities\Textures\ForeverClassmate
 ## Author: Codex
-## Version: 0.24.5
+## Version: 0.25.0
 ## SavedVariables: ForeverUtilitiesDB
 Core.lua
+Locale.lua
 ClassHost.lua
 TargetContext.lua
 PetDatabase.lua

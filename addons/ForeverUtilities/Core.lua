@@ -2,6 +2,8 @@ local addon, NS = ...
 local Core = {}
 NS.Core = Core
 NS.Classes = {}
+-- Locale.lua replaces this with the client-language lookup at load time.
+NS.L = function(text) return text end
 -- Forever stores the desktop swing-timer preset width as an offset from the
 -- 213px slider minimum. The preset value 213 therefore renders as 426px.
 NS.ClassBarWidth = 426
