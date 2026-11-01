@@ -19,8 +19,10 @@ The static addon-writing guide lives in `site/` and deploys to GitHub Pages from
 For each fix/feature: implement, add meaningful checks, bump the TOC (patch fixes,
 minor features), run python3 scripts/check.py and git diff --check, then build with
 python3 scripts/package.py. Verify the ZIP root is ForeverUtilities/. Install the
-same files in the known client's _classic_beta_/Interface/AddOns/ForeverUtilities
-folder and compare bytes. Preserve unexpected local edits and live SavedVariables.
+same files in the requested/current client's Interface/AddOns/ForeverUtilities
+folder and compare bytes. Detect the active product first: on 2026-11-01 `wowf`
+is installed under `_forever_`; the historical installation is under `_classic_beta_`.
+Preserve unexpected local edits and live SavedVariables.
 Never restart the user's game. Report unavailable installation explicitly.
 
 Commit and push scoped changes to main, then verify CI and the GitHub release
