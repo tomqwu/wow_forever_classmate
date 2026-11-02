@@ -5,7 +5,7 @@
 ## Notes-zhCN: 为魔兽世界：永恒各职业提供战斗信息条，支持已学种族技能。
 ## IconTexture: Interface\AddOns\ForeverUtilities\Textures\ForeverClassmate
 ## Author: Codex
-## Version: 0.25.0
+## Version: 0.25.1
 ## SavedVariables: ForeverUtilitiesDB
 Core.lua
 Locale.lua

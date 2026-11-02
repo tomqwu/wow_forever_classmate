@@ -6,7 +6,7 @@
 
 **[Build addons for Forever](https://tomqwu.github.io/wow_forever_classmate/)** is the companion GitHub Pages guide to the client API, safe reads, beta pitfalls, testing, and release practices.
 
-Version 0.25.0 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
+Version 0.25.1 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
 
 The interface follows the WoW client language: English and Simplified Chinese (`zhCN`) labels for bars, settings, warnings, and tooltips. Spell and character names come from the client; curated rare-pet names may remain in English. Other client locales use English.
 
@@ -34,7 +34,7 @@ Warlock armor is confirmed out of combat. If combat hides the aura, the upkeep s
 
 ## Setup and commands
 
-Install the `ForeverUtilities` folder into `_classic_beta_/Interface/AddOns/`. The folder name and `ForeverUtilitiesDB` stay stable for upgrades. Restart WoW for first discovery or use `/reload` after an update.
+Install the `ForeverUtilities` folder into the active Forever client’s `_forever_/Interface/AddOns/` folder. Historical beta installs used `_classic_beta_/Interface/AddOns/`. The folder name and `ForeverUtilitiesDB` stay stable for upgrades. Restart WoW for first discovery or use `/reload` after an update.
 
 Left-click the round minimap button or use the active class command to open settings. Right-click it to inspect an eligible targeted player. Drag the button around the map edge. The padlock on the bar toggles movement without disabling updates or fading.
 
@@ -49,6 +49,8 @@ Left-click the round minimap button or use the active class command to open sett
 | `<command> status` | Show version and live diagnostics |
 
 Each information block can be switched independently. Bars use full opacity in combat; the Shaman bar also stays fully visible while a totem is active. Mage uses 90% opacity with a target and 75% while idle outside combat. Without an active totem, the other bars use 60% with a target and 20% while idle. A confirmed missing long-term upkeep buff keeps a standard-class bar fully visible outside combat; an unavailable reading does not. Rogue finisher buffs still use the normal fade between fights. Hovering a bar reveals it at full opacity, even while locked; leaving restores its normal fade. Unlocking does not override fading on its own.
+
+Hunter ammo counts and low-ammo warnings respect the current weapon’s ammo eligibility when the client exposes it; no-ammo weapons and unreadable eligibility stay quiet.
 
 For a minimal Hunter display, enable **Icon-only range display** in `/fhunter` settings. Green means the client confirms ranged reach and red means it confirms you cannot shoot. The locked icon hides when reach is unavailable or there is no valid hostile target; unlocking keeps a neutral icon available for dragging. Use `/fhunter unlock` to move it. **Right-click the Classmate minimap button to inspect an eligible targeted player on any class**, including Hunter icon-only mode; left-click opens settings. The right-click shortcut has its own per-class toggle. The optional Hunter full-bar Inspect button remains available. Pet hints describe family guidance; the selected pet's learned abilities remain unknown unless checked with Beast Lore.
 

@@ -266,9 +266,17 @@ f.Refresh()
 check(f.labels[3].text=='Ammo: 500' and not f.scripts.OnUpdate,'ammo visible without target or polling')
 ammo=499;f.scripts.OnEvent(f,'BAG_UPDATE_DELAYED')
 check(f.labels[3].text=='Ammo: 499','bag event refreshes ammo')
+UnitUsesAmmo=function() return false end
+ammo=0;f.scripts.OnEvent(f,'PLAYER_EQUIPMENT_CHANGED',18)
+check(f.labels[3].text=='' and #warnings==0,'switching to a no-ammo weapon clears count without a false empty warning')
+UnitUsesAmmo=function() return secret end
+f.scripts.OnEvent(f,'UNIT_INVENTORY_CHANGED','player')
+check(f.labels[3].text=='' and #warnings==0,'restricted ammo eligibility stays quiet')
+UnitUsesAmmo=function() return true end
 ammo=200;f.scripts.OnEvent(f,'UNIT_INVENTORY_CHANGED','player')
 check(f.labels[3].text=='Ammo: 200','equipped ammo change refreshes count')
 check(#warnings==1 and warnings[1]:find('200 remaining',1,true),'warning at exactly 200')
+UnitUsesAmmo=nil
 ammo=199;f.scripts.OnEvent(f,'BAG_UPDATE_DELAYED');f.Refresh()
 check(#warnings==1,'no repeated warning per shot or refresh')
 ammo=nil;f.scripts.OnEvent(f,'BAG_UPDATE_DELAYED')

@@ -7,8 +7,11 @@ local count=0
 local function check(value,message) assert(value,message);count=count+1 end
 local now=100
 GetTime=function() return now end
-local units={target={guid='A',name='First',auras={}},nameplate1={guid='A',name='First',auras={}},
-    nameplate2={guid='B',name='Second',auras={}}}
+-- Same creature type with opaque server/spawn fields: compare complete session
+-- identities, never infer a layer or deduplicate by creature ID alone.
+local firstGUID='Creature-0-958321-0-784512-1132-AE901F23B456'
+local units={target={guid=firstGUID,name='First',auras={}},nameplate1={guid=firstGUID,name='First',auras={}},
+    nameplate2={guid='Creature-0-716234-0-198765-1132-EC423981DCBA',name='Second',auras={}}}
 UnitExists=function(unit) return units[unit]~=nil end
 UnitCanAttack=function() return true end
 UnitIsDead=function() return false end
@@ -29,7 +32,7 @@ units.target.auras={
 units.nameplate1.auras=units.target.auras
 units.nameplate2.auras={{name='Corruption',sourceUnit='player',duration=20,expirationTime=118}}
 local first=NS.DotTracker.ReadUnit('target',names,now)
-check(first and first.guid=='A' and first.effects.corruption.left==20 and first.effects.immolate.left==8,
+check(first and first.guid==firstGUID and first.effects.corruption.left==20 and first.effects.immolate.left==8,
     'reader keeps only player-owned readable DoTs with exact duration')
 units.target.auras[1].expirationTime=secret
 first=NS.DotTracker.ReadUnit('target',names,now)
@@ -88,6 +91,10 @@ check(tracker.bars[1].value==15 and tracker.bars[1].time.text=='15s',
 tracker.scripts.OnEvent(tracker,'NAME_PLATE_UNIT_REMOVED','nameplate2')
 check(not tracker.bars[3].shown and tracker.heading.text=='DoTs',
     'removed nameplate clears its bars immediately')
+tracker.scripts.OnEvent(tracker,'NAME_PLATE_UNIT_ADDED','nameplate2')
+check(tracker.bars[3].shown,'vertically filtered nameplate returning restores only currently readable effects')
+tracker.scripts.OnEvent(tracker,'NAME_PLATE_UNIT_REMOVED','nameplate2')
+check(not tracker.bars[3].shown,'repeated vertical disappearance cannot retain a stale DoT row')
 now=126;tracker.scripts.OnUpdate(tracker,0.11)
 check(not tracker.shown and not tracker.scripts.OnUpdate,
     'expired DoTs disappear without retaining stale target claims')

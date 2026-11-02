@@ -52,6 +52,10 @@ end
 
 -- Count the selected ammo type carried by the player, excluding all bank storage.
 function Context.AmmoCount()
+    -- Newer Forever clients expose whether the current weapon uses ammo.
+    -- A restricted/failed eligibility read is unknown, never an empty quiver.
+    -- Retain the ammo-slot path only when this optional API is absent.
+    if type(UnitUsesAmmo)=='function' and Call(UnitUsesAmmo,'player')~=true then return nil end
     local slot=Call(GetInventorySlotInfo,'AmmoSlot')
     if not Core.IsNumber(slot) or slot<0 then return nil end
     if type(GetInventoryItemID)~='function' then return nil end

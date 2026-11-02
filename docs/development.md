@@ -1,8 +1,10 @@
 # Forever Classmate development
 
-Active source: `addons/ForeverUtilities/`. The folder, TOC filename, saved-variable name, and release tag prefix remain stable for upgrades. Version 0.25.0 supports all nine classes through the registry in `Core.lua`.
+Active source: `addons/ForeverUtilities/`. The folder, TOC filename, saved-variable name, and release tag prefix remain stable for upgrades. Version 0.25.1 supports all nine classes through the registry in `Core.lua`.
 
 The [November 1 API review](forever-api-review-2026-11-01.md) compares the October client changes with Classmate's call sites and records the gap between the latest public UI source (70532) and the installed `wowf` client (70707). The launch client uses `_forever_`; detect the active product before deploying rather than assuming the historical `_classic_beta_` folder.
+
+Run `python3 scripts/install.py --wow-root '/mnt/f/World of Warcraft'` to install the checked source. It reads the active `wowf` entry from `.build.info`, selects `_forever_`, backs up changed existing addon files under `ClassmateBackups`, and verifies installed file bytes. It leaves SavedVariables and extra local files intact. A historical beta install requires `--client _classic_beta_`; a missing active launch client never silently selects another beta product.
 
 The public [Forever addon guide](https://tomqwu.github.io/wow_forever_classmate/) is authored in `site/` and deployed by `.github/workflows/pages.yml`. Run `python3 scripts/check_site.py` before changing its links or sections. This documentation site is separate from the versioned addon package.
 
