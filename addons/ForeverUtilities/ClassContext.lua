@@ -240,7 +240,7 @@ local racialCatalog={
     {key='willForsaken',names={'Will of the Forsaken'},kind='racial',priority=1},
     {key='warStomp',names={'War Stomp'},kind='racial',priority=1},
     {key='berserking',names={'Berserking'},kind='racial',priority=1},
-    {key='readLeyLine',names={'Read Ley Line'},kind='racial',priority=1},
+    {key='readLeyLine',names={'Read Leyline','Read Ley Line'},kind='racial',priority=1},
     {key='skysight',names={'Skysight'},kind='racial',priority=1},
     {key='walkOnAir',names={'Walk on Air'},kind='racial',priority=3},
     {key='escapeArtist',names={'Escape Artist'},kind='racial',priority=2},

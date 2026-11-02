@@ -57,6 +57,27 @@ C_Item={GetItemCount=function(id,bank,uses,reagent,account)
     return 2456
 end}
 check(C.AmmoCount()==2456,'total carried selected ammo')
+UnitUsesAmmo=function(unit) assert(unit=='player');return true end
+check(C.AmmoCount()==2456,'ammo weapon retains carried count with new eligibility API')
+UnitUsesAmmo=function() return false end
+check(C.AmmoCount()==nil,'no-ammo weapon hides carried arrows instead of warning')
+local inventoryReader=GetInventoryItemID
+GetInventoryItemID=function() error('ineligible ammo must not read inventory') end
+for _,value in ipairs({false,secret,'true'}) do
+ UnitUsesAmmo=function() return value end
+ check(C.AmmoCount()==nil,'false restricted or malformed eligibility stops ammo reads')
+end
+UnitUsesAmmo=function() return nil end
+check(C.AmmoCount()==nil,'missing eligibility result is unknown')
+UnitUsesAmmo=function() error('restricted') end
+check(C.AmmoCount()==nil,'failed eligibility is unknown')
+GetInventoryItemID=inventoryReader
+UnitUsesAmmo=function() return false end
+ammoID=nil;UnitClass=function() return 'Hunter','HUNTER' end
+check(C.AmmoCount()==nil,'no-ammo weapon with empty slot does not produce false zero')
+UnitUsesAmmo=function() return true end
+check(C.AmmoCount()==0,'ammo weapon with empty slot still reports zero')
+UnitUsesAmmo=nil
 ammoID=nil;UnitClass=function() return 'Hunter','HUNTER' end
 check(C.AmmoCount()==0,'hunter empty ammo slot is zero')
 UnitClass=function() return 'Mage','MAGE' end

@@ -1,3 +1,12 @@
+## 0.25.1
+
+- Hunter ammo counts and low-ammo warnings now respect `UnitUsesAmmo` when the client exposes it. No-ammo weapons and unreadable eligibility hide the ammo reading; clients without the API retain the existing ammo-slot fallback. Equipment changes refresh this immediately.
+- Skyborne racial discovery accepts both Read Leyline and Read Ley Line, including client-resolved localized names, and continues using the actual learned spell's cooldown.
+- Added a local installer that detects the active `wowf` product and `_forever_` folder. Historical beta deployment is explicit; existing addon edits are backed up and SavedVariables are preserved.
+- Added regressions for obfuscated GUID session identities, NPC matching, nameplate disappearance/reappearance, and minimap resizing without reading secret frame strata.
+
+Use `/reload` for an existing installation; a newly installed addon may require normal first discovery when the client next starts. Checks use mocked APIs and temporary installation folders; live build 70707 combat behavior still needs in-game validation.
+
 ## 0.25.0
 
 - Added Simplified Chinese (`zhCN`) interface text selected from the WoW client locale. Hunter range, target and ammo labels; class bars; settings; warnings; pet guidance; and tooltips now use a shared locale lookup. English remains the fallback for other locales.

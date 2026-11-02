@@ -1,6 +1,6 @@
 # Forever addon API review — 2026-11-01
 
-This review compares the APIs Classmate uses with newer Forever client documentation. It does not change the addon runtime or establish live combat behavior.
+This review compares the APIs Classmate uses with newer Forever client documentation. The initial research did not establish live combat behavior. The follow-up compatibility fixes are recorded below.
 
 ## Evidence and version limits
 
@@ -51,4 +51,6 @@ One catalog question needs a client check: the official notes write **Read Leyli
 3. Verify the Read Leyline spelling against the actual spellbook. Preserve semantic discovery rather than hardcoding the newer spell IDs.
 4. Update deployment tooling to detect the installed `wowf` product and `_forever_` location. The historical `_classic_beta_` installation is not the installed launch client's AddOns folder. No files or saved settings were migrated as part of this research.
 
-The addon runtime is unchanged by this review, so no addon version bump or CurseForge upload is required.
+## Follow-up implementation — 0.25.1
+
+The follow-up patch gates Hunter ammo reads on a readable true `UnitUsesAmmo` result when the function exists, adds both Read Leyline spellings to learned racial discovery, and adds `scripts/install.py` for active-product detection, addon backups and byte verification. Tests cover no-ammo weapons, restricted/missing eligibility, empty ammo, equipment updates, localized spell discovery, obfuscated session GUIDs, returning nameplates, and native minimap resizing without reading frame strata. These are mocked checks, not live build 70707 validation. Combat restrictions and native-data guards remain in place.

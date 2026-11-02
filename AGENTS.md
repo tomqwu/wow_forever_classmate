@@ -23,6 +23,8 @@ same files in the requested/current client's Interface/AddOns/ForeverUtilities
 folder and compare bytes. Detect the active product first: on 2026-11-01 `wowf`
 is installed under `_forever_`; the historical installation is under `_classic_beta_`.
 Preserve unexpected local edits and live SavedVariables.
+Use `python3 scripts/install.py` for the local install; it detects the active
+`wowf` product, backs up changed addon files, and verifies copied file bytes.
 Never restart the user's game. Report unavailable installation explicitly.
 
 Commit and push scoped changes to main, then verify CI and the GitHub release

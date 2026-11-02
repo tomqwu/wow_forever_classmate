@@ -42,6 +42,10 @@ Reset();UnitCreatureFamily=function() return 'Fox',319 end
 check(NS.PetGuide.ReadTarget().family.ability=="Trickster's Dance",'Forever fox guide')
 Reset();UnitCreatureID=nil
 check(NS.PetGuide.ReadTarget().notable.name=='Timber','GUID fallback when creature ID API absent')
+for _,guid in ipairs({'Creature-0-958321-0-784512-1132-AE901F23B456','Creature-0-716234-0-198765-1132-EC423981DCBA'}) do
+ UnitGUID=function() return guid end
+ check(NS.PetGuide.ReadTarget().notable.name=='Timber','changed server and spawn fields do not change the pet NPC match')
+end
 for _,guid in ipairs({'Pet-0-1234-0-5678-1132-0000ABC123','Player-1234-1132','broken','Creature-0-1234-0-5678-bad-0000ABC123',secret,1132}) do
  UnitGUID=function() return guid end
  check(not NS.PetGuide.ReadTarget().notable,'invalid or restricted GUID never exact-matches')

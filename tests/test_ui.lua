@@ -10,6 +10,11 @@ local frames,named={},{}
 local methods={}
 local function object() return setmetatable({scripts={},events={},shown=true},{__index=methods}) end
 function methods:SetScript(k,v) self.scripts[k]=v end
+function methods:HookScript(k,v)
+ local previous=self.scripts[k]
+ self.scripts[k]=function(...) if previous then previous(...) end;v(...) end
+end
+function methods:GetFrameStrata() error('must not copy possibly secret native frame strata') end
 function methods:RegisterEvent(e) self.events[e]=true end
 function methods:RegisterForClicks(...) self.clicks={...} end
 function methods:UnregisterEvent(e) self.events[e]=nil end
@@ -103,6 +108,9 @@ local mini=named.ForeverHunterFriendMinimap
 check(mini and mini.shown,'minimap button available even when bar disabled')
 check(mini.width==28 and mini.height==28,'compact minimap button')
 check(math.abs(math.sqrt(mini.x^2+mini.y^2)-103)<0.01,'button sits on minimap rim')
+db.minimapAngle=90;Minimap:SetSize(220,160);Minimap.scripts.OnSizeChanged(Minimap)
+check(math.abs(mini.x)<0.01 and math.abs(mini.y-83)<0.01,'reskinned minimap resize keeps button on the root minimap rim')
+db.minimapAngle=35;Minimap:SetSize(200,200);Minimap.scripts.OnSizeChanged(Minimap)
 check(mini.clicks[1]=='LeftButtonUp' and mini.clicks[2]=='RightButtonUp','minimap registers both click buttons')
 mini.scripts.OnClick(mini,'LeftButton');check(panel.shown,'minimap left-click opens settings')
 local inspected=0

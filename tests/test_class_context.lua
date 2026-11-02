@@ -180,4 +180,21 @@ C_Spell.GetSpellLevelLearned=function(id) return id*10 end
 local ranks=C.Discover({{key='fortitude',names={'Power Word: Fortitude','Prayer of Fortitude'}}})
 check(ranks.fortitude.id==2,'highest readable learned rank supplies spell readiness')
 check(C.Names(ranks,{'fortitude'})['Prayer of Fortitude'],'equivalent group buff is accepted even before the group spell is learned')
+-- Both documented spellings discover the actual learned spell, including
+-- localization resolved by client metadata; readiness uses its live spell ID.
+C_SpellBook.GetSpellBookSkillLineInfo=function() return {itemIndexOffset=0,numSpellBookItems=1} end
+C_SpellBook.GetSpellBookItemInfo=function() return {spellID=7001,isPassive=false,isOffSpec=false} end
+for _,name in ipairs({'Read Leyline','Read Ley Line','解读魔网'}) do
+ C_Spell.GetSpellInfo=function(value)
+  if value==7001 or value==name or (name=='解读魔网' and value=='Read Leyline') then
+   return {name=name,iconID=77}
+  end
+ end
+ local discovered=C.Discover(C.RacialCatalog)
+ check(discovered.readLeyLine and discovered.readLeyLine.id==7001 and discovered.readLeyLine.name==name,
+  'Skyborne racial discovers each client spelling and localized metadata')
+ C_Spell.GetSpellCooldown=function(id) assert(id==7001);return {startTime=90,duration=120,isEnabled=true} end
+ C_Spell.IsSpellUsable=function() return true,false end
+ check(C.Racial(discovered,'MAGE').left==110,'racial follows live cooldown rather than a stored tuning value')
+end
 print('PASS: '..count..' shared class context checks')
