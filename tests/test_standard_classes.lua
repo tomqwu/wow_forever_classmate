@@ -395,4 +395,14 @@ for _,key in ipairs({'showResource','showUpkeep','showTarget','showAbilities','s
 warrior.Refresh()
 check(reads==0 and not warrior.scripts.OnUpdate,'disabled standard blocks perform no resource, aura, cooldown reads or polling')
 check(not warrior.dotTracker.shown and not next(warrior.dotTracker.events),'disabled DoT strip removes its own listeners')
+local updatedPaladin=Fixture(NS.Paladin,{'Twist of Light','Unsealed Wrath'},{'Unsealed Wrath'})
+check(not NS.Paladin.spells.twistLight and updatedPaladin.cells.ability.top.text=='Proc',
+    'Paladin surfaces the readable replacement aura and drops the retired talent')
+local updatedRogue=Fixture(NS.Rogue,{'Slice and Dice','Venom','Shank','Death Mark','Thousand Cuts','Cutthroat'},{'Slice and Dice'})
+check(updatedRogue.cells.upkeep.top.text=='1/1' and NS.Rogue.spells.deathMark
+    and not NS.Rogue.spells.thousandCuts and not NS.Rogue.spells.cutthroat,
+    'absent Venom is not missing upkeep and retired Rogue talents are ignored')
+local updatedDruid=Fixture(NS.Druid,{"Tiger's Fury",'Berserk','Primal Bite','Lacerate','Shifting Power'},{})
+check(not NS.Druid.spells.berserk and not NS.Druid.spells.tigersFury and NS.Druid.spells.lacerate
+    and updatedDruid.cells.ability.top.text=='Ready','Druid replaces stale cues with learned Feral abilities')
 print('PASS: '..count..' standard class runtime checks')

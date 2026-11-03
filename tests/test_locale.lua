@@ -20,7 +20,7 @@ check(NS.L('Forever Classmate — Mage'),'永恒战友 — 法师','class panel 
 check(NS.L('Show mana percentage'),'显示法力百分比','settings option')
 check(NS.L('Mana 53%'),'法力 53%','Shaman mana')
 check(NS.L('Maelstrom 5/5'),'漩涡 5/5','Shaman helper')
-check(NS.L('Lava Burst 12s'),'熔岩爆裂 12秒','Shaman timed helper')
+check(NS.L('Riptide 12s'),'激流 12秒','Shaman timed helper')
 check(NS.L('Earth element: no active totem'),'地系元素：没有生效的图腾','Shaman totem tooltip')
 check(NS.L('Armor: Frost Armor active'),'护甲：Frost Armor 生效中','upkeep tooltip with native spell name')
 check(NS.L('No tracked effect from you is active.'),'目标身上没有你施加的已追踪效果。','standard tooltip')

@@ -84,12 +84,6 @@ UnitAffectingCombat=function() return false end;missing=C.MissingShield(names);c
 auras={{name='Lightning Shield',applications=2,expirationTime=0}};UnitAffectingCombat=function() return true end
 local shieldMissing,shieldAura=C.MissingShield(names)
 check(shieldMissing==false and shieldAura.applications==2,'active shield clears warning')
-UnitCanAttack=function() return true end;UnitIsDead=function() return false end
-auras={{name='Flame Shock',expirationTime=112,sourceUnit='player'}}
-local flame=C.FlameShock('Flame Shock');check(flame.name=='Flame Shock' and flame.left==12,'target Flame Shock timer')
-auras={{name='Flame Shock',sourceUnit='party1'}};check(C.FlameShock('Flame Shock')==false,'another shaman’s Flame Shock does not satisfy personal setup')
-auras={};check(C.FlameShock('Flame Shock')==false,'readable missing Flame Shock')
-UnitCanAttack=function() return false end;check(C.FlameShock('Flame Shock')==false,'friendly target quiet')
 UnitPower=function() return 51 end;UnitPowerMax=function() return 100 end
 check(C.ManaPercent()==51,'mana percentage')
 UnitPower=function() return secret end;check(C.ManaPercent()==nil,'secret mana hidden')

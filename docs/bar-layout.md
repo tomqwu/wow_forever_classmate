@@ -43,7 +43,7 @@ The Shaman bar uses three readable groups across the same footprint:
 
 - Four aligned 38px Earth, Fire, Water, and Air totem cells appear first.
 - Main-hand weapon imbue and elemental-shield cells follow the totems.
-- The learned Maelstrom, Flame Shock/Lava Burst, Riptide, or Totemic Recall cue
+- The learned Maelstrom, Riptide, Lightning Mastery, Stormstrike, Totemic Call, or Totemic Recall cue
   occupies the right group, with mana below it.
 - The shared lock button occupies the final 20px.
 

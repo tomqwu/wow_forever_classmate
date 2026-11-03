@@ -1,3 +1,11 @@
+## 0.26.0
+
+- Audited all nine classes against Blizzard’s November 3 Forever launch notes. Replaced retired Paladin, Rogue, Druid and Shaman cues with learned launch abilities, including Unsealed Wrath, Shank, Primal Bite and Lightning Mastery. Venom is a temporary proc; it no longer counts as Rogue upkeep.
+- Added selected readable effects and cooldowns to existing class slots: Garrote, Death Mark, Rake, Lacerate, Reckless Swings, Slam, Missile Barrage, Penance, Amplify Curse, Stormstrike and Totemic Call. Existing layouts and settings carry forward.
+- Corrected the bear, boar, carrion bird and bat family guide entries to match Blizzard’s Forever overview. Pet guide entries remain family guidance, not evidence of an individual pet’s skills.
+
+Use `/reload` after updating. Checks use mocked APIs; live launch-client aura names and combat restrictions still need validation.
+
 ## 0.25.1
 
 - Hunter ammo counts and low-ammo warnings now respect `UnitUsesAmmo` when the client exposes it. No-ammo weapons and unreadable eligibility hide the ammo reading; clients without the API retain the existing ammo-slot fallback. Equipment changes refresh this immediately.

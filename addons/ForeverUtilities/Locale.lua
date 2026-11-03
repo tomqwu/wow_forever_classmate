@@ -9,6 +9,10 @@ local zh={
     ['Forever Classmate']='永恒战友',
     ['Hunter']='猎人',['Shaman']='萨满祭司',['Paladin']='圣骑士',['Warrior']='战士',
     ['Rogue']='潜行者',['Druid']='德鲁伊',['Mage']='法师',['Priest']='牧师',['Warlock']='术士',
+    ['Multi-target attack.']='群体攻击。',['Group defense']='团队防御',
+    ['Area damage and reduced enemy melee attack power.']='范围伤害并降低敌人的近战攻击强度。',
+    ['Caster control']='施法者控制',['Damage and reduced enemy casting speed.']='造成伤害并降低敌人施法速度。',
+    ['Bleed damage over time.']='持续造成流血伤害。',
     ['No target']='无目标',['Target dead']='目标已死亡',['Friendly target']='友方目标',
     ['Range unavailable']='距离不可用',['Melee']='近战',['Too close']='太近',
     ['Shooting']='射击范围内',['Too far']='太远',['Distance']='距离',
@@ -131,11 +135,9 @@ local zh={
     ['Last readable state; live combat data unavailable.']='显示上次可读取的状态；战斗中的实时数据不可用。',
     ['Cast observed; timer unavailable until duration is learned.']='已观察到施放；尚未获取持续时间，无法显示计时。',
     ['Fire Nova requires an active Fire totem.']='火焰新星需要一个生效的火系图腾。',
-    ['Flame Shock!']='施放烈焰震击！',['Lava Burst ready']='熔岩爆裂就绪',
-    ['Lava Burst: context']='熔岩爆裂：条件不符',
     ['Riptide ready']='激流就绪',['Riptide: context']='激流：条件不符',
-    ['Riptide']='激流',['Lava Burst']='熔岩爆裂',['Maelstrom']='漩涡武器',
-    ['Flame']='烈焰震击',['Recall']='召回图腾',['Totems']='图腾',
+    ['Riptide']='激流',['Maelstrom']='漩涡武器',
+    ['Recall']='召回图腾',['Totems']='图腾',
     ['Percentage is displayed by the client; exact values are restricted.']='百分比由客户端显示；精确数值受限。',
     ['The client did not expose a readable resource value.']='客户端未提供可读取的资源数值。',
     ['The client did not permit a readable resource percentage.']='客户端未允许读取资源百分比。',
@@ -243,10 +245,7 @@ local function Translate(text)
     if seenName then return seenName..' 上次确认；当前状态不可读取' end
     local lower,upper,limit=text:match('^(.-): (%d+) / (%d+) active$')
     if lower then return Translate(lower)..'：'..upper..' / '..limit..' 生效' end
-    local ability,time=text:match('^(Lava Burst) (.+)$')
-    if not ability then ability,time=text:match('^(Riptide) (.+)$') end
-    if ability then return Translate(ability)..' '..Translate(time) end
-    ability,time=text:match('^(Flame) (.+)$')
+    local ability,time=text:match('^(Riptide) (.+)$')
     if ability then return Translate(ability)..' '..Translate(time) end
     local prefix,suffix=text:match('^(.-): (.+)$')
     if prefix then

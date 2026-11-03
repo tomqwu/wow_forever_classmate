@@ -79,12 +79,6 @@ function Context.MissingShield(names)
     return false
 end
 
-function Context.FlameShock(name)
-    if type(name)~='string' or name=='' then return nil end
-    if Call(UnitCanAttack,'player','target')~=true or Call(UnitIsDead,'target')~=false then return false end
-    return Context.Aura('target','HARMFUL',{[name]=true},true)
-end
-
 function Context.ManaPercent()
     local current=Call(UnitPower,'player',0)
     local maximum=Call(UnitPowerMax,'player',0)

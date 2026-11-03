@@ -144,4 +144,8 @@ for name,entry in pairs(NS.PetDatabase.rareByName) do
  if entry.id then check(NS.PetDatabase.rareByID[entry.id]==entry,'numeric rare indexes share the same record') end
 end
 check(families==19 and notables==21 and rares==70,'curated database coverage')
+for family,ability in pairs({[4]='Swipe',[5]='Charge',[7]='Demoralizing Screech',[24]='Sonic Blast'}) do
+ Reset();UnitCreatureFamily=function() return nil,family end
+ check(NS.PetGuide.ReadTarget().family.ability==ability,'Forever family guide uses the documented signature ability')
+end
 print('PASS: '..count..' pet guide checks')

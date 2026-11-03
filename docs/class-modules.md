@@ -1,6 +1,6 @@
 # Standard class modules
 
-Version 0.25.1 supports Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock alongside the existing Hunter and Shaman companions. The standard modules share `ClassContext.lua` and `StandardClasses.lua`, but each has an independent `ForeverUtilitiesDB.<class>` table and command.
+Version 0.26.0 supports Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock alongside the existing Hunter and Shaman companions. The standard modules share `ClassContext.lua` and `StandardClasses.lua`, but each has an independent `ForeverUtilitiesDB.<class>` table and command.
 
 For every class, left-clicking the Classmate minimap button opens settings and right-clicking it opens WoW's native Inspect window for an eligible targeted player. The right-click shortcut has a per-class toggle and does not change the bar's information slots.
 
@@ -22,7 +22,7 @@ Warrior, Rogue, Druid, Priest, and Warlock have an independently toggleable DoT 
 
 ## Forever mechanics represented
 
-- **Paladin:** persistent seals and target judgments, including the Twist of Light aura introduced for Retribution.
+- **Paladin:** persistent seals and target judgments, including the readable Unsealed Wrath aura for Retribution.
 - **Warrior:** rage and stance changes, shout upkeep, Rend/Deep Wounds, Bloodthrill, and reactive or execute abilities. The game has its own swing display, so this module does not restore the retired swing bar.
 - **Rogue:** both temporary weapon coatings, energy, combo points, Slice and Dice, Forever's Venom buff, target poison/bleed effects, and Riposte or other learned cooldowns.
 - **Druid:** power changes with form, Mark of the Wild or Thorns, Moonfire/Insect Swarm/Faerie Fire/Rip, Eclipse and other learned procs, plus spec abilities such as Tiger's Fury or Swiftmend.

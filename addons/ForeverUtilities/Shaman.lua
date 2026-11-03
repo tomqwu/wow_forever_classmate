@@ -107,7 +107,9 @@ local function CreateIndicator(host,db)
 
     local catalog={
         lightningShield={'Lightning Shield','shield'},waterShield={'Water Shield','shield'},
-        maelstrom={'Maelstrom Weapon','maelstrom'},lava={'Lava Burst','lava'},flame={'Flame Shock','flame'},
+        maelstrom={'Maelstrom Weapon','maelstrom'},
+        lightningMastery={'Lightning Mastery','cue'},stormstrike={'Stormstrike','cue'},
+        totemicCall={'Totemic Call','cue'},
         riptide={'Riptide','riptide'},fireNova={'Fire Nova','fireNova'},
         recall={'Totemic Recall','recall'},
         rockbiter={'Rockbiter Weapon','imbue'},flametongue={'Flametongue Weapon','imbue'},
@@ -326,7 +328,7 @@ local function CreateIndicator(host,db)
         end
         local inCombat=Core.Call(UnitAffectingCombat,'player')==true
         local hasTarget=Core.Call(UnitExists,'target')==true
-        local helper,icon,color='',nil,{0.75,0.85,1}
+        local helper,icon,color,compactStatus='',nil,{0.75,0.85,1},nil
         if db.totemRecallHint~=false and Shaman.spells.recall and not inCombat and activeTotems>0 then
             helper='Recall '..activeTotems..' totem'..(activeTotems==1 and '' or 's');color={1,0.75,0.25}
             icon=Shaman.spells.recall.icon
@@ -336,17 +338,6 @@ local function CreateIndicator(host,db)
             if type(auraState)=='table' then stacks=auraState.applications elseif auraState==false then stacks=0 end
             if stacks then helper='Maelstrom '..stacks..'/5';icon=Shaman.spells.maelstrom.icon end
             if stacks and stacks>=5 then color={0.25,1,0.45} end
-        elseif db.showSpecHelper~=false and Shaman.spells.lava and Shaman.spells.flame then
-            local flame=Context.FlameShock(Shaman.spells.flame.name);icon=Shaman.spells.flame.icon
-            if type(flame)=='table' then helper='Flame '..(Context.FormatTime(flame.left) or 'active');color={1,0.55,0.2}
-            elseif flame==false and inCombat and Core.Call(UnitCanAttack,'player','target')==true and Core.Call(UnitIsDead,'target')==false then helper='Flame Shock!';color={1,0.2,0.15}
-            else
-                local state=NS.ClassContext.SpellState(Shaman.spells.lava)
-                icon=Shaman.spells.lava.icon
-                if state and state.status=='ready' then helper='Lava Burst ready';color={0.25,1,0.45}
-                elseif state and state.status=='cooldown' then helper='Lava Burst '..(Context.FormatTime(state.left) or 'CD')
-                elseif state and state.status=='context' then helper='Lava Burst: context' end
-            end
         elseif db.showSpecHelper~=false and Shaman.spells.riptide then
             local friendly=Core.Call(UnitIsFriend,'player','target')==true and Core.Call(UnitIsDead,'target')==false
             local tide=friendly and Context.Aura('target','HELPFUL',{[Shaman.spells.riptide.name]=true},true) or nil
@@ -356,6 +347,15 @@ local function CreateIndicator(host,db)
                 if state and state.status=='ready' then helper='Riptide ready';icon=Shaman.spells.riptide.icon
                 elseif state and state.status=='cooldown' then helper='Riptide '..(Context.FormatTime(state.left) or 'CD');icon=Shaman.spells.riptide.icon
                 elseif state and state.status=='context' then helper='Riptide: context';icon=Shaman.spells.riptide.icon end
+            end
+        elseif db.showSpecHelper~=false and (Shaman.spells.lightningMastery or Shaman.spells.stormstrike or Shaman.spells.totemicCall) then
+            local state=NS.ClassContext.BestCue(Shaman.spells,{'lightningMastery','stormstrike','totemicCall'})
+            if state then
+                icon=state.spell.icon
+                local status=state.status=='ready' and 'Ready' or state.status=='context' and 'Ctx'
+                    or Context.FormatTime(state.left) or 'CD'
+                compactStatus=NS.L(status);helper=state.spell.name..' '..compactStatus
+                if state.ready then color={0.25,1,0.45} end
             end
         elseif db.showSpecHelper~=false then
             if unknownTotems==0 then helper=activeTotems..'/4 totems'
@@ -375,7 +375,8 @@ local function CreateIndicator(host,db)
         local width=helperText:GetStringWidth()
         if Core.IsNumber(width) and width>helperText:GetWidth() then
             local compact=helper:match('^Recall (%d+) totems?$')
-            if compact then helperText:SetText(NS.L('Recall '..compact))
+            if compactStatus then helperText:SetText(compactStatus)
+            elseif compact then helperText:SetText(NS.L('Recall '..compact))
             elseif helper:match('^Maelstrom ') then helperText:SetText(NS.L(helper:gsub('^Maelstrom ', 'MW ')))
             elseif helper=='Riptide ready' then helperText:SetText(NS.L('Riptide')) end
         end

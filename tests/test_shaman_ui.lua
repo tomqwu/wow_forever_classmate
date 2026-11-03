@@ -233,11 +233,15 @@ check(indicator.helperText.text=='' and not indicator.helperIcon.shown,
     'secret Maelstrom stacks do not create a question-mark helper')
 C_UnitAuras.GetAuraDataByIndex=savedAuras
 local savedSpells=NS.Shaman.spells
-NS.Shaman.spells={lava={id=2001,name='Lava Burst',icon=124},flame={id=2002,name='Flame Shock',icon=125}}
+NS.Shaman.spells={lightningMastery={id=2001,name='Lightning Mastery',icon=124}}
 C_Spell.GetSpellCooldown=nil
 indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')
 check(indicator.helperText.text=='' and not indicator.helperIcon.shown,
-    'unreadable Lava Burst state does not leave a generic ability label')
+    'unreadable Lightning Mastery state does not leave a generic ability label')
+C_Spell.GetSpellCooldown=function(id) assert(id==2001);return {startTime=140,duration=10,isEnabled=true} end
+C_Spell.IsSpellUsable=function() return true,false end
+indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')
+check(indicator.helperIcon.shown and indicator.helperText.text:find('8s',1,true),'Lightning Mastery uses live cooldown')
 NS.Shaman.spells={riptide={id=2000,name='Riptide',icon=123}}
 C_Spell.GetSpellCooldown=nil
 indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')

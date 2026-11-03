@@ -7,7 +7,7 @@ Forever's Shaman still revolves around shared upkeep—totems, a weapon imbue, a
 ## Workflow behind the helper
 
 - **All Shamans:** Forever adds Call of the Elements variants, Totemic Recall, and Totemic Projection. Keeping the four element slots visible makes placement and expiration easy to read; the out-of-combat recall hint helps recover 25% of the spent totem mana and avoids leaving an aggressive totem behind.
-- **Elemental:** Lava Burst gains 20% damage while the Shaman's Flame Shock is on the target. Fire Nova now casts from an active Fire totem. The bar tracks Flame Shock only when Lava Burst is learned; the Fire-slot tooltip explains Fire Nova's totem requirement without demanding a Fire totem in every single-target fight.
+- **Elemental:** The launch notes remove Lava Burst and rename Elemental Mastery to Lightning Mastery. The helper reads learned Lightning Mastery readiness. The Fire-slot tooltip explains Fire Nova’s active-totem requirement.
 - **Enhancement:** Maelstrom Weapon stacks to five and affects Lightning Bolt in the current Forever design. The helper shows the readable live stack count and highlights five stacks; it does not recommend modern Chain Lightning or healing-spell spenders that this beta talent does not support.
 - **Restoration:** Riptide is instant, leaves a 15-second effect, and improves Chain Heal cast directly on that target. Water Shield uses three orbs and returns mana. The helper shows the player's Riptide on the current friendly target and tracks the active elemental shield.
 
@@ -44,14 +44,14 @@ The bar uses Forever's 426-pixel rendered desktop swing-bar width and remains 56
 | --- | --- |
 | Totems | Four fixed 38px positions; subdued art identifies confirmed inactive slots, active totems show a full-color icon and readable timer, and unreadable slots remain hidden |
 | Upkeep | Dark main-hand imbue and elemental-shield icons with narrow status-colored stripes; shield charges appear as a number |
-| Helper | Maelstrom, Flame Shock/Lava Burst, Riptide, or recall cue; mana below |
+| Helper | Maelstrom, Riptide, Lightning Mastery, Stormstrike, Totemic Call, or recall cue; mana below |
 | Control | Shared lock toggle |
 
 Preference changes reclaim unused space; transient combat states never resize the outer bar. Combat or a confirmed active totem keeps the bar at full opacity. With no active totem, an out-of-combat target uses 60%, and idle uses 20%.
 
 ## September 23 review
 
-Passive Maelstrom Weapon is supported, and restricted stacks hide the cue rather than showing a question mark. Riptide and Lava Burst readiness come from the shared cooldown/usability checks; unreadable states hide their cue. Personal Flame Shock uses the shared aura-owner checks. Recall hints require a learned Totemic Recall. Observed totems remain tracked across combat exit if the native slot API is still unavailable. Death/world exit suspend the bar until return. See [the class review](class-review-2026-09-23.md).
+Passive Maelstrom Weapon is supported, and restricted stacks hide the cue rather than showing a question mark. Riptide, Lightning Mastery, Stormstrike and Totemic Call use the shared cooldown/usability checks. Riptide keeps its personal HoT timer on friendly targets. Unreadable states hide the cue. Recall hints require a learned Totemic Recall. Observed totems remain tracked across combat exit if the native slot API is still unavailable. Death/world exit suspend the bar until return. See [the class review](class-review-2026-09-23.md).
 
 The 0.21.16 follow-up separates icon artwork from cell backgrounds, rejects zero texture IDs, and merges partial native readings with the current summon rather than erasing usable fields. Native remaining-only readings establish a countdown even if start/duration are missing. Successful casts get a brief placement grace period, and another spell or summon start cannot inherit the old timer. A zero duration never becomes a learned duration.
 

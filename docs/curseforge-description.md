@@ -2,7 +2,7 @@
 
 **One compact, class-aware companion for World of Warcraft: Forever.**
 
-Version 0.25.1 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
+Version 0.26.0 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
 
 The interface follows the WoW client language: English and Simplified Chinese (`zhCN`) labels for bars, settings, warnings, and tooltips. Spell and character names come from the client; curated rare-pet names may remain in English. Other client locales use English.
 
@@ -11,14 +11,14 @@ The interface follows the WoW client language: English and Simplified Chinese (`
 | Class | Live helper |
 | --- | --- |
 | Hunter | Range brackets and validated yards or an optional red/green range icon; ammo, target of target, facing, Hunter's Mark, aspect, pet care, family guidance, and optional player Inspect |
-| Shaman | Four totem slots with live or marked estimated timers, weapon imbue, elemental shield, mana, Totemic Recall, and learned Maelstrom/Lava Burst/Riptide cues |
-| Paladin | Mana, active seal, target judgments, Twist of Light aura, and learned Holy Strike/Holy Shock/Consecration readiness |
-| Warrior | Rage, current stance, shout upkeep, Rend/Deep Wounds, and real Overpower/Execute/Victory Rush/Bloodthirst usability |
-| Rogue | Energy, combo points, both weapon coatings, Slice and Dice/Venom, target poison or bleed, and reactive abilities |
-| Druid | Current form and its live power type, Mark/Thorns, target DoTs, Eclipse/Nature's Grace/Omen, and learned spec abilities |
-| Mage | Live mana meter, armor and absorb-shield status, personal target setup, Hot Streak/Fingers of Frost/Arcane Blast state, and learned cooldowns |
-| Priest | Mana, self buffs, Shadow target effects, healing or Shadow abilities, and Forever's race-specific Priest spells |
-| Warlock | Mana, health, Soul Shards, armor, demon presence, target DoT/Bane/Curse, and learned abilities |
+| Shaman | Four totem slots with live or marked estimated timers, weapon imbue, elemental shield, mana, Totemic Recall, and learned Maelstrom, Riptide, Lightning Mastery, Stormstrike and Totemic Call cues |
+| Paladin | Mana, active seal, target judgments, Unsealed Wrath aura, and learned Holy Strike/Holy Shock/Consecration readiness |
+| Warrior | Rage, current stance, shout upkeep, Rend/Deep Wounds, and learned cues including Overpower, Slam and Reckless Swings |
+| Rogue | Energy, combo points, both weapon coatings, Slice and Dice upkeep, Poised and Venom procs, target poison or bleed, and reactive abilities |
+| Druid | Current form and its live power type, Mark/Thorns, target bleeds and DoTs, Poised and other readable procs, plus Primal Bite and Shifting Power |
+| Mage | Live mana meter, armor and absorb-shield status, personal target setup, Hot Streak/Fingers of Frost/Arcane Blast/Missile Barrage state, and learned cooldowns |
+| Priest | Mana, self buffs, Shadow target effects, Penance and other healing or Shadow abilities, and Forever's race-specific Priest spells |
+| Warlock | Mana, health, Soul Shards, armor, demon presence, target DoT/Bane/Curse, and learned abilities including Amplify Curse |
 
 The seven standard class bars discover every learned active racial and surface the one most useful now, while hover details list the others. This includes Forever racials such as Will to Survive, Elune's Light, Eureka!, Shatter Curse, Read Ley Line, and Skysight, plus the twelve race-specific Priest spells. “Context” means the game currently reports the racial unusable; the addon does not guess why.
 
