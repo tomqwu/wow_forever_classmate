@@ -22,7 +22,7 @@ local zh={
     ['active']='生效中',['inactive']='未生效',['missing']='缺失',['unavailable']='不可用',
     ['ready']='就绪',['cooldown']='冷却中',['context']='条件不符',
     ['hidden']='已隐藏',['found']='已找到',['not found']='未找到',
-    ['Shield']='护盾',['OK']='正常',['Form']='形态',['Base']='基础形态',
+    ['Shield']='护盾',['OK']='正常',['Form']='形态',['Base']='基础形态',['Missing']='缺失',
     ['On']='生效中',['Proc']='触发',['CD']='冷却',
     ['Mana']='法力',['Rage']='怒气',['Energy']='能量',['Power']='能量',
     ['Health']='生命值',['Soul Shards']='灵魂碎片',['Combo points']='连击点数',

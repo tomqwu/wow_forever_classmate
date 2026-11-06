@@ -1,3 +1,11 @@
+## 0.26.1
+
+- Fixed Warlock armor discovery on Chinese clients when English spell-name lookup returns no metadata. Learned Demon Skin, Demon Armor and Fel Armor can now be recognized by their Chinese names without hardcoded spell IDs.
+- A confirmed missing Warlock armor buff now shows Armor / Missing (护甲 / 缺失) with a red border and full bar opacity outside combat, including when demon existence is unavailable. Applying armor clears the warning; restricted reads do not invent missing status.
+- Added regressions for English and localized-only armor discovery, warning clearing, combat restrictions, independent demon state, and the upkeep toggle.
+
+Use `/reload` after updating. Automated checks use mocked APIs; live client confirmation remains necessary.
+
 ## 0.26.0
 
 - Audited all nine classes against Blizzard’s November 3 Forever launch notes. Replaced retired Paladin, Rogue, Druid and Shaman cues with learned launch abilities, including Unsealed Wrath, Shank, Primal Bite and Lightning Mastery. Venom is a temporary proc; it no longer counts as Rogue upkeep.

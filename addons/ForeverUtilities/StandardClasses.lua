@@ -81,7 +81,11 @@ local configs={
     WARLOCK={key='warlock',label='Warlock',command='/fwarlock',color={0.53,0.53,0.93},icon='Interface\\Icons\\Spell_Shadow_Metamorphosis',
         description='Mana and health, armor and demon state, DoT or Bane upkeep, abilities, and racial cooldowns.',
         catalog={
-            Spell('demonArmor','Demon Armor','upkeep'),Spell('demonSkin','Demon Skin','upkeep'),Spell('felArmor','Fel Armor','upkeep'),
+            -- Spell-name lookup can be localized-only. English metadata queries
+            -- returning nil must not make learned Chinese armor disappear.
+            Spell('demonArmor',{'Demon Armor','魔甲术','恶魔护甲'},'upkeep'),
+            Spell('demonSkin',{'Demon Skin','恶魔皮肤'},'upkeep'),
+            Spell('felArmor',{'Fel Armor','邪甲术','邪能护甲'},'upkeep'),
             Spell('summon',{'Summon Imp','Summon Voidwalker','Summon Succubus','Summon Incubus','Summon Felhunter','Summon Felguard'},'summon'),
             Spell('corruption','Corruption','target'),Spell('immolate','Immolate','target'),Spell('wrack','Wrack','target'),
             Spell('baneAgony','Bane of Agony','target'),Spell('curseAgony','Curse of Agony','target'),
@@ -132,6 +136,10 @@ local function CreateIndicator(module,config,host,db)
         upkeep.meter=MakeMeter(upkeep,72,4,{0.4,0.85,1})
     end
     frame.cells={resource=resource,upkeep=upkeep,target=target,ability=ability,racial=racial}
+    local armorWarning=upkeep:CreateTexture(nil,'BACKGROUND')
+    armorWarning:SetSize(28,28);armorWarning:SetPoint('LEFT',upkeep,'LEFT',1,0)
+    armorWarning:SetColorTexture(1,0.2,0.08,1);armorWarning:Hide()
+    upkeep.armorWarning=armorWarning
     local dots=config.dotKeys and NS.DotTracker.Create(frame,db,module,config.dotKeys,config.color)
     frame.dotTracker=dots
     local lastStatus='Not checked';local elapsed=0;local active=false;local suspended=false
@@ -244,7 +252,7 @@ local function CreateIndicator(module,config,host,db)
         resource:SetShown(db.showResource~=false and (power~=nil or renderedProtectedPercent or meterOK or resourceBottom~=''))
 
         local upkeepTotal,upkeepActive,upkeepMissing,upkeepUnknown=0,0,0,0
-        local missingBuff=false
+        local missingBuff=false;local missingArmor=false
         local upkeepLines={};local upkeepIcon;local upkeepDim=false
         if db.showUpkeep~=false and config.weaponCoatings then
             local coatings=Context.WeaponCoatings()
@@ -274,6 +282,7 @@ local function CreateIndicator(module,config,host,db)
                     confirmedUpkeep[group.label]=nil
                     upkeepMissing=upkeepMissing+1;upkeepIcon=upkeepIcon or learned.icon;upkeepDim=true
                     if group.wakeOnMissing~=false then missingBuff=true end
+                    if config.key=='warlock' and group.label=='Armor' then missingArmor=true end
                     upkeepLines[#upkeepLines+1]=group.label..': missing'
                 else
                     local confirmed=confirmedUpkeep[group.label]
@@ -294,6 +303,10 @@ local function CreateIndicator(module,config,host,db)
         end
         local upkeepTop=upkeepUnknown>0 and '' or (upkeepTotal>0 and (upkeepActive..'/'..upkeepTotal) or '')
         local upkeepBottom=upkeepMissing>0 and ('!'..upkeepMissing) or (upkeepUnknown>0 and '' or (upkeepTotal>0 and 'OK' or ''))
+        -- The armor reminder stays explicit even if another upkeep reading (for
+        -- example demon existence) is unavailable; no aggregate count is implied.
+        if missingArmor then upkeepTop='Armor';upkeepBottom='Missing' end
+        armorWarning:SetShown(missingArmor and upkeepIcon~=nil)
         local upkeepWarn=missingBuff or (inCombat and upkeepMissing>0)
         local shieldAura,protectedAbsorb,hasProtectedAbsorb
         if config.key=='mage' and db.showMageShield~=false then

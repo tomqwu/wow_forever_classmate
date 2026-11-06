@@ -345,8 +345,9 @@ check(armorReads==0 and warlock.cells.upkeep.top.text=='' and warlock.cells.upke
     and warlock.cells.upkeep.tooltipLines[1]:find('Demon Skin last seen',1,true),
     'Warlock keeps the confirmed Demon Skin icon but makes no combat aura read or 0/1 claim')
 UnitAffectingCombat=function() return false end;warlock.Update()
-check(warlock.cells.upkeep.top.text=='0/1' and warlock.cells.upkeep.bottom.text=='!1'
-    and warlock.alpha==1,'a readable out-of-combat absence clears the armor and restores full visibility')
+check(warlock.cells.upkeep.top.text=='Armor' and warlock.cells.upkeep.bottom.text=='Missing'
+    and warlock.cells.upkeep.armorWarning.shown and warlock.alpha==1,
+    'a readable out-of-combat absence shows an explicit armor warning at full visibility')
 NS.Warlock.db.showUpkeep=false;warlock.Update()
 check(warlock.alpha==0.6,'turning off upkeep removes the missing-buff fade override')
 NS.Warlock.db.showUpkeep=true
@@ -405,4 +406,42 @@ check(updatedRogue.cells.upkeep.top.text=='1/1' and NS.Rogue.spells.deathMark
 local updatedDruid=Fixture(NS.Druid,{"Tiger's Fury",'Berserk','Primal Bite','Lacerate','Shifting Power'},{})
 check(not NS.Druid.spells.berserk and not NS.Druid.spells.tigersFury and NS.Druid.spells.lacerate
     and updatedDruid.cells.ability.top.text=='Ready','Druid replaces stale cues with learned Feral abilities')
+-- Reproduce a localized-only spell lookup: English names return nil when
+-- only Chinese spells are learned. No Classic spell IDs are assumed.
+local nativeSpellInfo=C_Spell.GetSpellInfo
+C_Spell.GetSpellInfo=function(value)
+    if type(value)=='number' then return nativeSpellInfo(value) end
+    for _,item in pairs(book) do
+        if item.name==value then return {name=item.name,iconID=item.iconID} end
+    end
+end
+UnitAffectingCombat=function() return false end
+UnitExists=function(unit) return unit=='target' end
+for _,armorName in ipairs({'Demon Skin','Demon Armor','Fel Armor','恶魔皮肤','魔甲术','邪甲术'}) do
+    local checked=Fixture(NS.Warlock,{armorName},{})
+    local cell=checked.cells.upkeep
+    check(cell.shown and cell.top.text=='Armor' and cell.bottom.text=='Missing'
+        and cell.armorWarning.shown and checked.alpha==1,
+        'learned armor warns out of combat with localized-only lookup: '..armorName)
+    UnitAffectingCombat=function() return true end;checked.Update()
+    check(not cell.armorWarning.shown and cell.bottom.text~='Missing',
+        'unknown combat armor state never carries a stale missing warning')
+    UnitAffectingCombat=function() return false end
+    checked=Fixture(NS.Warlock,{armorName},{armorName})
+    check(not cell.armorWarning.shown and cell.top.text=='1/1' and cell.bottom.text=='OK',
+        'applying any recognized armor clears its warning')
+    C_UnitAuras.GetAuraDataByIndex=function() return {name=secret} end
+    checked.Update()
+    check(not cell.armorWarning.shown and cell.bottom.text~='Missing' and checked.alpha==0.6,
+        'restricted aura names do not create a false missing-armor warning')
+end
+local checked=Fixture(NS.Warlock,{'恶魔皮肤','Summon Imp'},{})
+UnitExists=function(unit) if unit=='pet' then return secret end;return unit=='target' end
+checked.Update()
+check(checked.cells.upkeep.top.text=='Armor' and checked.cells.upkeep.bottom.text=='Missing'
+    and checked.cells.upkeep.armorWarning.shown and checked.alpha==1,
+    'confirmed missing armor remains explicit when demon existence is unavailable')
+NS.Warlock.db.showUpkeep=false;checked.Update()
+check(not checked.cells.upkeep.shown and not checked.cells.upkeep.armorWarning.shown and checked.alpha==0.6,
+    'disabling upkeep disables the localized armor reminder and its fade override')
 print('PASS: '..count..' standard class runtime checks')

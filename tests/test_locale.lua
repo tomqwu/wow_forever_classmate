@@ -10,6 +10,7 @@ end
 GetLocale=function() return 'zhCN' end
 assert(loadfile(root..'Locale.lua'))('ForeverUtilities',NS)
 check(NS.Locale,'zhCN','selected locale')
+check(NS.L('Missing'),'缺失','missing armor warning label')
 check(NS.L('No target'),'无目标','Hunter no-target label')
 check(NS.L('Ammo: 525'),'弹药：525','Hunter live ammo count')
 check(NS.L('Shooting | ~8-35 yd'),'射击范围内 | ~8-35 码','Hunter range bracket')

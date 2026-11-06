@@ -7,7 +7,7 @@ present fabricated exact yards. Spell checks supply approximate brackets. A
 failed minimum-range check can mean too close OR too far. Avoid hardcoded Classic
 spell IDs and scan learned spells. Poll only while the matching class module is enabled and a live widget needs updates. Target-dependent widgets stop on target loss; timers stop on death, disable, and leaving the world.
 
-For new UI text, use `NS.L` from `Locale.lua` at the display boundary and add an English/Simplified Chinese locale check. Keep client-provided spell and character names, slash commands, and saved-variable keys unchanged. English is the fallback outside `zhCN`.
+For new UI text, use `NS.L` from `Locale.lua` at the display boundary and add an English/Simplified Chinese locale check. Keep client-provided spell and character names, slash commands, and saved-variable keys unchanged. English is the fallback outside `zhCN`. UI localization does not localize learned-spell discovery. Test catalog aliases with a localized spellbook and nil results for unrecognized English spell-name queries; never assume those queries return translated metadata.
 
 Runtime modules use the addon's namespace, independent frame names,
 ForeverUtilitiesDB, and /futils commands. Preserve Hunter and Shaman settings and their disabled lifecycles. No dependency on ForeverSwing or ForeverHunterRange.
