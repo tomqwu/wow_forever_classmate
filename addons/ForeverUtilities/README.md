@@ -2,7 +2,7 @@
 
 **One compact, class-aware companion for World of Warcraft: Forever.**
 
-Version 0.27.0 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
+Version 0.28.0 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
 
 The interface follows the WoW client language: English and Simplified Chinese (`zhCN`) labels for bars, settings, warnings, and tooltips. Spell and character names come from the client; curated rare-pet names may remain in English. Other client locales use English.
 
@@ -41,6 +41,8 @@ Each information block can be switched independently. Bars use full opacity in c
 Hunter ammo counts and low-ammo warnings respect the current weapon’s ammo eligibility when the client exposes it; no-ammo weapons and unreadable eligibility stay quiet.
 
 Confirmed missing maintained buffs now pulse their warning border while the icon, text and bar stay readable. **Flash missing buffs** can be disabled independently in class settings to keep a static warning. Hunter aspects and Shaman shields retain their existing combat-only warning conditions. Warlock armor is confirmed outside combat; restricted readings, temporary Rogue finishers and missing pets do not trigger a pulse.
+
+**Sleeping bag reminder:** for levels **1–59**, a small Cozy Sleeping Bag icon appears when the Well-Rested buff is confirmed missing outside combat, and keeps the bar fully visible. Any active stack clears it. Level 60 and above, combat, death, and unreadable aura data hide the reminder. Disable **Sleeping bag buff reminder (below level 60)** independently in class settings; **Flash missing buffs** also controls its pulsing border. The bar keeps its current size; Hunter icon-only mode places the reminder beside the range icon.
 
 For a minimal Hunter display, enable **Icon-only range display** in `/fhunter` settings. Green means the client confirms ranged reach and red means it confirms you cannot shoot. The locked icon hides when reach is unavailable or there is no valid hostile target; unlocking keeps a neutral icon available for dragging. Use `/fhunter unlock` to move it. **Right-click the Classmate minimap button to inspect an eligible targeted player on any class**, including Hunter icon-only mode; left-click opens settings. The right-click shortcut has its own per-class toggle. The optional Hunter full-bar Inspect button remains available. Pet hints describe family guidance; the selected pet's learned abilities remain unknown unless checked with Beast Lore.
 

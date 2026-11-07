@@ -58,3 +58,5 @@ The 0.21.16 follow-up separates icon artwork from cell backgrounds, rejects zero
 The totem number means **remaining summoned lifetime**, not the action-button cooldown. For example, [Stoneclaw Totem](https://www.wowhead.com/forever/spell=5730/stoneclaw-totem) lasts 15 seconds with a 30-second cast cooldown, so 12 seconds on the bar and 27 seconds on the action button are consistent. Runtime durations still come from readable client data, not this example.
 
 Confirmed missing shield/weapon-imbue warning stripes pulse unless **Flash missing buffs** is disabled. Missing shield warnings remain combat-only; a confirmed missing equipped-weapon imbue keeps the bar fully visible outside combat. Restricted readings and hidden features stop animation.
+
+The shared **Sleeping bag buff reminder (below level 60)** adds a small icon outside combat at levels 1–59 when Well-Rested is confirmed absent. It keeps the bar bright and follows **Flash missing buffs**, independently of totem and shield settings. It hides at level 60, with any active stack, on death, in combat, or when aura data is unavailable. See [sleeping bag sources and behavior](sleeping-bag.md).

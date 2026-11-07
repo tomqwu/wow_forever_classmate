@@ -459,6 +459,7 @@ end
 
 local defaultOptions={
     {key='flashMissingBuffs',label='Flash missing buffs',kind='toggle'},
+    {key='sleepingBagReminder',label='Sleeping bag buff reminder (below level 60)',kind='toggle'},
     {key='showMinimap',label='Show minimap settings button',kind='toggle'},
     {key='minimapInspect',label='Right-click minimap to inspect players',kind='toggle'},
     {key='showLockButton',label='Show lock button on bar',kind='toggle'},
@@ -485,7 +486,7 @@ for token,config in pairs(configs) do
         panelName='ForeverClassmate'..config.label..'Options',minimapName='ForeverClassmate'..config.label..'Minimap',
         indicatorName='ForeverClassmate'..config.label..'Indicator',normalize=Normalize,options=OptionsFor(config),
         defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showMinimap=true,minimapInspect=true,showLockButton=true,showResource=true,
-            showUpkeep=true,showTarget=true,showAbilities=true,showRacial=true,showMageShield=true,flashMissingBuffs=true,fadeOutOfCombat=true,minimapAngle=35}}
+            showUpkeep=true,showTarget=true,showAbilities=true,showRacial=true,showMageShield=true,flashMissingBuffs=true,sleepingBagReminder=true,fadeOutOfCombat=true,minimapAngle=35}}
     if config.dotKeys then module.defaults.showMultiDots=true end
     NS[config.label]=module
     function module.create(db)

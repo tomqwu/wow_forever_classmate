@@ -262,7 +262,7 @@ local slash=SlashCmdList.FOREVERUTILITIES
 slash('')
 local panel=named.ForeverClassmateShamanOptions
 check(panel and panel.shown and panel.movable,'movable shaman settings panel')
-for _,key in ipairs({'showTotems','showWeaponImbue','showShield','showSpecHelper','showMana','totemRecallHint','fadeOutOfCombat'}) do
+for _,key in ipairs({'showTotems','showWeaponImbue','showShield','showSpecHelper','showMana','totemRecallHint','fadeOutOfCombat','sleepingBagReminder'}) do
     check(panel.controls[key]~=nil,'shaman option exists: '..key)
 end
 for _,key in ipairs({'showTotems','showWeaponImbue','showShield','showSpecHelper','showMana','totemRecallHint'}) do

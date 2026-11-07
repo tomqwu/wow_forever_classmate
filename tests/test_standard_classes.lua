@@ -105,6 +105,12 @@ check(NS.Warrior.instance==nil and NS.Rogue.instance==nil and NS.Druid.instance=
 check(NS.Paladin.db.x==77 and NS.Paladin.db.y==-88 and NS.Paladin.db.scale==1.1 and not NS.Paladin.db.locked,'saved Paladin layout retained')
 check(ForeverUtilitiesDB.warrior and ForeverUtilitiesDB.rogue and ForeverUtilitiesDB.druid and ForeverUtilitiesDB.mage and ForeverUtilitiesDB.priest and ForeverUtilitiesDB.warlock,'independent class databases initialized')
 for _,module in pairs(NS.Classes) do
+    check(module.db.sleepingBagReminder==true,'sleeping bag reminder defaults on for '..module.name)
+    local hasBagOption=false
+    for _,option in ipairs(module.options) do
+        if option.key=='sleepingBagReminder' then hasBagOption=option.kind=='toggle' end
+    end
+    check(hasBagOption,'sleeping bag reminder has a settings toggle for '..module.name)
     if module~=NS.Paladin then
         check(module.db.minimapInspect==true,'Inspect shortcut defaults on for '..module.name)
     end

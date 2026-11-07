@@ -1,3 +1,12 @@
+## 0.28.0
+
+- Added an independently toggleable sleeping bag reminder for all nine classes, strictly for character levels 1–59. Level 60 and above never warn.
+- A small Cozy Sleeping Bag icon appears outside combat only when a complete readable aura scan confirms the actual Well-Rested buff is missing. Any active stack clears it; ordinary rested XP and the separate Legacy Well Rested effect do not satisfy it.
+- The reminder keeps the bar fully visible and uses the existing Flash missing buffs preference for its pulsing border. It keeps the bar size unchanged and sits beside the Hunter range icon in compact mode.
+- Combat, death, world exit, restricted aura reads, and disabled tracking clear the reminder. The service is event-driven, removes listeners at level 60 or when disabled, and adds English/Simplified Chinese settings and tooltips.
+
+Use `/reload`, then `/fclassmate` to configure it. Automated checks use mocked APIs; live client behavior still needs confirmation.
+
 ## 0.27.0
 
 - Confirmed missing maintained buffs pulse their warning border using a gentle 1.3-second native animation. Warlock armor, other standard-class upkeep, weapon coatings, Hunter aspects, and Shaman shields/imbues share the behavior. Icons and text stay readable.

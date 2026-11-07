@@ -4,7 +4,7 @@ NS.ClassHost=Host
 
 function Host.SetFade(host,content,alpha)
     content.baseAlpha=alpha
-    content:SetAlpha(host.hovered==true and 1 or alpha)
+    content:SetAlpha((host.hovered==true or host.sleepingBagMissing==true) and 1 or alpha)
 end
 
 function Host.Create(module,db,contentFactory)
@@ -16,6 +16,7 @@ function Host.Create(module,db,contentFactory)
     host.hint=host:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall')
     host.hint:SetPoint('BOTTOM',host,'TOP',0,4)
     local content=contentFactory(host,db)
+    local sleepingBag=NS.SleepingBag and NS.SleepingBag.Create(host,content,db)
     local lock=CreateFrame('Button',module.lockName,content)
     lock:SetSize(18,24);lock:SetPoint('RIGHT',host,'RIGHT',-7,0);lock:EnableMouse(true)
     local function Block(width,blockHeight,x,y)
@@ -35,7 +36,7 @@ function Host.Create(module,db,contentFactory)
     local function Hover(over)
         if not db.enabled or host.hovered==over then return end
         host.hovered=over
-        if content.baseAlpha then content:SetAlpha(over and 1 or content.baseAlpha) end
+        if content.baseAlpha then Host.SetFade(host,content,content.baseAlpha) end
     end
     local hoverElapsed=0
     host:SetScript('OnEnter',function() Hover(true) end)
@@ -72,6 +73,7 @@ function Host.Create(module,db,contentFactory)
             else texture:SetColorTexture(0.3,1,0.5,1) end
         end
         content.Refresh()
+        if sleepingBag then sleepingBag.Refresh() end
     end
     host:SetScript('OnDragStart',function(self) if db.enabled and not db.locked then self:StartMoving() end end)
     host:SetScript('OnDragStop',function(self)
@@ -81,5 +83,5 @@ function Host.Create(module,db,contentFactory)
         db.x,db.y=x-cx/ratio,y-cy/ratio
         Apply()
     end)
-    return {Apply=Apply,Status=content.Status,content=content,lock=lock}
+    return {Apply=Apply,Status=content.Status,content=content,lock=lock,sleepingBag=sleepingBag}
 end
