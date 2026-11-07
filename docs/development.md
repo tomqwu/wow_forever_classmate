@@ -1,6 +1,6 @@
 # Forever Classmate development
 
-Active source: `addons/ForeverUtilities/`. The folder, TOC filename, saved-variable name, and release tag prefix remain stable for upgrades. Version 0.28.0 supports all nine classes through the registry in `Core.lua`.
+Active source: `addons/ForeverUtilities/`. The folder, TOC filename, saved-variable name, and release tag prefix remain stable for upgrades. Version 0.29.0 supports all nine classes through the registry in `Core.lua`.
 
 The [November 1 API review](forever-api-review-2026-11-01.md) compares the October client changes with Classmate's call sites and records the gap between the latest public UI source (70532) and the installed `wowf` client (70707). The launch client uses `_forever_`; detect the active product before deploying rather than assuming the historical `_classic_beta_` folder.
 
@@ -12,7 +12,7 @@ The public [Forever addon guide](https://tomqwu.github.io/wow_forever_classmate/
 
 `ClassHost.lua` owns the shared movable 426 × 56 host, lock button, scale, and position. The 426-pixel rendered width matches Forever's default desktop Main Hand swing timer. Forever stores that preset as a 213-pixel offset above the 213-pixel slider minimum. `UI.lua` owns class-aware settings, minimap, commands, and initialization. Inactive class modules may initialize saved defaults but must not create frames, register events, or poll.
 
-`SleepingBag.lua` supplies the shared event-driven leveling reminder through `ClassHost.lua`. Every class exposes `sleepingBagReminder` (default on). Only levels 1–59 with a complete readable player aura scan outside combat may warn; a readable Well-Rested spell ID clears it regardless of stack count or localized name. The service owns its own listeners, removes them when disabled or at level 60, and does not add polling. Its small badge keeps the bar footprint unchanged, uses `Core.CreateWarningPulse`, and overrides idle fading only while confirmed missing. See [the exact aura IDs, sources, and limits](sleeping-bag.md).
+`LevelingBuffs.lua` supplies the sleeping bag and food reminders through `ClassHost.lua` with one shared event listener and aura scan. `foodXPReminder` is independent of `sleepingBagReminder`; either warning overrides fading. Food observes the visible Well Fed family because the XP effect is hidden; it never claims a measured multiplier. Numeric spell-ID queries resolve the localized food-family name, with English/zhCN fallbacks; unreadable or unclassifiable auras suppress absence warnings. See [food reminder sources and limits](food-xp.md). Every class exposes both reminder preferences (default on). Only levels 1–59 with a complete readable player aura scan outside combat may warn; a readable Well-Rested spell ID clears it regardless of stack count or localized name. The service owns its listeners, removes them when both reminders are disabled or at level 60, and does not add polling. Its small badge keeps the bar footprint unchanged, uses `Core.CreateWarningPulse`, and overrides idle fading only while confirmed missing. See [the exact aura IDs, sources, and limits](sleeping-bag.md).
 
 The [November 3 class audit](class-audit-2026-11-03.md) records launch spell changes and the decisions for all nine helpers.
 

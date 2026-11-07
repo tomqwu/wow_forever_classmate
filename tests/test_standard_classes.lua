@@ -111,6 +111,12 @@ for _,module in pairs(NS.Classes) do
         if option.key=='sleepingBagReminder' then hasBagOption=option.kind=='toggle' end
     end
     check(hasBagOption,'sleeping bag reminder has a settings toggle for '..module.name)
+    check(module.db.foodXPReminder==true,'food reminder defaults on for '..module.name)
+    local hasFoodOption=false
+    for _,option in ipairs(module.options) do
+        if option.key=='foodXPReminder' then hasFoodOption=option.kind=='toggle' end
+    end
+    check(hasFoodOption,'food reminder has a settings toggle for '..module.name)
     if module~=NS.Paladin then
         check(module.db.minimapInspect==true,'Inspect shortcut defaults on for '..module.name)
     end

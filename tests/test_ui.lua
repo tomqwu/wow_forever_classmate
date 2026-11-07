@@ -72,6 +72,7 @@ check(named.ForeverUtilitiesDistanceFrame.width==426,'hunter host matches render
 local compact=panel.controls.rangeIconOnly
 check(compact and panel.controls.showInspect,'compact range and inspect each have a settings toggle')
 check(panel.controls.sleepingBagReminder and db.sleepingBagReminder==true,'Hunter has an independent sleeping bag reminder setting')
+check(panel.controls.foodXPReminder and db.foodXPReminder==true,'Hunter has an independent food XP reminder setting')
 compact:SetChecked(true);compact.scripts.OnClick(compact)
 check(db.rangeIconOnly and named.ForeverUtilitiesDistanceFrame.width==42 and named.ForeverUtilitiesDistanceFrame.height==42,'compact toggle resizes host immediately')
 check(not named.ForeverHunterFriendLock.shown,'compact toggle hides the full-bar lock button')

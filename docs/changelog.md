@@ -1,3 +1,12 @@
+## 0.29.0
+
+- Added an independent Food XP buff reminder (below level 60) for all nine classes. Levels 1–59 see a small food icon outside combat when a complete readable scan confirms Well Fed is absent; level 60 and above never warn.
+- The food icon clears when Well Fed is observed. The XP effect is hidden, so this is a food-buff reminder rather than a measured XP multiplier; its tooltip recommends food explicitly granting +5% XP from kills. Client-resolved localized names and English/Simplified Chinese aliases recognize different Well Fed ranks.
+- Sleeping bag and food reminders now share one event listener and aura scan. Either keeps the bar bright and follows Flash missing buffs. Their icons fit above/below the lock or beside Hunter's compact range icon without resizing the bar.
+- Combat, death, world exit, disabled features, and unreadable aura data clear affected warnings. Both disabled removes listeners; reaching level 60 retires tracking even while queued events still see the previous level. Existing sleeping bag preferences are preserved.
+
+Use `/reload`, then `/fclassmate` to configure the independent reminders. Automated checks use mocked APIs; live client behavior still needs confirmation.
+
 ## 0.28.0
 
 - Added an independently toggleable sleeping bag reminder for all nine classes, strictly for character levels 1–59. Level 60 and above never warn.

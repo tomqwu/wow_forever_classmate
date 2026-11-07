@@ -41,7 +41,7 @@ duration, or per-stack value from the static record.
 The extracted Forever
 [unit aura API](https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/UnitAuraDocumentation.lua)
 documents restricted aura access. A nullable `GetPlayerAuraBySpellID` lookup is
-not used as proof of absence. `SleepingBag.lua` instead scans helpful player
+not used as proof of absence. `LevelingBuffs.lua` instead scans helpful player
 auras through `C_UnitAuras.GetAuraDataByIndex` outside combat and only confirms
 absence after reaching the end with readable spell IDs. An error, restricted
 record or identifier, missing API, or scan that does not reach the end leaves
@@ -51,3 +51,5 @@ The regression suite covers the 59/60 boundary, one and multiple stacks,
 localized/secret names, the separate Legacy aura, combat and death, world
 transitions, event teardown, shared fading, compact placement, and feature
 toggles. These are mocked checks; the live client still needs confirmation.
+
+Since 0.29.0 the same service also hosts the independent [food XP reminder](food-xp.md). Both share one aura scan and event listener; disabling either leaves the other working. The food icon fits below the lock, while the bag stays above it. Compact Hunter mode puts both beside the range icon.

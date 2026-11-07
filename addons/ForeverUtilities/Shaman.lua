@@ -29,10 +29,11 @@ end
 Shaman.normalize=Normalize
 Shaman.defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showMinimap=true,minimapInspect=true,showLockButton=true,
     showTotems=true,showWeaponImbue=true,showShield=true,showSpecHelper=true,showMana=true,
-    totemRecallHint=true,flashMissingBuffs=true,sleepingBagReminder=true,fadeOutOfCombat=true,minimapAngle=35}
+    totemRecallHint=true,flashMissingBuffs=true,sleepingBagReminder=true,foodXPReminder=true,fadeOutOfCombat=true,minimapAngle=35}
 Shaman.options={
     {key='flashMissingBuffs',label='Flash missing buffs',kind='toggle'},
     {key='sleepingBagReminder',label='Sleeping bag buff reminder (below level 60)',kind='toggle'},
+    {key='foodXPReminder',label='Food XP buff reminder (below level 60)',kind='toggle'},
     {key='showMinimap',label='Show minimap settings button',kind='toggle'},
     {key='minimapInspect',label='Right-click minimap to inspect players',kind='toggle'},
     {key='showLockButton',label='Show lock button on bar',kind='toggle'},
