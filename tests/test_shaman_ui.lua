@@ -40,6 +40,7 @@ function methods:SetPoint(_,_,_,x,y) self.x,self.y=x,y end
 function methods:GetCenter() return 30,40 end
 function methods:GetEffectiveScale() return 1 end
 setmetatable(methods,{__index=function() return function() end end})
+dofile('tests/mock_animation.lua')(methods)
 CreateFrame=function(_,name,parent)
     local frame=object();frame.name=name;frame.parent=parent;frames[#frames+1]=frame
     if name then named[name]=frame end
@@ -281,4 +282,42 @@ check(db.minimapInspect and panel.controls.minimapInspect,'shaman exposes enable
 slash('reset');check(db.showTotems and db.showWeaponImbue and db.showShield and db.showSpecHelper and db.showMana,'reset restores shaman features')
 local before=#DEFAULT_CHAT_FRAME.messages;slash('status');check(#DEFAULT_CHAT_FRAME.messages>=before+2,'status reports module diagnostics')
 NS.Shaman.Initialize(ForeverUtilitiesDB);check(NS.Shaman.db.x==0 and ForeverUtilitiesDB.schemaVersion==3,'shaman preferences persist with class schema')
+check(panel.controls.flashMissingBuffs and db.flashMissingBuffs,'Shaman exposes the enabled flash toggle')
+GetTotemInfo=function() return false,'',0,0,0 end
+GetTotemTimeLeft=function() return 0 end
+GetInventoryItemID=function() return 123 end
+C_Item.GetWeaponEnchantInfo=function() return {} end
+UnitAffectingCombat=function() return false end
+C_UnitAuras.GetAuraDataByIndex=function(_,index)
+    if index==1 then return {name='Lightning Shield',sourceUnit='player'} end
+end
+indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD')
+indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD')
+local weaponPulse=indicator.weaponCell.stripe.warningPulseGroup
+check(weaponPulse.playing and indicator.alpha==1,
+    'confirmed missing weapon imbue pulses and keeps Shaman readable outside combat')
+C_Item.GetWeaponEnchantInfo=function() return {{hasEnchant=true,timeLeft=10000}} end
+UnitAffectingCombat=function() return true end
+C_UnitAuras.GetAuraDataByIndex=function() end
+indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')
+local shieldPulse=indicator.shieldCell.stripe.warningPulseGroup
+check(not weaponPulse.playing and shieldPulse.playing,'restored imbue stops its pulse while a confirmed missing shield pulses')
+C_UnitAuras.GetAuraDataByIndex=function() return {name=secret} end
+indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')
+check(not shieldPulse.playing,'restricted shield data immediately stops flashing')
+C_Item.GetWeaponEnchantInfo=function() return {} end
+C_UnitAuras.GetAuraDataByIndex=function() end
+db.flashMissingBuffs=false;indicator.Refresh()
+check(not weaponPulse.playing and not shieldPulse.playing and indicator.shieldCell.stripe.color[1]==1,
+    'Shaman flash toggle keeps static warning stripes')
+db.flashMissingBuffs=true;indicator.Refresh()
+db.showShield=false;db.showWeaponImbue=false;indicator.Refresh()
+check(not weaponPulse.playing and not shieldPulse.playing,'disabled Shaman upkeep widgets stop their animations')
+db.showShield=true;db.showWeaponImbue=true;indicator.Refresh()
+indicator.scripts.OnEvent(indicator,'PLAYER_DEAD')
+check(not weaponPulse.playing and not shieldPulse.playing,'death stops both Shaman warning pulses')
+indicator.scripts.OnEvent(indicator,'PLAYER_ALIVE')
+check(weaponPulse.playing and shieldPulse.playing,'resurrection refreshes current Shaman missing-buff warnings')
+db.enabled=false;indicator.Refresh()
+check(not weaponPulse.playing and not shieldPulse.playing,'disabling Shaman stops both pulses')
 print('PASS: '..count..' shaman UI and lifecycle checks')

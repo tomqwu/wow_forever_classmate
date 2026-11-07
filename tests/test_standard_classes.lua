@@ -40,6 +40,7 @@ function methods:SetPoint(_,_,_,x,y) self.x,self.y=x,y end
 function methods:GetCenter() return 30,40 end
 function methods:GetEffectiveScale() return 1 end
 setmetatable(methods,{__index=function() return function() end end})
+dofile('tests/mock_animation.lua')(methods)
 CreateFrame=function(_,name,parent)
     local frame=object();frame.name=name;frame.parent=parent;frames[#frames+1]=frame
     if name then named[name]=frame end
@@ -406,6 +407,14 @@ check(updatedRogue.cells.upkeep.top.text=='1/1' and NS.Rogue.spells.deathMark
 local updatedDruid=Fixture(NS.Druid,{"Tiger's Fury",'Berserk','Primal Bite','Lacerate','Shifting Power'},{})
 check(not NS.Druid.spells.berserk and not NS.Druid.spells.tigersFury and NS.Druid.spells.lacerate
     and updatedDruid.cells.ability.top.text=='Ready','Druid replaces stale cues with learned Feral abilities')
+local missingDruid=Fixture(NS.Druid,{'Mark of the Wild'},{})
+local druidPulse=missingDruid.cells.upkeep.armorWarning.warningPulseGroup
+check(druidPulse.playing and missingDruid.alpha==1,'a confirmed missing Druid maintained buff uses the shared pulse')
+Fixture(NS.Druid,{'Mark of the Wild'},{'Mark of the Wild'})
+check(not druidPulse.playing,'restoring the Druid buff clears the shared pulse')
+local temporary=Fixture(NS.Rogue,{'Slice and Dice'},{})
+local temporaryPulse=rawget(temporary.cells.upkeep.armorWarning,'warningPulseGroup')
+check(not temporaryPulse or not temporaryPulse.playing,'a missing temporary Rogue finisher does not trigger maintained-buff flashing')
 -- Reproduce a localized-only spell lookup: English names return nil when
 -- only Chinese spells are learned. No Classic spell IDs are assumed.
 local nativeSpellInfo=C_Spell.GetSpellInfo
@@ -423,16 +432,22 @@ for _,armorName in ipairs({'Demon Skin','Demon Armor','Fel Armor','恶魔皮肤'
     check(cell.shown and cell.top.text=='Armor' and cell.bottom.text=='Missing'
         and cell.armorWarning.shown and checked.alpha==1,
         'learned armor warns out of combat with localized-only lookup: '..armorName)
+    local pulse=cell.armorWarning.warningPulseGroup
+    check(pulse.playing,'confirmed missing Warlock armor pulses')
+    NS.Warlock.db.flashMissingBuffs=false;checked.Update()
+    check(not pulse.playing and cell.armorWarning.shown and checked.alpha==1,
+        'turning off flashing keeps the static warning and full readability')
+    NS.Warlock.db.flashMissingBuffs=true;checked.Update()
     UnitAffectingCombat=function() return true end;checked.Update()
-    check(not cell.armorWarning.shown and cell.bottom.text~='Missing',
+    check(not cell.armorWarning.shown and not pulse.playing and cell.bottom.text~='Missing',
         'unknown combat armor state never carries a stale missing warning')
     UnitAffectingCombat=function() return false end
     checked=Fixture(NS.Warlock,{armorName},{armorName})
-    check(not cell.armorWarning.shown and cell.top.text=='1/1' and cell.bottom.text=='OK',
+    check(not cell.armorWarning.shown and not pulse.playing and cell.top.text=='1/1' and cell.bottom.text=='OK',
         'applying any recognized armor clears its warning')
     C_UnitAuras.GetAuraDataByIndex=function() return {name=secret} end
     checked.Update()
-    check(not cell.armorWarning.shown and cell.bottom.text~='Missing' and checked.alpha==0.6,
+    check(not cell.armorWarning.shown and not pulse.playing and cell.bottom.text~='Missing' and checked.alpha==0.6,
         'restricted aura names do not create a false missing-armor warning')
 end
 local checked=Fixture(NS.Warlock,{'恶魔皮肤','Summon Imp'},{})
@@ -444,4 +459,14 @@ check(checked.cells.upkeep.top.text=='Armor' and checked.cells.upkeep.bottom.tex
 NS.Warlock.db.showUpkeep=false;checked.Update()
 check(not checked.cells.upkeep.shown and not checked.cells.upkeep.armorWarning.shown and checked.alpha==0.6,
     'disabling upkeep disables the localized armor reminder and its fade override')
+check(not checked.cells.upkeep.armorWarning.warningPulseGroup.playing,'disabled upkeep stops its native animation')
+NS.Warlock.db.showUpkeep=true;checked.Update()
+local pulse=checked.cells.upkeep.armorWarning.warningPulseGroup
+check(pulse.playing,'reenabling upkeep restores the confirmed missing-buff pulse')
+checked.scripts.OnEvent(checked,'PLAYER_DEAD')
+check(not pulse.playing,'death stops the pulse even while missing armor')
+checked.scripts.OnEvent(checked,'PLAYER_ALIVE')
+check(pulse.playing,'resurrection refreshes the warning from current readable state')
+NS.Warlock.db.enabled=false;checked.Refresh()
+check(not pulse.playing,'disabling the whole addon stops warning animations')
 print('PASS: '..count..' standard class runtime checks')

@@ -74,6 +74,7 @@ function methods:SetAlpha(v) self.alpha=v end
 function methods:SetSize(w,h) self.width,self.height=w,h end
 function methods:SetPoint(_,parent,_,x,y) self.parent,self.x,self.y=parent,x,y end
 setmetatable(methods,{__index=function() return function() end end})
+dofile('tests/mock_animation.lua')(methods)
 CreateFrame=function() local f=setmetatable({scripts={},events={}},{__index=methods});frames[#frames+1]=f;return f end
 local class,target,dead,distance='HUNTER',true,false,20
 UnitClass=function() return 'Hunter',class end
@@ -351,9 +352,19 @@ end
 UnitExists=function() return false end
 f.scripts.OnEvent(f,'SPELLS_CHANGED')
 check(f.aspectIcon.shown and not f.scripts.OnUpdate,'aspect warns in combat without target and without idle polling')
+local aspectPulse=f.aspectWarning.warningPulseGroup
+check(aspectPulse.playing,'confirmed missing Hunter aspect pulses its border')
+local aspectPlays=aspectPulse.plays
+f.scripts.OnEvent(f,'UNIT_AURA','player')
+check(aspectPulse.plays==aspectPlays,'unrelated aura refresh keeps the pulse phase')
+db.flashMissingBuffs=false;f.Refresh()
+check(not aspectPulse.playing and f.aspectIcon.shown,'Hunter flash toggle leaves its static warning visible')
+db.flashMissingBuffs=true;f.Refresh()
 aspect=true;f.scripts.OnEvent(f,'UNIT_AURA','player');check(not f.aspectIcon.shown,'player aura immediately clears aspect warning')
+check(not aspectPulse.playing,'Hunter pulse stops when the aspect returns')
 aspect=false;f.scripts.OnEvent(f,'UNIT_AURA','player');check(f.aspectIcon.shown,'removed aspect restores warning')
 combat=false;f.scripts.OnEvent(f,'PLAYER_REGEN_ENABLED');check(not f.aspectIcon.shown,'combat end clears aspect warning')
+check(not aspectPulse.playing,'ending the eligible warning state stops the Hunter pulse')
 combat=true;db.aspectWarning=false;f.Refresh();check(not f.aspectIcon.shown,'aspect toggle disables warning')
 db.petHappinessWarning=true;db.showTargetTarget=false;combat=false
 UnitExists=function(unit) return unit=='pet' end;UnitIsDead=function() return false end

@@ -1,3 +1,11 @@
+## 0.27.0
+
+- Confirmed missing maintained buffs pulse their warning border using a gentle 1.3-second native animation. Warlock armor, other standard-class upkeep, weapon coatings, Hunter aspects, and Shaman shields/imbues share the behavior. Icons and text stay readable.
+- Added the independent Flash missing buffs setting (缺少增益时闪烁) for every class; disabling it keeps static warnings. A confirmed missing Shaman weapon imbue now also restores full bar opacity outside combat.
+- Pulses stop when a buff returns, the data becomes unreadable, the feature or addon is disabled, the bar hides, the player dies, or the player leaves the world. Existing combat-only warning rules are preserved; missing pets and temporary Rogue finishers do not flash.
+
+Use `/reload` after updating. Automated checks use mocked animation and game APIs; verify the appearance in the live client.
+
 ## 0.26.1
 
 - Fixed Warlock armor discovery on Chinese clients when English spell-name lookup returns no metadata. Learned Demon Skin, Demon Armor and Fel Armor can now be recognized by their Chinese names without hardcoded spell IDs.

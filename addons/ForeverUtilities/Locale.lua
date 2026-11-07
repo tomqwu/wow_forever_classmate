@@ -83,6 +83,7 @@ local zh={
     ['Fire damage and slower enemy casting; beta tame sources unconfirmed.']='火焰伤害并延缓敌方施法；测试版驯服来源未确认。',
     ['Temporary dodge and faster attacks; beta tame sources unconfirmed.']='暂时提高闪避和攻击速度；测试版驯服来源未确认。',
     ['Enable hunter bar']='启用猎人信息条',['Enable shaman bar']='启用萨满信息条',
+    ['Flash missing buffs']='缺少增益时闪烁',
     ['Show minimap settings button']='显示小地图设置按钮',
     ['Right-click minimap to inspect players']='右键小地图按钮观察玩家',
     ['Show lock button on bar']='在信息条上显示锁定按钮',

@@ -53,6 +53,36 @@ function Core.EnsureSchema(saved,minimum)
     saved.schemaVersion=Core.IsNumber(saved.schemaVersion) and math.max(saved.schemaVersion,minimum) or minimum
 end
 
+-- Animate only the warning decoration. Keep the icon, text and bar readable,
+-- and let the native animation system do the work without another poller.
+function Core.CreateWarningPulse(owner,decoration)
+    local group,attempted
+    local function Set(enabled)
+        if enabled~=true then
+            if group then
+                if group:IsPlaying() then group:Stop() end
+                decoration:SetAlpha(1)
+            end
+            return
+        end
+        if not attempted then
+            attempted=true
+            if type(decoration.CreateAnimationGroup)~='function' then return end
+            group=decoration:CreateAnimationGroup()
+            if not group then return end
+            for order,ends in ipairs({{0.25,1},{1,0.25}}) do
+                local alpha=group:CreateAnimation('Alpha')
+                alpha:SetFromAlpha(ends[1]);alpha:SetToAlpha(ends[2])
+                alpha:SetDuration(0.65);alpha:SetOrder(order)
+            end
+            group:SetLooping('REPEAT')
+        end
+        if group and not group:IsPlaying() then group:Play() end
+    end
+    owner:HookScript('OnHide',function() Set(false) end)
+    return Set
+end
+
 function NS.RegisterClass(token,module)
     assert(type(token)=='string' and type(module)=='table','Invalid class module')
     module.classToken=token

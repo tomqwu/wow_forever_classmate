@@ -16,8 +16,9 @@ NS.Hunter = {
     lockVisible=function(db) return not db.rangeIconOnly end,
     frameName='ForeverUtilitiesDistanceFrame',lockName='ForeverHunterFriendLock',
     panelName='ForeverHunterFriendOptions',minimapName='ForeverHunterFriendMinimap',
-    defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showTargetTarget=true,showAngle=true,showRange=true,rangeIconOnly=false,showInspect=false,showAmmo=true,lowAmmoWarning=true,petMendWarning=true,petHappinessWarning=true,petGuide=true,markWarning=true,aspectWarning=true,fadeOutOfCombat=true,showMinimap=true,minimapInspect=true,showLockButton=true,minimapAngle=35}, normalize=Normalize,
+    defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showTargetTarget=true,showAngle=true,showRange=true,rangeIconOnly=false,showInspect=false,showAmmo=true,lowAmmoWarning=true,petMendWarning=true,petHappinessWarning=true,petGuide=true,markWarning=true,aspectWarning=true,flashMissingBuffs=true,fadeOutOfCombat=true,showMinimap=true,minimapInspect=true,showLockButton=true,minimapAngle=35}, normalize=Normalize,
     options={
+        {key='flashMissingBuffs',label='Flash missing buffs',kind='toggle'},
         {key='showMinimap',label='Show minimap settings button',kind='toggle'},
         {key='minimapInspect',label='Right-click minimap to inspect players',kind='toggle'},
         {key='showLockButton',label='Show lock button on bar',kind='toggle'},

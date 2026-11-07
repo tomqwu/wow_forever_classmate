@@ -140,6 +140,7 @@ local function CreateIndicator(module,config,host,db)
     armorWarning:SetSize(28,28);armorWarning:SetPoint('LEFT',upkeep,'LEFT',1,0)
     armorWarning:SetColorTexture(1,0.2,0.08,1);armorWarning:Hide()
     upkeep.armorWarning=armorWarning
+    local pulseUpkeep=Core.CreateWarningPulse(frame,armorWarning)
     local dots=config.dotKeys and NS.DotTracker.Create(frame,db,module,config.dotKeys,config.color)
     frame.dotTracker=dots
     local lastStatus='Not checked';local elapsed=0;local active=false;local suspended=false
@@ -306,7 +307,10 @@ local function CreateIndicator(module,config,host,db)
         -- The armor reminder stays explicit even if another upkeep reading (for
         -- example demon existence) is unavailable; no aggregate count is implied.
         if missingArmor then upkeepTop='Armor';upkeepBottom='Missing' end
-        armorWarning:SetShown(missingArmor and upkeepIcon~=nil)
+        -- With no icon, use a narrow warning stripe instead of an empty square.
+        armorWarning:SetSize(upkeepIcon and 28 or 3,28)
+        armorWarning:SetShown(missingBuff)
+        pulseUpkeep(missingBuff and db.flashMissingBuffs~=false)
         local upkeepWarn=missingBuff or (inCombat and upkeepMissing>0)
         local shieldAura,protectedAbsorb,hasProtectedAbsorb
         if config.key=='mage' and db.showMageShield~=false then
@@ -424,12 +428,13 @@ local function CreateIndicator(module,config,host,db)
     local function Refresh()
         frame:SetScript('OnUpdate',nil);frame:SetShown(db.enabled)
         if not db.enabled then
+            pulseUpkeep(false)
             if active then for _,event in ipairs(events) do frame:UnregisterEvent(event) end end
             if dots then dots.Refresh(false) end
             active=false;confirmedUpkeep={};lastStatus=config.label..' helper disabled';return
         end
         if not active then for _,event in ipairs(events) do frame:RegisterEvent(event) end;active=true;Discover() end
-        if suspended or Core.PlayerDead() then if dots then dots.Refresh(false) end;frame:Hide();return end
+        if suspended or Core.PlayerDead() then pulseUpkeep(false);if dots then dots.Refresh(false) end;frame:Hide();return end
         Update();elapsed=0
         if dots then dots.Refresh(true) end
         if NeedsPoll() then frame:SetScript('OnUpdate',function(_,delta) elapsed=elapsed+delta;if elapsed>=0.25 then elapsed=0;Update() end end) end
@@ -437,7 +442,7 @@ local function CreateIndicator(module,config,host,db)
     frame:SetScript('OnEvent',function(_,event,unit)
         if not db.enabled then return end
         if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then
-            suspended=true;confirmedUpkeep={};frame:SetScript('OnUpdate',nil);frame:Hide();return
+            pulseUpkeep(false);suspended=true;confirmedUpkeep={};frame:SetScript('OnUpdate',nil);frame:Hide();return
         end
         if event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_ALIVE' or event=='PLAYER_UNGHOST' then suspended=false end
         if suspended or Core.PlayerDead() then return end
@@ -453,6 +458,7 @@ local function CreateIndicator(module,config,host,db)
 end
 
 local defaultOptions={
+    {key='flashMissingBuffs',label='Flash missing buffs',kind='toggle'},
     {key='showMinimap',label='Show minimap settings button',kind='toggle'},
     {key='minimapInspect',label='Right-click minimap to inspect players',kind='toggle'},
     {key='showLockButton',label='Show lock button on bar',kind='toggle'},
@@ -479,7 +485,7 @@ for token,config in pairs(configs) do
         panelName='ForeverClassmate'..config.label..'Options',minimapName='ForeverClassmate'..config.label..'Minimap',
         indicatorName='ForeverClassmate'..config.label..'Indicator',normalize=Normalize,options=OptionsFor(config),
         defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showMinimap=true,minimapInspect=true,showLockButton=true,showResource=true,
-            showUpkeep=true,showTarget=true,showAbilities=true,showRacial=true,showMageShield=true,fadeOutOfCombat=true,minimapAngle=35}}
+            showUpkeep=true,showTarget=true,showAbilities=true,showRacial=true,showMageShield=true,flashMissingBuffs=true,fadeOutOfCombat=true,minimapAngle=35}}
     if config.dotKeys then module.defaults.showMultiDots=true end
     NS[config.label]=module
     function module.create(db)

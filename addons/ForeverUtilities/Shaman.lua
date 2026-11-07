@@ -29,8 +29,9 @@ end
 Shaman.normalize=Normalize
 Shaman.defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showMinimap=true,minimapInspect=true,showLockButton=true,
     showTotems=true,showWeaponImbue=true,showShield=true,showSpecHelper=true,showMana=true,
-    totemRecallHint=true,fadeOutOfCombat=true,minimapAngle=35}
+    totemRecallHint=true,flashMissingBuffs=true,fadeOutOfCombat=true,minimapAngle=35}
 Shaman.options={
+    {key='flashMissingBuffs',label='Flash missing buffs',kind='toggle'},
     {key='showMinimap',label='Show minimap settings button',kind='toggle'},
     {key='minimapInspect',label='Right-click minimap to inspect players',kind='toggle'},
     {key='showLockButton',label='Show lock button on bar',kind='toggle'},
@@ -94,6 +95,8 @@ local function CreateIndicator(host,db)
     end
     frame.totemCells=totemCells
     local weapon=MakeCell(38);local shield=MakeCell(38)
+    local pulseWeapon=Core.CreateWarningPulse(frame,weapon.stripe)
+    local pulseShield=Core.CreateWarningPulse(frame,shield.stripe)
     weapon.badge:SetText('');shield.badge:SetText('')
     local helperIcon=frame:CreateTexture(nil,'ARTWORK');helperIcon:SetSize(28,28)
     local helperText=frame:CreateFontString(nil,'OVERLAY','GameFontHighlight')
@@ -305,17 +308,21 @@ local function CreateIndicator(host,db)
             end
         end
         local imbue=db.showWeaponImbue~=false and Context.WeaponImbue() or nil;weapon.state=imbue
+        local imbueWarn=false
         weapon.button:SetShown(db.showWeaponImbue~=false and imbue~=nil and imbue.equipped)
         if imbue and imbue.equipped then
             weapon.icon:SetTexture(imbue.icon or 'Interface\\Icons\\INV_Mace_02')
             weapon.icon:SetVertexColor(imbue.active and 1 or 0.45,imbue.active and 1 or 0.45,imbue.active and 1 or 0.45,1)
             weapon.timer:SetText(imbue.active and NS.L(Context.FormatTime(imbue.left) or '') or '')
             local warn=next(imbueNames)~=nil and not imbue.active
+            imbueWarn=warn
             weapon.stripe:SetColorTexture(warn and 1 or 0.25,warn and 0.15 or 0.75,warn and 0.1 or 1,1)
         end
+        pulseWeapon(imbueWarn and db.flashMissingBuffs~=false)
         local missingShield,aura
         if db.showShield~=false then missingShield,aura=Context.MissingShield(shieldNames) end
         shield.state=aura
+        pulseShield(missingShield==true and db.flashMissingBuffs~=false)
         shield.button:SetShown(db.showShield~=false and next(shieldNames)~=nil and missingShield~=nil)
         if next(shieldNames) then
             local fallback=(Shaman.spells.waterShield or Shaman.spells.lightningShield or {}).icon or 'Interface\\Icons\\Spell_Nature_LightningShield'
@@ -383,7 +390,7 @@ local function CreateIndicator(host,db)
         helperText:SetTextColor(unpack(color));helperText:SetShown(helper~='')
         local mana=db.showMana~=false and Context.ManaPercent() or nil
         manaText:SetText(mana and NS.L('Mana '..mana..'%') or '');manaText:SetShown(mana~=nil)
-        NS.ClassHost.SetFade(host,frame,(db.fadeOutOfCombat==false or inCombat or activeTotems>0) and 1 or (hasTarget and 0.6 or 0.2))
+        NS.ClassHost.SetFade(host,frame,(db.fadeOutOfCombat==false or inCombat or activeTotems>0 or imbueWarn or missingShield==true) and 1 or (hasTarget and 0.6 or 0.2))
         lastStatus=string.format('Totems %d/4 confirmed, %d unavailable; weapon imbue %s; shield %s; helper %s; mana %s',activeTotems,unknownTotems,
             imbue and (imbue.active and 'active' or (imbue.equipped and 'missing' or 'no weapon')) or 'unavailable',
             missingShield==nil and 'unavailable' or (missingShield and 'missing' or (aura and 'active' or 'inactive')),
@@ -399,19 +406,20 @@ local function CreateIndicator(host,db)
     local function Refresh()
         frame:SetScript('OnUpdate',nil);frame:SetShown(db.enabled);Layout()
         if not db.enabled then
+            pulseWeapon(false);pulseShield(false)
             totemCache={};recentCast={}
             if active then for _,event in ipairs(events) do frame:UnregisterEvent(event) end end
             active=false;lastStatus='Shaman helper disabled';return
         end
         if not active then for _,event in ipairs(events) do frame:RegisterEvent(event) end;active=true;Discover() end
-        if suspended or Core.PlayerDead() then frame:Hide();return end
+        if suspended or Core.PlayerDead() then pulseWeapon(false);pulseShield(false);frame:Hide();return end
         Update();elapsed=0
         if NeedsPoll() then frame:SetScript('OnUpdate',function(_,delta) elapsed=elapsed+delta;if elapsed>=0.25 then elapsed=0;Update() end end) end
     end
     frame:SetScript('OnEvent',function(_,event,unit,_,spellID)
         if not db.enabled then return end
         if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then
-            suspended=true;totemCache={};recentCast={};frame:SetScript('OnUpdate',nil);frame:Hide();return
+            pulseWeapon(false);pulseShield(false);suspended=true;totemCache={};recentCast={};frame:SetScript('OnUpdate',nil);frame:Hide();return
         end
         if event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_ALIVE' or event=='PLAYER_UNGHOST' then suspended=false end
         if suspended or Core.PlayerDead() then return end

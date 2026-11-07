@@ -110,10 +110,12 @@ function Range.Create(host, db)
     local aspectIcon=frame:CreateTexture(nil,'ARTWORK',nil,1)
     aspectIcon:SetSize(20,20);aspectIcon:SetPoint('CENTER',aspectBorder,'CENTER',0,0)
     aspectIcon:SetTexture('Interface\\Icons\\Spell_Nature_RavenForm');aspectIcon:Hide()
-    frame.aspectIcon=aspectIcon
+    frame.aspectIcon=aspectIcon;frame.aspectWarning=aspectBorder
+    local pulseAspect=Core.CreateWarningPulse(frame,aspectBorder)
     local function UpdateAspect()
         local missing=db.aspectWarning~=false and NS.TargetContext.AspectMissing(aspectNames)==true
         aspectIcon:SetShown(missing);aspectBorder:SetShown(missing)
+        pulseAspect(missing and not db.rangeIconOnly and db.flashMissingBuffs~=false)
     end
     local petHighlight=frame:CreateTexture(nil,'ARTWORK',nil,0)
     petHighlight:SetSize(44,44);petHighlight:SetPoint('RIGHT',frame,'RIGHT',-21,0)
@@ -405,10 +407,12 @@ function Range.Create(host, db)
     local rangeEvents={'PLAYER_TARGET_CHANGED','SPELLS_CHANGED','LEARNED_SPELL_IN_SKILL_LINE','PLAYER_ENTERING_WORLD',
         'PLAYER_LEAVING_WORLD','PLAYER_DEAD','PLAYER_ALIVE','PLAYER_UNGHOST','PLAYER_EQUIPMENT_CHANGED','UNIT_FLAGS','UNIT_TARGET','UNIT_NAME_UPDATE','UNIT_PORTRAIT_UPDATE','BAG_UPDATE_DELAYED','UNIT_INVENTORY_CHANGED','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED','UNIT_HEALTH','UNIT_MAXHEALTH','UNIT_PET','UNIT_AURA','UNIT_HAPPINESS'}
     local function Refresh()
+        if db.rangeIconOnly then pulseAspect(false) end
         frame:SetScript('OnUpdate',nil)
         frame:SetShown(db.enabled)
         ContextLayout()
         if not db.enabled then
+            pulseAspect(false)
             guide.Clear()
             if active then for _,event in ipairs(rangeEvents) do frame:UnregisterEvent(event) end end
             active=false;lastStatus='Distance checker disabled'
@@ -418,7 +422,7 @@ function Range.Create(host, db)
             for _,event in ipairs(rangeEvents) do frame:RegisterEvent(event) end
             active=true;Discover()
         end
-        if suspended or Core.PlayerDead() then frame:Hide();return end
+        if suspended or Core.PlayerDead() then pulseAspect(false);frame:Hide();return end
         if not db.rangeIconOnly then UpdateAmmo();UpdateAspect();UpdateHappiness() end
         local hasTarget=Call(UnitExists,'target')==true
         local inCombat=Call(UnitAffectingCombat,'player')==true
@@ -449,7 +453,7 @@ function Range.Create(host, db)
     frame:SetScript('OnEvent',function(_,event,unit)
         if not db.enabled then return end
         if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then
-            suspended=true;frame:SetScript('OnUpdate',nil);aspectIcon:Hide();aspectBorder:Hide();mood:Hide();ClearContext();frame:Hide();return
+            pulseAspect(false);suspended=true;frame:SetScript('OnUpdate',nil);aspectIcon:Hide();aspectBorder:Hide();mood:Hide();ClearContext();frame:Hide();return
         end
         if event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_ALIVE' or event=='PLAYER_UNGHOST' then suspended=false end
         if suspended or Core.PlayerDead() then return end
