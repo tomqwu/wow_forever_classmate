@@ -78,6 +78,19 @@ ShamanContext.lua owns secret-safe totem, temporary-enchant, aura, and mana read
 
 ClassContext.lua and StandardClasses.lua own the Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock runtime. Each class has an independent database and a fixed resource, upkeep, target/ability, and active-racial block. Spellbook discovery controls class and racial availability. Preserve “Context” for learned abilities that the client reports unusable, keep Priest racial spells ahead of base racials, and never infer why an ability is unavailable. DotTracker.lua owns optional multi-target DoT sidebars for Warrior, Rogue, Druid, Priest, and Warlock. Read only current target and active nameplates; never extrapolate an offscreen aura. Clear on disappearance, expiry, world leave, and disable. Keep nameplate aura updates scoped to that unit.
 
+## Mail recipient utility
+
+`MailRecipients.lua` is a shared utility, controlled by the active class's
+`mailRecipients` preference independently of its bar. Preserve account-wide
+`ForeverUtilitiesDB.mail` character/history records. Learn alts only from observed
+logins, filter them by realm/faction, and retain realm suffixes for explicit
+cross-realm recipients. Fill the native recipient field only on a click. Observe
+only the recipient argument with a guarded secure post-hook; commit recents only
+on `MAIL_SEND_SUCCESS`, never on a draft edit or failed/cancelled attempt. Do not
+read mail contents or call sending/transfer APIs. Native frames load lazily;
+disable removes listeners and leaves existing hooks inert. See the pinned Forever
+70862 source and lifecycle/secret handling in `docs/mail-recipients.md`.
+
 ## Bar layout
 
 Layout.lua owns Hunter visual block allocation inside its fixed 426 × 56 bar. Shaman.lua owns the Shaman grouped allocation, and StandardClasses.lua owns the five fixed standard slots in the same outer footprint. The 426-pixel width is the rendered result of Forever's default desktop swing-timer preset: stored width offset 213 plus slider minimum 213. Keep range/ammo, combat reminders, pet portrait, and control separate. Blocks do not shift with transient warning state; only feature preferences redistribute width. See docs/bar-layout.md before adding information.

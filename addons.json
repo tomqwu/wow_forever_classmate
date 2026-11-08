@@ -7,6 +7,7 @@
       "tests/test_locale.lua",
       "tests/test_warning_pulse.lua",
       "tests/test_leveling_buffs.lua",
+      "tests/test_mail_recipients.lua",
       "tests/test_ui.lua",
       "tests/test_targetcontext.lua",
       "tests/test_layout.lua",

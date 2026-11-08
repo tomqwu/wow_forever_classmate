@@ -1,3 +1,13 @@
+## 0.30.0
+
+- Added a compact recipient panel beside native Send Mail, with Alts and Recent recipients visible together. Click a name to fill the recipient field; right-click to forget its saved entry. Each list has five rows and pagination.
+- Logged-in characters are remembered in account-wide saved variables. Alts show other recorded characters on the current realm and faction, with readable realm IDs preventing same-name realm mixups and whole player GUIDs updating observed renames. Log into each alt once with Classmate enabled to register it.
+- Recents retain the newest 20 successfully sent recipients per sending realm/faction, shared across your characters. The original recipient argument is captured before the native success handler clears its field. Failed/cancelled or ambiguous sends and restricted recipient values do not create history. Explicit cross-realm recipients keep their realm suffix.
+- Added Mail recipients: alts and recents in English/Simplified Chinese settings for every class, independent of the class bar. Mail subjects, bodies, items, and amounts are not stored; selection fills the field and leaves sending to the normal game action.
+- Mail integration loads lazily, uses no polling, hides in combat and outside the native Send Mail tab, and removes listeners when disabled. Existing class bars, leveling reminders, and saved preferences are preserved.
+
+Use `/reload`, then open a mailbox and select Send Mail. Automated checks use mocked APIs; live client rendering and event behavior still need confirmation.
+
 ## 0.29.0
 
 - Added an independent Food XP buff reminder (below level 60) for all nine classes. Levels 1–59 see a small food icon outside combat when a complete readable scan confirms Well Fed is absent; level 60 and above never warn.

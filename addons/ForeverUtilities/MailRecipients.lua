@@ -1,0 +1,274 @@
+local _,NS=...
+local Core=NS.Core
+local Mail={}
+NS.MailRecipients=Mail
+local db,controller,panel,owner,pending
+local active,hooked,suspended,closed,combatBlocked=false,false,false,false,false
+local pageSize=5
+
+local function String(value)
+    return Core.IsReadable(value) and type(value)=='string' and value~='' and #value<=160
+        and not value:find('[%c|;:/\\@%[%]{}<>]') and value or nil
+end
+local function Realm(value)
+    value=String(value)
+    return value and value:gsub('%s+','') or nil
+end
+function Mail.Recipient(value,homeRealm)
+    value=String(value)
+    if not value then return nil end
+    value=value:match('^%s*(.-)%s*$')
+    local name,realm=value:match('^([^%-]+)%-(.+)$')
+    if not name then name=value;realm=homeRealm end
+    realm=Realm(realm)
+    if not realm or realm=='' or name=='' or #name>48 or name:find('[%s%p%d]') then return nil end
+    return {name=name,realm=realm,address=name..'-'..realm,key=(name..'-'..realm):lower()}
+end
+local function Scope(player)
+    return (player.realmID and ('id:'..player.realmID) or ('realm:'..player.realm:lower()))..'/'..player.faction
+end
+function Mail.Player()
+    local name,realm=Core.Call(UnitFullName,'player')
+    realm=Realm(Core.Call(GetNormalizedRealmName)) or Realm(realm) or Realm(Core.Call(GetRealmName))
+    local recipient=Mail.Recipient(name,realm)
+    local faction=Core.Call(UnitFactionGroup,'player')
+    if not recipient or (faction~='Alliance' and faction~='Horde') then return nil end
+    local realmID=Core.Call(GetRealmID)
+    if type(GetRealmID)=='function' and (not Core.IsNumber(realmID) or realmID<=0) then return nil end
+    recipient.realmID=Core.IsNumber(realmID) and realmID>0 and realmID or nil
+    recipient.faction=faction;recipient.scope=Scope(recipient)
+    recipient.savedKey=recipient.scope..'/'..recipient.key
+    recipient.guid=String(Core.Call(UnitGUID,'player'))
+    return recipient
+end
+local function SameRealm(a,b)
+    if a.realmID~=nil or b.realmID~=nil then
+        return Core.IsNumber(a.realmID) and Core.IsNumber(b.realmID) and a.realmID==b.realmID
+    end
+    return a.realm:lower()==b.realm:lower()
+end
+local function Enabled()
+    local module=NS.ActiveClass()
+    return db~=nil and module and module.db and module.db.mailRecipients~=false
+end
+local function OutOfCombat()
+    if combatBlocked then return false end
+    if type(InCombatLockdown)=='function' then return Core.Call(InCombatLockdown)==false end
+    return Core.Call(UnitAffectingCombat,'player')==false
+end
+local function RememberPlayer()
+    if not Enabled() or suspended or not OutOfCombat() then return end
+    local player=Mail.Player()
+    if not player then return end
+    for key,record in pairs(db.characters) do
+        if type(record)=='table' and player.guid and record.guid==player.guid and key~=player.savedKey then
+            db.characters[key]=nil
+        end
+    end
+    db.characters[player.savedKey]=player
+end
+function Mail.Alts(player)
+    local result,seen={},{}
+    if not db or not player then return result end
+    for key,record in pairs(db.characters) do
+        if type(record)=='table' then
+            local item=Mail.Recipient(record.name,record.realm)
+            if item and record.faction==player.faction and SameRealm({realm=item.realm,realmID=record.realmID},player)
+                and item.key~=player.key and not seen[item.key] then
+                seen[item.key]=true;item.savedKey=key;result[#result+1]=item
+            end
+        end
+    end
+    table.sort(result,function(a,b) return a.key<b.key end)
+    return result
+end
+function Mail.Recents(player)
+    local result,seen={},{}
+    if not db or not player or type(db.recents[player.scope])~='table' then return result end
+    for _,address in ipairs(db.recents[player.scope]) do
+        local item=Mail.Recipient(address,player.realm)
+        if item and item.key~=player.key and not seen[item.key] then
+            seen[item.key]=true;result[#result+1]=item
+            if #result==20 then break end
+        end
+    end
+    return result
+end
+local function RecordRecent(attempt)
+    local entries={attempt.recipient.address}
+    for _,item in ipairs(Mail.Recents(attempt.player)) do
+        if item.key~=attempt.recipient.key and #entries<20 then entries[#entries+1]=item.address end
+    end
+    db.recents[attempt.player.scope]=entries
+end
+local function Forget(kind,item,player)
+    if kind=='alts' then db.characters[item.savedKey]=nil
+    else
+        local entries={}
+        for _,entry in ipairs(Mail.Recents(player)) do
+            if entry.key~=item.key then entries[#entries+1]=entry.address end
+        end
+        db.recents[player.scope]=entries
+    end
+end
+local function Public(frame)
+    return Core.IsReadable(frame) and (type(frame)=='table' or type(frame)=='userdata')
+        and type(frame.IsForbidden)=='function' and Core.Call(frame.IsForbidden,frame)==false
+end
+local function Visible(frame)
+    return Public(frame) and Core.Call(frame.IsVisible,frame)==true
+end
+local function Hide()
+    if panel then
+        panel:Hide()
+        if GameTooltip then
+            for _,group in pairs(panel.groups) do
+                for _,row in ipairs(group.rows) do
+                    if GameTooltip:IsOwned(row) then GameTooltip:Hide() end
+                end
+            end
+        end
+    end
+end
+local function Fill(item,player)
+    if not Enabled() or suspended or closed or pending~=nil or not OutOfCombat() or not Visible(owner) then return end
+    local edit=SendMailNameEditBox
+    if not Public(edit) or Core.Call(edit.IsEnabled,edit)~=true or type(edit.SetText)~='function' then return end
+    local address=item.realm:lower()==player.realm:lower() and item.name or item.address
+    if pcall(edit.SetText,edit,address) then Core.Call(edit.ClearFocus,edit) end
+end
+local function Text(parent,value,x,y,width,height)
+    local label=parent:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall')
+    label:SetPoint('TOPLEFT',parent,'TOPLEFT',x,y);label:SetSize(width,height or 16)
+    label:SetJustifyH('LEFT');label:SetText(NS.L(value));return label
+end
+local Refresh
+local function CreatePanel()
+    panel=CreateFrame('Frame','ForeverClassmateMailRecipients',owner)
+    panel:SetSize(220,440);panel:SetPoint('TOPLEFT',owner,'TOPRIGHT',8,-34)
+    panel:SetFrameStrata('DIALOG');panel:SetClampedToScreen(true);panel:EnableMouse(true)
+    local edge=panel:CreateTexture(nil,'BACKGROUND');edge:SetAllPoints();edge:SetColorTexture(0.5,0.4,0.19,1)
+    local bg=panel:CreateTexture(nil,'BORDER');bg:SetPoint('TOPLEFT',1,-1);bg:SetPoint('BOTTOMRIGHT',-1,1);bg:SetColorTexture(0.035,0.04,0.055,0.98)
+    Text(panel,'Mail recipients',12,-12,196):SetTextColor(1,0.82,0.3)
+    Text(panel,'Click: use name. Right-click: forget.',12,-410,196,26)
+    panel.groups={}
+    for index,definition in ipairs({{key='alts',title='Alts',empty='Log into each alt once with Classmate enabled.'},
+        {key='recents',title='Recent recipients',empty='Recipients appear after successful mail sends.'}}) do
+        local y=-40-(index-1)*183
+        Text(panel,definition.title,12,y,196):SetTextColor(1,0.82,0.3)
+        local group={page=1,rows={}}
+        panel.groups[definition.key]=group
+        group.empty=Text(panel,definition.empty,12,y-24,196,96);group.empty:SetJustifyV('TOP')
+        for rowIndex=1,pageSize do
+            local row=CreateFrame('Button',nil,panel)
+            row:SetSize(196,24);row:SetPoint('TOPLEFT',panel,'TOPLEFT',12,y-22-(rowIndex-1)*25)
+            row:RegisterForClicks('LeftButtonUp','RightButtonUp')
+            local hover=row:CreateTexture(nil,'HIGHLIGHT');hover:SetAllPoints();hover:SetColorTexture(1,0.8,0.3,0.18)
+            row.label=Text(row,'',6,-4,184);row.label:SetWordWrap(false)
+            row:SetScript('OnClick',function(self,button)
+                local player=Mail.Player()
+                if not Enabled() or not self.item or not player or pending~=nil or not OutOfCombat() then return end
+                if button=='RightButton' then Forget(definition.key,self.item,player);Refresh()
+                else Fill(self.item,player) end
+            end)
+            row:SetScript('OnEnter',function(self)
+                if GameTooltip and self.item then
+                    GameTooltip:SetOwner(self,'ANCHOR_RIGHT');GameTooltip:SetText(self.item.address)
+                    GameTooltip:AddLine(NS.L('Click: use name. Right-click: forget.'),1,1,1,true);GameTooltip:Show()
+                end
+            end)
+            row:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
+            group.rows[rowIndex]=row
+        end
+        group.pageText=Text(panel,'',70,y-156,90)
+        for _,direction in ipairs({-1,1}) do
+            local button=CreateFrame('Button',nil,panel,'UIPanelButtonTemplate')
+            button:SetSize(28,20);button:SetPoint('TOPLEFT',panel,'TOPLEFT',direction==-1 and 12 or 180,y-150)
+            button:SetText(direction==-1 and '<' or '>')
+            button:SetScript('OnClick',function() group.page=group.page+direction;Refresh() end)
+            if direction==-1 then group.previous=button else group.next=button end
+        end
+    end
+end
+Refresh=function()
+    if not Enabled() or suspended or closed or not OutOfCombat() or not Visible(owner) then Hide();return end
+    local player=Mail.Player()
+    if not player then Hide();return end
+    if not panel then CreatePanel() end
+    for kind,group in pairs(panel.groups) do
+        local entries=kind=='alts' and Mail.Alts(player) or Mail.Recents(player)
+        local pages=math.max(1,math.ceil(#entries/pageSize))
+        group.page=math.max(1,math.min(group.page,pages))
+        group.empty:SetShown(#entries==0)
+        group.pageText:SetText(string.format('%d / %d',group.page,pages))
+        group.previous:SetEnabled(group.page>1);group.next:SetEnabled(group.page<pages)
+        for index,row in ipairs(group.rows) do
+            local item=entries[(group.page-1)*pageSize+index]
+            row.item=item;row:SetShown(item~=nil);row:SetEnabled(pending==nil)
+            if item then row.label:SetText(item.realm:lower()==player.realm:lower() and item.name or item.address) end
+        end
+    end
+    panel:Show()
+end
+local function Bind()
+    if owner then return end
+    local frame=SendMailFrame
+    if not Public(frame) or type(frame.HookScript)~='function' then return end
+    if not pcall(frame.HookScript,frame,'OnShow',function() closed=false;Refresh() end) then return end
+    owner=frame
+    Core.Call(frame.HookScript,frame,'OnHide',Hide)
+    controller:UnregisterEvent('ADDON_LOADED')
+end
+local function HookSend()
+    if hooked or type(SendMail)~='function' or type(hooksecurefunc)~='function' then return end
+    hooked=pcall(hooksecurefunc,'SendMail',function(recipient)
+        if not Enabled() or suspended or not OutOfCombat() then return end
+        -- Overlapping send attempts cannot be associated safely with a single
+        -- success event. Omit history rather than attribute it to a guessed name.
+        if pending~=nil then pending=false;Refresh();return end
+        local player=Mail.Player()
+        local item=player and Mail.Recipient(recipient,player.realm)
+        pending=item and {player=player,recipient=item} or false
+        Refresh()
+    end)
+end
+local events={'PLAYER_LOGIN','PLAYER_ENTERING_WORLD','PLAYER_LEAVING_WORLD','MAIL_SHOW','MAIL_CLOSED',
+    'MAIL_SEND_SUCCESS','MAIL_FAILED','SECURE_TRANSFER_CANCEL','ADDON_LOADED','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED'}
+local function OnEvent(_,event,name)
+    if not Enabled() then Hide();return end
+    if event=='PLAYER_LEAVING_WORLD' then suspended=true;pending=nil;Hide();return end
+    if event=='MAIL_SEND_SUCCESS' then
+        local attempt=pending;pending=nil
+        if Enabled() and type(attempt)=='table' then RecordRecent(attempt) end
+    elseif event=='MAIL_FAILED' or event=='SECURE_TRANSFER_CANCEL' then pending=nil
+    elseif event=='MAIL_CLOSED' then closed=true
+    elseif event=='MAIL_SHOW' then closed=false
+    elseif event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_LOGIN' then suspended=false;RememberPlayer()
+    elseif event=='PLAYER_REGEN_DISABLED' then combatBlocked=true
+    elseif event=='PLAYER_REGEN_ENABLED' then combatBlocked=false;RememberPlayer()
+    elseif event=='ADDON_LOADED' and (not Core.IsReadable(name) or name~='Blizzard_MailFrame') then return end
+    Bind();HookSend();Refresh()
+end
+function Mail.Apply()
+    if not Enabled() then
+        if controller and active then for _,event in ipairs(events) do controller:UnregisterEvent(event) end end
+        active=false;pending=nil;suspended=false;closed=false;combatBlocked=false;Hide();return
+    end
+    if not controller then
+        controller=CreateFrame('Frame');controller:SetScript('OnEvent',OnEvent)
+    end
+    if not active then
+        for _,event in ipairs(events) do controller:RegisterEvent(event) end
+        if owner then controller:UnregisterEvent('ADDON_LOADED') end
+        active=true
+    end
+    if suspended then Hide();return end
+    RememberPlayer();Bind();HookSend();Refresh()
+end
+function Mail.Initialize(saved)
+    if type(saved.mail)~='table' then saved.mail={} end
+    db=saved.mail
+    if type(db.characters)~='table' then db.characters={} end
+    if type(db.recents)~='table' then db.recents={} end
+    Mail.Apply()
+end

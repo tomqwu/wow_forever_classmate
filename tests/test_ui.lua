@@ -55,11 +55,17 @@ end}
 local class='HUNTER'
 UnitClass=function() return 'Hunter',class end
 assert(loadfile(root..'Distance.lua'))('ForeverUtilities',NS)
+local mailApplies,mailInitializations=0,0
+NS.MailRecipients={Apply=function() mailApplies=mailApplies+1 end,Initialize=function(saved)
+ check(saved==ForeverUtilitiesDB,'mail initializes with account-wide saved variables')
+ mailInitializations=mailInitializations+1
+end}
 assert(loadfile(root..'UI.lua'))('ForeverUtilities',NS)
 local events=frames[1]
 events.scripts.OnEvent(events,'ADDON_LOADED','Unrelated')
 check(not NS.Hunter.db,'ignores unrelated addon')
 events.scripts.OnEvent(events,'ADDON_LOADED','ForeverUtilities')
+check(mailInitializations==1,'mail service initializes once after class preferences')
 local db=NS.Hunter.db
 check(db.x==70 and db.y==-123 and db.scale==1.3 and not db.enabled,'flat preferences migrated')
 check(not NS.Hunter.instance,'disabled bar not created')
@@ -73,6 +79,12 @@ local compact=panel.controls.rangeIconOnly
 check(compact and panel.controls.showInspect,'compact range and inspect each have a settings toggle')
 check(panel.controls.sleepingBagReminder and db.sleepingBagReminder==true,'Hunter has an independent sleeping bag reminder setting')
 check(panel.controls.foodXPReminder and db.foodXPReminder==true,'Hunter has an independent food XP reminder setting')
+local mailToggle=panel.controls.mailRecipients
+check(mailToggle and db.mailRecipients==true,'Hunter exposes mail utility preference')
+local beforeMailApply=mailApplies
+mailToggle:SetChecked(false);mailToggle.scripts.OnClick(mailToggle)
+check(not db.mailRecipients and mailApplies>beforeMailApply,'mail toggle saves and refreshes shared service')
+mailToggle:SetChecked(true);mailToggle.scripts.OnClick(mailToggle)
 compact:SetChecked(true);compact.scripts.OnClick(compact)
 check(db.rangeIconOnly and named.ForeverUtilitiesDistanceFrame.width==42 and named.ForeverUtilitiesDistanceFrame.height==42,'compact toggle resizes host immediately')
 check(not named.ForeverHunterFriendLock.shown,'compact toggle hides the full-bar lock button')

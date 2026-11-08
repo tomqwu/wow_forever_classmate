@@ -126,7 +126,10 @@ local function RefreshMinimap()
 end
 local function BindChanges()
     for _,module in pairs(NS.Classes) do
-        module.changed=function() if Active()==module then RefreshPanel();RefreshMinimap() end end
+        module.changed=function() if Active()==module then
+            RefreshPanel();RefreshMinimap()
+            if NS.MailRecipients then NS.MailRecipients.Apply() end
+        end end
     end
 end
 
@@ -136,6 +139,7 @@ events:SetScript('OnEvent',function(self,_,name)
     if type(ForeverUtilitiesDB)~='table' then ForeverUtilitiesDB={} end
     BindChanges()
     for _,module in pairs(NS.Classes) do module.Initialize(ForeverUtilitiesDB) end
+    if NS.MailRecipients then NS.MailRecipients.Initialize(ForeverUtilitiesDB) end
     self:UnregisterEvent('ADDON_LOADED')
     local module=Active()
     if module then Say(L('Loaded')..' '..L(module.name:gsub('Forever Classmate — ',''))..' v'..NS.Version..'. '..module.command..' '..L('opens settings.')) end

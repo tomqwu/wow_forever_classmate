@@ -6,7 +6,7 @@
 
 **[Build addons for Forever](https://tomqwu.github.io/wow_forever_classmate/)** is the companion GitHub Pages guide to the client API, safe reads, beta pitfalls, testing, and release practices.
 
-Version 0.29.0 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
+Version 0.30.0 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
 
 The interface follows the WoW client language: English and Simplified Chinese (`zhCN`) labels for bars, settings, warnings, and tooltips. Spell and character names come from the client; curated rare-pet names may remain in English. Other client locales use English.
 
@@ -31,6 +31,14 @@ Resource percentages use Forever’s native percent API when exact power values 
 Warrior, Rogue, Druid, Priest, and Warlock can show **slim multi-target DoT bars** to the right of the main bar. Each row identifies an enemy, your active effect, and its readable remaining time. The strip tracks the current target and nearby enemies that have active nameplates; it clears a row when the effect expires or its nameplate disappears. It cannot continue tracking an offscreen enemy whose aura state Forever no longer exposes. Turn it off with **Show multi-target DoT bars** in your class settings. The original 426 × 56 bar stays the same size.
 
 Warlock armor is confirmed out of combat. Learned English and Simplified Chinese armor names are recognized even when English spell-name lookup is unavailable. A confirmed missing armor buff shows an explicit red-bordered Armor/Missing reminder at full opacity; buffing clears it. If combat hides the aura, the upkeep slot can keep the last confirmed armor icon dimmed without status text or an active claim. Other standard-class upkeep slots hide an unreadable count, and target, ability, racial, or resource slots disappear when no useful live state can be read.
+
+## Mail recipients
+
+Opening **Send Mail** shows a compact side panel with **Alts** and **Recent recipients**. Click a name to fill the recipient field, or right-click to forget its saved entry. Both lists have pagination; recents keep the newest 20 successful recipients for the current realm and faction, shared across your characters. Explicitly addressed recipients on other realms retain their realm suffix.
+
+Log into each alt once with Classmate and its mail feature enabled to record it. The alt list shows other recorded characters on your current realm and faction; it does not discover unplayed characters from the account roster. No mail subject, body, items, or gold amounts are stored. Character and recipient records use the existing account-wide saved variables.
+
+Toggle **Mail recipients: alts and recents** in `/fclassmate` settings independently of the class bar. The panel appears only beside the native Send Mail tab, hides in combat, and uses no polling. It fills the selected name; sending remains the normal game action.
 
 ## Setup and commands
 
