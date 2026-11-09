@@ -225,6 +225,7 @@ level=60;service.Refresh();check(not bag.button.shown and not food.button.shown,
 print('PASS: '..count..' leveling-buff reminder checks')
 
 -- Folding hides the visual container, while the existing updater stays live.
+function methods:SetText(value) self.text=value end
 function methods:SetTexture(value) self.texture=value end
 function methods:GetScript(event) return self.scripts[event] end
 function methods:SetParent(parent) self.parent=parent end
@@ -243,13 +244,16 @@ foldModule.Apply=foldInstance.Apply;foldInstance.Apply()
 local summary=foldInstance.folded
 check(foldHost.width==64 and foldHost.height==64 and not foldInstance.visual.shown and summary.button.shown,'collapsed host is a large icon with hidden full-bar controls')
 local badges=foldInstance.levelingBuffs.indicators
-check(badges.food.button.width==20 and badges.food.button.x==-3 and badges.food.button.y==-41,
-    'food badge stays inside the collapsed icon')
-check(badges.sleepingBag.button.y==-3 and summary.button.alpha==1,'sleeping warning stays inside the top right and keeps icon bright')
+check(not badges.food.button.shown and not badges.sleepingBag.button.shown,
+    'folded mode suppresses the old floating corner controls')
+check(summary.primary.texture==foldHost.foldLevelWarnings.food.icon and summary.badges[1].texture==foldHost.foldLevelWarnings.sleepingBag.icon,
+    'main warning is large native food art, with sleeping bag in the secondary row')
+check(summary.edges[1].width==64 and summary.edges[1].height==1 and foldHost.hint.text=='',
+    'warning outline is one pixel and collapsed drag instructions are hidden')
 NS.ClassHost.SetWarning(foldHost,'upkeep',true,777,'Armor missing')
-check(summary.badges[1].shown and summary.badges[1].texture==777,'confirmed armor warning appears inside icon')
+check(summary.primary.texture==777 and summary.badges[2].shown,'armor takes primary position with food and sleeping warnings grouped below')
 NS.ClassHost.SetWarning(foldHost,'upkeep',false,nil,'Armor missing')
-check(not summary.badges[1].shown,'unknown or restored armor removes its badge')
+check(summary.primary.texture==foldHost.foldLevelWarnings.food.icon and not summary.badges[2].shown,'cleared armor immediately restores the next real warning')
 local ticks=0
 foldContent:SetScript('OnUpdate',function() ticks=ticks+1 end)
 foldHost.scripts.OnUpdate(foldHost,0.3)

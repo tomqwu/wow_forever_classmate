@@ -4,15 +4,29 @@ NS.Folded={}
 function NS.Folded.Create(host,content,db,module)
     local button=CreateFrame('Button',nil,host)
     button:SetAllPoints(host);button:RegisterForDrag('LeftButton');button:EnableMouse(true)
-    local border=button:CreateTexture(nil,'BACKGROUND');border:SetAllPoints();border:SetColorTexture(0.65,0.52,0.22,1)
+    local background=button:CreateTexture(nil,'BACKGROUND');background:SetAllPoints();background:SetColorTexture(0.025,0.025,0.03,0.95)
     local logo=button:CreateTexture(nil,'ARTWORK');logo:SetPoint('TOPLEFT',3,-3);logo:SetPoint('BOTTOMRIGHT',-3,3)
-    logo:SetTexture('Interface\\AddOns\\ForeverUtilities\\Textures\\ForeverClassmate')
-    local pulse=Core.CreateWarningPulse(button,border)
-    local badges={}
-    for index=1,2 do
-        local badge=button:CreateTexture(nil,'OVERLAY');badge:SetSize(22,22)
-        badge:SetPoint('TOPLEFT',button,'TOPLEFT',3,-3-(index-1)*36);badge:Hide();badges[index]=badge
+    local _,token=Core.Call(UnitClass,'player')
+    local classIcons={WARLOCK='Spell_Shadow_DemonArmor',MAGE='Spell_Frost_FrostArmor02',PRIEST='Spell_Holy_InnerFire',
+        WARRIOR='Ability_Warrior_BattleShout',ROGUE='Ability_Stealth',DRUID='Spell_Nature_Regeneration',
+        HUNTER='Ability_Hunter_BeastCall',SHAMAN='Spell_Nature_LightningShield',PALADIN='Spell_Holy_DevotionAura'}
+    local fallback='Interface\\Icons\\'..(classIcons[token] or 'Spell_Holy_SealOfProtection')
+    -- Pulse only a one-pixel outline, never a solid rectangle behind transparent artwork.
+    local border=CreateFrame('Frame',nil,button);border:SetAllPoints()
+    local edges={}
+    for _,side in ipairs({'TOP','BOTTOM','LEFT','RIGHT'}) do
+        local edge=border:CreateTexture(nil,'OVERLAY');edge:SetColorTexture(0.55,0.5,0.35,1)
+        edge:SetPoint(side,border,side,0,0)
+        edge:SetSize((side=='TOP' or side=='BOTTOM') and 64 or 1,(side=='TOP' or side=='BOTTOM') and 1 or 64)
+        edges[#edges+1]=edge
     end
+    local pulse=Core.CreateWarningPulse(button,border)
+    local strip=button:CreateTexture(nil,'OVERLAY');strip:SetPoint('BOTTOMLEFT',2,2);strip:SetSize(60,22);strip:SetColorTexture(0.02,0.02,0.025,0.92)
+    local badges={}
+    for index=1,3 do
+        local badge=button:CreateTexture(nil,'OVERLAY',nil,1);badge:SetSize(18,18);badge:Hide();badges[index]=badge
+    end
+    local visibleWarnings={}
     local fold=CreateFrame('Button',nil,host,'UIPanelButtonTemplate')
     fold:SetSize(18,18);fold:SetPoint('BOTTOMRIGHT',host,'TOPRIGHT',0,3);fold:SetText('<')
     fold:SetScript('OnClick',function() db.collapsed=true;module.Apply() end)
@@ -26,9 +40,8 @@ function NS.Folded.Create(host,content,db,module)
         if content.baseAlpha then NS.ClassHost.SetFade(host,content,content.baseAlpha) end
         if not GameTooltip then return end
         GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(NS.L('Click to expand'))
-        for _,warning in pairs(host.foldWarnings or {}) do
-            if warning.active and content:IsShown() and not Core.PlayerDead() then GameTooltip:AddLine(NS.L(warning.label),1,0.5,0.2,true) end
-        end
+        for _,warning in ipairs(visibleWarnings) do GameTooltip:AddLine(NS.L(warning.label),1,0.75,0.35,true) end
+        if not db.locked then GameTooltip:AddLine(NS.L('Drag to move'),0.75,0.75,0.75) end
         GameTooltip:Show()
     end)
     button:SetScript('OnLeave',function()
@@ -39,22 +52,37 @@ function NS.Folded.Create(host,content,db,module)
         local collapsed=db.collapsed==true
         button:SetShown(db.enabled and collapsed)
         fold:SetShown(db.enabled and not collapsed and db.showFoldButton~=false)
-        local count=0
-        if collapsed and db.enabled and content:IsShown() and not Core.PlayerDead() then
-            for _,key in ipairs({'upkeep','imbue','shield','aspect'}) do
-                local warning=host.foldWarnings and host.foldWarnings[key]
-                if warning and warning.active and count<2 then
-                    count=count+1;badges[count]:SetTexture(Core.Icon(warning.icon) or 'Interface\\Icons\\Spell_Holy_SealOfProtection');badges[count]:Show()
+        visibleWarnings={}
+        if collapsed and db.enabled and not Core.PlayerDead() then
+            if content:IsShown() then
+                for _,key in ipairs({'upkeep','imbue','shield','aspect'}) do
+                    local warning=host.foldWarnings and host.foldWarnings[key]
+                    if warning and warning.active then visibleWarnings[#visibleWarnings+1]=warning end
                 end
             end
+            for _,key in ipairs({'food','sleepingBag'}) do
+                local warning=host.foldLevelWarnings and host.foldLevelWarnings[key]
+                if warning and warning.active then visibleWarnings[#visibleWarnings+1]=warning end
+            end
         end
-        for index=count+1,2 do badges[index]:Hide() end
-        local warning=count>0 or host.levelingBuffMissing==true
+        local primary=visibleWarnings[1]
+        logo:SetTexture(primary and Core.Icon(primary.icon) or fallback)
+        local count=math.min(3,math.max(0,#visibleWarnings-1))
+        strip:SetShown(count>0)
+        for index,badge in ipairs(badges) do
+            local warning=visibleWarnings[index+1]
+            badge:SetShown(index<=count)
+            if warning and index<=count then
+                badge:SetTexture(Core.Icon(warning.icon) or fallback)
+                badge:ClearAllPoints();badge:SetPoint('BOTTOMLEFT',button,'BOTTOMLEFT',(64-count*20)/2+(index-1)*20+1,4)
+            end
+        end
+        local warning=primary~=nil
         button:SetAlpha((warning or host.hovered) and 1 or math.max(0.35,content.baseAlpha or 1))
-        border:SetColorTexture(warning and 1 or 0.65,warning and 0.25 or 0.52,warning and 0.08 or 0.22,1)
+        for _,edge in ipairs(edges) do edge:SetColorTexture(warning and 1 or 0.55,warning and 0.6 or 0.5,warning and 0.15 or 0.35,1) end
         pulse(collapsed and db.enabled and warning and db.flashMissingBuffs~=false)
     end
     host.foldRefresh=Refresh
     content:HookScript('OnHide',Refresh);content:HookScript('OnShow',Refresh)
-    return {Refresh=Refresh,button=button,fold=fold,badges=badges,border=border}
+    return {Refresh=Refresh,button=button,fold=fold,badges=badges,border=border,primary=logo,strip=strip,edges=edges}
 end

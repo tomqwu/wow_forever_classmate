@@ -82,7 +82,7 @@ function Host.Create(module,db,contentFactory)
         host:EnableMouse(db.enabled)
         host:SetScript('OnUpdate',db.enabled and CheckHover or nil)
         if not db.enabled then host.hovered=false;hoverElapsed=0 end
-        host.hint:SetText(db.locked and '' or (NS.L('Drag to move')..' | '..module.command..' lock'))
+        host.hint:SetText((db.locked or db.collapsed) and '' or (NS.L('Drag to move')..' | '..module.command..' lock'))
         lock:SetShown(db.showLockButton~=false and (not module.lockVisible or module.lockVisible(db)))
         right:SetShown(db.locked)
         for _,texture in ipairs({body,left,top,right}) do

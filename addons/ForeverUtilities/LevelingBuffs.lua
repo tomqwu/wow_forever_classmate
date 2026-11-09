@@ -61,6 +61,7 @@ end
 function Buffs.Create(host,content,db)
     local controller=CreateFrame('Frame',nil,host)
     local indicators={}
+    host.foldLevelWarnings={}
     local definitions={
         {key='sleepingBag',option='sleepingBagReminder',itemID=211527,title='Cozy Sleeping Bag',
             fallback='Interface\\Icons\\INV_Misc_Bag_BigBagofEnchantments',
@@ -80,6 +81,7 @@ function Buffs.Create(host,content,db)
         icon:SetSize(12,12);icon:SetPoint('CENTER')
         icon:SetTexture(Core.Icon(Core.Call(C_Item and C_Item.GetItemIconByID,definition.itemID)) or definition.fallback)
         indicators[definition.key]={button=button,border=border,icon=icon,pulse=Core.CreateWarningPulse(host,border)}
+        host.foldLevelWarnings[definition.key]={active=false,icon=Core.Icon(Core.Call(C_Item and C_Item.GetItemIconByID,definition.itemID)) or definition.fallback,label=definition.hint}
         button:SetScript('OnEnter',function(self)
             if not GameTooltip then return end
             GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(NS.L(definition.title))
@@ -97,6 +99,7 @@ function Buffs.Create(host,content,db)
     end
     local function Clear()
         host.levelingBuffMissing=false
+        for _,warning in pairs(host.foldLevelWarnings) do warning.active=false end
         for _,indicator in pairs(indicators) do
             indicator.pulse(false);indicator.button:Hide()
             if GameTooltip and GameTooltip:IsOwned(indicator.button) then GameTooltip:Hide() end
@@ -123,14 +126,15 @@ function Buffs.Create(host,content,db)
         host.levelingBuffMissing=false
         for index,definition in ipairs(definitions) do
             local indicator=indicators[definition.key]
-            if db[definition.option]~=false and states[definition.key]==true then
+            host.foldLevelWarnings[definition.key].active=db[definition.option]~=false and states[definition.key]==true
+            if host.foldLevelWarnings[definition.key].active then
                 indicator.button:ClearAllPoints()
                 indicator.button:SetSize(db.collapsed and 20 or 16,db.collapsed and 20 or 16)
                 indicator.icon:SetSize(db.collapsed and 16 or 12,db.collapsed and 16 or 12)
                 if db.collapsed then indicator.button:SetPoint('TOPRIGHT',host,'TOPRIGHT',-3,-3-38*(index-1))
                 elseif db.rangeIconOnly then indicator.button:SetPoint('TOPLEFT',host,'TOPRIGHT',3,-20*(index-1))
                 else indicator.button:SetPoint('TOPRIGHT',host,'TOPRIGHT',-8,1-42*(index-1)) end
-                indicator.button:Show();indicator.pulse(db.flashMissingBuffs~=false)
+                indicator.button:SetShown(not db.collapsed);indicator.pulse(not db.collapsed and db.flashMissingBuffs~=false)
                 host.levelingBuffMissing=true
             else
                 indicator.pulse(false);indicator.button:Hide()

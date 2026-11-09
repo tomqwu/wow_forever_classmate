@@ -1,3 +1,11 @@
+## 0.31.1
+
+- Reworked the cluttered collapsed icon shown in the user screenshot. The highest-priority confirmed warning now uses large native spell/food artwork; additional warnings form one bottom row. With no confirmed warnings, the icon shows class artwork.
+- Removed the oversized branding crest, solid red warning background, and floating corner controls. Only a one-pixel amber outline pulses; icons remain readable. Collapsed drag instructions are available on hover instead of sitting above the icon.
+- The 64 × 64 footprint, click-to-expand, saved position, fading, warning toggles and existing warning eligibility remain intact. Added regressions for warning priority, secondary layout, thin outlines and suppressed old controls.
+
+Use `/reload`. Automated checks use mocked APIs; live rendering still needs confirmation.
+
 ## 0.31.0
 
 - Added a saved collapsed view for every class: a 64 × 64 Classmate icon with confirmed class upkeep badges on the left and food/sleeping-bag reminders on the right. Existing warning eligibility and unreadable-data rules are preserved.

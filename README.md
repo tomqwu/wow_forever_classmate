@@ -6,7 +6,7 @@
 
 **[Build addons for Forever](https://tomqwu.github.io/wow_forever_classmate/)** is the companion GitHub Pages guide to the client API, safe reads, beta pitfalls, testing, and release practices.
 
-Version 0.31.0 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
+Version 0.31.1 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
 
 The interface follows the WoW client language: English and Simplified Chinese (`zhCN`) labels for bars, settings, warnings, and tooltips. Spell and character names come from the client; curated rare-pet names may remain in English. Other client locales use English.
 
@@ -32,7 +32,7 @@ Warrior, Rogue, Druid, Priest, and Warlock can show **slim multi-target DoT bars
 
 Warlock armor is confirmed out of combat. Learned English and Simplified Chinese armor names are recognized even when English spell-name lookup is unavailable. A confirmed missing armor buff shows an explicit red-bordered Armor/Missing reminder at full opacity; buffing clears it. If combat hides the aura, the upkeep slot can keep the last confirmed armor icon dimmed without status text or an active claim. Other standard-class upkeep slots hide an unreadable count, and target, ability, racial, or resource slots disappear when no useful live state can be read.
 
-**Foldable bar:** click the small **<** button beside the bar to fold it into a **64 × 64** Classmate icon. Confirmed class upkeep warnings appear inside the left edge; missing food and sleeping-bag buffs appear inside the right edge. Warning borders follow **Flash missing buffs**, and active warnings keep the icon bright. Click the large icon to expand. **Collapsed warning icon** and **Show collapse button** are independent settings; each class remembers its view. Unlocking allows the icon to be dragged. Existing warning eligibility, level limits, and unreadable-data rules still apply.
+**Foldable bar:** click the small **<** button beside the bar to fold it into a **64 × 64** native icon. The highest-priority confirmed upkeep, food, or sleeping-bag warning fills the icon; additional warnings form one row along the bottom. A thin amber outline pulses without obscuring the artwork. With no warnings, the icon shows class artwork. Drag instructions appear on hover. Warning borders follow **Flash missing buffs**, and active warnings keep the icon bright. Click the large icon to expand. **Collapsed warning icon** and **Show collapse button** are independent settings; each class remembers its view. Unlocking allows the icon to be dragged. Existing warning eligibility, level limits, and unreadable-data rules still apply.
 
 ## Mail recipients
 
