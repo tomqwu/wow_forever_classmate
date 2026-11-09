@@ -43,9 +43,10 @@ CreateFrame=function(_,name,parent)
     if name then named[name]=frame end
     return frame
 end
-local name,realm,faction,realmID,guid='Alice','Forever Realm','Alliance',123,'Player-123-A'
+local name,surname,realm,faction,realmID,guid='Alice','Dawn','Forever Realm','Alliance',123,'Player-123-A'
 local combat=false
-UnitFullName=function() return name,realm end
+GetUnitName=function() return name..' '..surname end
+UnitFullName=function() return name,surname end
 GetNormalizedRealmName=function() return realm end
 GetRealmName=function() return realm end
 GetRealmID=function() return realmID end
@@ -65,20 +66,40 @@ assert(loadfile(root..'MailRecipients.lua'))('ForeverUtilities',NS)
 local Mail=NS.MailRecipients
 local count=0
 local function check(value,message) assert(value,message);count=count+1 end
-check(Mail.Recipient(' Alice ','Forever Realm').address=='Alice-ForeverRealm','same-realm names normalize without losing case')
-check(Mail.Recipient('Bank-Other Realm','Home').address=='Bank-OtherRealm','explicit realm preserved and normalized')
-check(Mail.Recipient('小号','永恒服').address=='小号-永恒服','Chinese names and realms remain intact')
-for _,value in ipairs({secret,'','   ','A B','A|cffff0000','A;B','A/B','A\\B','A@B','A\nB','A-B:C','A-','A1'}) do
-    check(Mail.Recipient(value,'Realm')==nil,'malformed or secret recipient rejected')
+check(Mail.Recipient(' Alice Dawn ').address=='Alice Dawn','complete name trims edges without appending a realm')
+check(Mail.Recipient('Alice-Dawn').address=='Alice-Dawn','observed hyphen address is not split into name and realm')
+check(Mail.Recipient('Alice Dawn').key==Mail.Recipient('Alice-Dawn').key,'two native name spellings deduplicate without losing a surname')
+check(Mail.Recipient('小号 晨曦').address=='小号 晨曦','Chinese first and last name remain intact')
+for _,value in ipairs({secret,'','   ','Alice','A|cffff0000 Last','A;B Last','A/B Last','A\\B Last','A@B Last','A\nB Last','Alice-','-Dawn'}) do
+    check(Mail.Recipient(value)==nil,'incomplete, malformed or secret recipient rejected')
 end
-local saved={hunter={x=71},mail={characters={},recents={}}}
+local nativeFullName=GetUnitName
+GetUnitName=nil
+check(Mail.Player().name=='Alice Dawn' and Mail.Player().realm=='ForeverRealm',
+    'tuple fallback joins firstname and surname while reading the realm separately')
+GetUnitName=function() return 'Alice' end
+check(Mail.Player().name=='Alice Dawn','incomplete native name falls back to both readable tuple parts')
+local tupleFullName=UnitFullName
+UnitFullName=function() return 'Alice',secret end
+check(Mail.Player()==nil,'restricted surname never falls back to a first-name-only identity')
+GetUnitName=nativeFullName;UnitFullName=tupleFullName
+local oldRecents={['id:123/Alliance']={'Legacy-ForeverRealm'}}
+local saved={hunter={x=71},mail={characters={
+    oldSelf={name='Alice',realm='ForeverRealm',realmID=123,faction='Alliance',guid='Player-123-A'},
+    legacyAlt={name='Legacy',realm='ForeverRealm',realmID=123,faction='Alliance',guid='Player-123-L'},
+},recents=oldRecents}}
 module.db.mailRecipients=false;Mail.Initialize(saved)
 check(#frames==0 and hookCount==0,'disabled utility creates no frames or hooks')
+check(saved.mail.legacyRecents==oldRecents and saved.mail.nameFormat==2,
+    'ambiguous legacy history is preserved separately instead of guessed or silently reused')
 module.db.mailRecipients=true;Mail.Apply()
 local controller=frames[1]
 local function Event(event,arg) controller.scripts.OnEvent(controller,event,arg) end
 local player=Mail.Player()
-check(saved.mail.characters[player.savedKey].name=='Alice' and saved.hunter.x==71,'observed player recorded without changing class settings')
+check(saved.mail.characters[player.savedKey].name=='Alice Dawn' and saved.hunter.x==71,'observed player recorded without changing class settings')
+check(saved.mail.characters.oldSelf==nil and saved.mail.characters.legacyAlt
+    and #Mail.Alts(player)==0 and #Mail.Recents(player)==0,
+    'login upgrades the matching GUID while legacy incomplete alts and history stay off active lists')
 check(controller.events.MAIL_SHOW and controller.events.MAIL_SEND_SUCCESS and hookCount==1,'mail events and safe observation hook registered')
 check(not named.ForeverClassmateMailRecipients and not controller.scripts.OnUpdate,'mail panel is lazy and adds no polling')
 check(module.db.enabled==false and next(controller.events),'utility works independently of the disabled class bar')
@@ -88,12 +109,12 @@ name='OtherRealm';guid='Player-456-A';faction='Alliance';realmID=456;Event('PLAY
 name='Alice';guid='Player-123-A';realmID=123;Event('PLAYER_ENTERING_WORLD')
 player=Mail.Player()
 local alts=Mail.Alts(player)
-check(#alts==1 and alts[1].name=='Bank','alts exclude current character, other faction, and same-name other realm IDs')
+check(#alts==1 and alts[1].name=='Bank Dawn','alts exclude current character, other faction, and same-name other realm IDs')
 -- A renamed character replaces its old observed entry by readable whole GUID.
 name='RenamedBank';guid='Player-123-B';Event('PLAYER_ENTERING_WORLD')
 name='Alice';guid='Player-123-A';Event('PLAYER_ENTERING_WORLD')
 alts=Mail.Alts(Mail.Player())
-check(#alts==1 and alts[1].name=='RenamedBank','same GUID updates renamed alt without retaining an old suggestion')
+check(#alts==1 and alts[1].name=='RenamedBank Dawn','same GUID updates renamed alt without retaining an old suggestion')
 -- Malformed saved records cannot break a mailbox.
 saved.mail.characters.bad={name='Bad-Realm',faction='Alliance'}
 saved.mail.characters.broken=true
@@ -112,9 +133,9 @@ local panel=named.ForeverClassmateMailRecipients
 check(panel and panel.shown and panel.width==220 and panel.height==440 and panel.x==8,'compact side panel attaches to native Send Mail')
 check(SendMailNameEditBox.text=='DraftRecipient' and sends==0,'opening suggestions never overwrites the draft or sends mail')
 local altRow=panel.groups.alts.rows[1]
-check(altRow.item.name=='RenamedBank','observed alt appears in its section')
+check(altRow.item.name=='RenamedBank Dawn','observed alt appears in its section')
 altRow.scripts.OnClick(altRow,'LeftButton')
-check(SendMailNameEditBox.text=='RenamedBank' and sends==0,'click fills recipient only')
+check(SendMailNameEditBox.text=='RenamedBank Dawn' and sends==0,'click fills recipient only')
 SendMailNameEditBox.enabled=false;SendMailNameEditBox.text='Untouched'
 altRow.scripts.OnClick(altRow,'LeftButton')
 check(SendMailNameEditBox.text=='Untouched','disabled native recipient field is left alone')
@@ -123,37 +144,42 @@ SendMailNameEditBox.forbidden=true;altRow.scripts.OnClick(altRow,'LeftButton')
 check(SendMailNameEditBox.text=='Untouched','forbidden edit box is left alone')
 SendMailNameEditBox.forbidden=false
 check(panel.groups.recents.empty.shown,'recents start with an explanatory empty state')
-NativeSend('Friend');check(#Mail.Recents(Mail.Player())==0,'attempted send is not yet history')
+NativeSend('Friend Dawn');check(#Mail.Recents(Mail.Player())==0,'attempted send is not yet history')
 check(not altRow.enabled,'pending send prevents changing a suggested recipient')
 SendMailNameEditBox.text='';Event('MAIL_SEND_SUCCESS')
-check(Mail.Recents(Mail.Player())[1].address=='Friend-ForeverRealm','success records captured recipient even after native field reset')
-check(panel.groups.recents.rows[1].item.name=='Friend','successful recipient appears in side panel')
-NativeSend('FailedFriend');Event('MAIL_FAILED')
+check(Mail.Recents(Mail.Player())[1].address=='Friend Dawn','success records captured recipient even after native field reset')
+check(panel.groups.recents.rows[1].item.name=='Friend Dawn','successful recipient appears in side panel')
+NativeSend('FailedFriend Dawn');Event('MAIL_FAILED')
 check(#Mail.Recents(Mail.Player())==1,'failed send does not enter history')
-NativeSend('CancelledFriend');Event('SECURE_TRANSFER_CANCEL');Event('MAIL_SEND_SUCCESS')
+NativeSend('CancelledFriend Dawn');Event('SECURE_TRANSFER_CANCEL');Event('MAIL_SEND_SUCCESS')
 check(#Mail.Recents(Mail.Player())==1,'cancelled transfer cannot become a stale recent')
 NativeSend(secret);Event('MAIL_SEND_SUCCESS')
 check(#Mail.Recents(Mail.Player())==1,'secret recipient is never saved')
-NativeSend('FirstOverlap');NativeSend('SecondOverlap');Event('MAIL_SEND_SUCCESS');Event('MAIL_SEND_SUCCESS')
-check(#Mail.Recents(Mail.Player())==1,'overlapping sends omit ambiguous history instead of guessing')
 NativeSend('Friend');Event('MAIL_SEND_SUCCESS')
+check(#Mail.Recents(Mail.Player())==1,'a successful first-name-only input cannot become a suggested full identity')
+NativeSend('FirstOverlap Dawn');NativeSend('SecondOverlap Dawn');Event('MAIL_SEND_SUCCESS');Event('MAIL_SEND_SUCCESS')
+check(#Mail.Recents(Mail.Player())==1,'overlapping sends omit ambiguous history instead of guessing')
+NativeSend('Friend Dawn');Event('MAIL_SEND_SUCCESS')
 check(#Mail.Recents(Mail.Player())==1,'repeated same-realm recipient is deduplicated')
-NativeSend('Friend-Other Realm');Event('MAIL_SEND_SUCCESS')
+NativeSend('Friend-Dawn');Event('MAIL_SEND_SUCCESS')
+check(#Mail.Recents(Mail.Player())==1 and Mail.Recents(Mail.Player())[1].address=='Friend-Dawn',
+    'history preserves the exact successful two-part address without converting surname to realm')
+NativeSend('Friend Dusk');Event('MAIL_SEND_SUCCESS')
 local recentRow=panel.groups.recents.rows[1]
-check(recentRow.label.text=='Friend-OtherRealm','cross-realm recent retains its realm visibly')
+check(recentRow.label.text=='Friend Dusk','different surnames are distinct recent recipients')
 recentRow.scripts.OnClick(recentRow,'LeftButton')
-check(SendMailNameEditBox.text=='Friend-OtherRealm','cross-realm fill never strips the destination realm')
+check(SendMailNameEditBox.text=='Friend Dusk','click fills the exact first and last name')
 recentRow.scripts.OnClick(recentRow,'RightButton')
 check(#Mail.Recents(Mail.Player())==1,'right-click removes history without sending or deleting game mail')
 for index=1,23 do
-    NativeSend('Friend'..string.char(64+index));Event('MAIL_SEND_SUCCESS')
+    NativeSend('Friend'..string.char(64+index)..' Dawn');Event('MAIL_SEND_SUCCESS')
 end
-check(#Mail.Recents(Mail.Player())==20 and Mail.Recents(Mail.Player())[1].name=='FriendW','history retains newest 20 recipients')
+check(#Mail.Recents(Mail.Player())==20 and Mail.Recents(Mail.Player())[1].name=='FriendW Dawn','history retains newest 20 recipients')
 check(panel.groups.recents.pageText.text=='1 / 4' and panel.groups.recents.next.enabled,'long history is paginated')
 panel.groups.recents.next.scripts.OnClick()
-check(panel.groups.recents.pageText.text=='2 / 4' and panel.groups.recents.rows[1].item.name=='FriendR','next page shows the next five records')
-NativeSend('ClosedMailbox');SendMailFrame:Hide();Event('MAIL_CLOSED');Event('MAIL_SEND_SUCCESS')
-check(not panel.shown and Mail.Recents(Mail.Player())[1].name=='ClosedMailbox','late success after closing still records the actual attempt')
+check(panel.groups.recents.pageText.text=='2 / 4' and panel.groups.recents.rows[1].item.name=='FriendR Dawn','next page shows the next five records')
+NativeSend('ClosedMailbox Dawn');SendMailFrame:Hide();Event('MAIL_CLOSED');Event('MAIL_SEND_SUCCESS')
+check(not panel.shown and Mail.Recents(Mail.Player())[1].name=='ClosedMailbox Dawn','late success after closing still records the actual attempt')
 SendMailFrame:Show();check(panel.shown,'returning to Send Mail restores the lists')
 Event('PLAYER_REGEN_DISABLED')
 check(not panel.shown,'combat event hides panel before the API lock flag updates')
@@ -171,7 +197,7 @@ check(#Mail.Recents(Mail.Player())==20 and hookCount==1,'reinitialization preser
 module.db.mailRecipients=false;Mail.Apply()
 check(not panel.shown and not next(controller.events),'disabling utility removes listeners and hides UI')
 local recentCount=#Mail.Recents(Mail.Player())
-NativeSend('DisabledRecipient');Event('MAIL_SEND_SUCCESS')
+NativeSend('DisabledRecipient Dawn');Event('MAIL_SEND_SUCCESS')
 check(#Mail.Recents(Mail.Player())==recentCount,'disabled feature records no mail history')
 name='DisabledAlt';guid='Player-123-D';Event('PLAYER_ENTERING_WORLD')
 check(saved.mail.characters[Mail.Player().savedKey]==nil,'disabled feature learns no new characters')
@@ -186,13 +212,29 @@ check(#Mail.Recents(Mail.Player())==0,'history is scoped to sending faction')
 faction='Alliance';realmID=456
 check(#Mail.Recents(Mail.Player())==0,'history is scoped to sending realm ID')
 realmID=123
+name='Spell';surname='Ward';guid='Player-123-SW';Event('PLAYER_ENTERING_WORLD')
+name='Spell';surname='Axe';guid='Player-123-SA';Event('PLAYER_ENTERING_WORLD')
+name='Alice';surname='Dawn';guid='Player-123-A';Event('PLAYER_ENTERING_WORLD')
+local siblings={}
+for _,item in ipairs(Mail.Alts(Mail.Player())) do siblings[item.name]=item end
+check(siblings['Spell Ward'] and siblings['Spell Axe'] and siblings['Spell Ward'].key~=siblings['Spell Axe'].key,
+    'alts sharing a first name remain distinct by their surnames')
+local selected
+for _,row in ipairs(panel.groups.alts.rows) do
+    if type(row.item)=='table' and row.item.name=='Spell Ward' then selected=row end
+end
+selected.scripts.OnClick(selected,'LeftButton')
+check(SendMailNameEditBox.text=='Spell Ward' and selected.label.height==24,
+    'alt label and clicked recipient retain the surname within the existing row size')
 realmID=secret;Mail.Apply()
 check(not panel.shown and Mail.Player()==nil,'unreadable available realm ID cannot mix identical realm names')
 realmID=123
 local originalFullName=UnitFullName
-UnitFullName=function() return secret,realm end
+local originalGetUnitName=GetUnitName
+GetUnitName=function() return secret end
+UnitFullName=function() return secret,surname end
 Mail.Apply();check(not panel.shown and Mail.Player()==nil,'restricted identity hides suggestions without saving it')
-UnitFullName=originalFullName
+UnitFullName=originalFullName;GetUnitName=originalGetUnitName
 SendMailFrame:Hide();check(not panel.shown,'Send Mail hide hook clears own panel')
 for _,frame in ipairs(frames) do check(frame.scripts.OnUpdate==nil,'mail utility never adds a poller') end
 check(sends>0,'test exercised native send observations')

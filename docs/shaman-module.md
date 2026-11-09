@@ -64,3 +64,5 @@ The shared **Sleeping bag buff reminder (below level 60)** adds a small icon out
 **Food XP buff reminder (below level 60)** independently adds a food icon when Well Fed is confirmed absent outside combat at levels 1–59. It shares the leveling reminder lifecycle and flash preference, keeps the bar bright, and clears when Well Fed appears. It does not measure the hidden XP multiplier; select a food whose tooltip grants +5% XP from kills. See [food reminder sources and limits](food-xp.md).
 
 The shared **Mail recipients: alts and recents** utility works even with the Shaman bar disabled. It records logged-in alts and successful mail recipients across your characters, with an independent preference and a compact panel beside native Send Mail. See [mail recipients](mail-recipients.md).
+
+Mail names now retain both first name and surname. Version 0.30.1 refreshes incomplete 0.30.0 character records when each alt logs in; legacy short-name suggestions and ambiguous recent addresses stay out of active lists. Realm context is read independently of the surname.

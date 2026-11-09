@@ -83,8 +83,13 @@ ClassContext.lua and StandardClasses.lua own the Paladin, Warrior, Rogue, Druid,
 `MailRecipients.lua` is a shared utility, controlled by the active class's
 `mailRecipients` preference independently of its bar. Preserve account-wide
 `ForeverUtilitiesDB.mail` character/history records. Learn alts only from observed
-logins, filter them by realm/faction, and retain realm suffixes for explicit
-cross-realm recipients. Fill the native recipient field only on a click. Observe
+logins and filter them by realm/faction. Forever uses first name plus surname:
+read the complete name from `GetUnitName`, with a readable two-part
+`UnitFullName` fallback. The second tuple value is a surname, never a realm.
+Read realm context independently. Preserve complete native recipient addresses;
+do not split hyphens into supposed realm suffixes or fabricate missing surnames.
+Keep incomplete 0.30.0 records out of suggestions until login refreshes them.
+Fill the native recipient field only on a click. Observe
 only the recipient argument with a guarded secure post-hook; commit recents only
 on `MAIL_SEND_SUCCESS`, never on a draft edit or failed/cancelled attempt. Do not
 read mail contents or call sending/transfer APIs. Native frames load lazily;

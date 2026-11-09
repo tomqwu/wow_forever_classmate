@@ -2,7 +2,7 @@
 
 **One compact, class-aware companion for World of Warcraft: Forever.**
 
-Version 0.30.0 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
+Version 0.30.1 supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
 
 The interface follows the WoW client language: English and Simplified Chinese (`zhCN`) labels for bars, settings, warnings, and tooltips. Spell and character names come from the client; curated rare-pet names may remain in English. Other client locales use English.
 
@@ -30,9 +30,9 @@ Warlock armor is confirmed out of combat. Learned English and Simplified Chinese
 
 ## Mail recipients
 
-Opening **Send Mail** shows a compact side panel with **Alts** and **Recent recipients**. Click a name to fill the recipient field, or right-click to forget its saved entry. Both lists have pagination; recents keep the newest 20 successful recipients for the current realm and faction, shared across your characters. Explicitly addressed recipients on other realms retain their realm suffix.
+Opening **Send Mail** shows a compact side panel with **Alts** and **Recent recipients**. Click a name to fill the recipient field, or right-click to forget its saved entry. Both lists have pagination; recents keep the newest 20 successful recipients for the current realm and faction, shared across your characters. Lists and recipient filling preserve the full **first name + surname**. Recent addresses are kept exactly as observed on a successful send; surnames are never treated as realm suffixes.
 
-Log into each alt once with Classmate and its mail feature enabled to record it. The alt list shows other recorded characters on your current realm and faction; it does not discover unplayed characters from the account roster. No mail subject, body, items, or gold amounts are stored. Character and recipient records use the existing account-wide saved variables.
+Log into each alt once with Classmate and its mail feature enabled to record it. After upgrading from 0.30.0, log into each alt again to replace its incomplete old name. Old first-name-only suggestions stay hidden until refreshed. The alt list shows other recorded characters on your current realm and faction; it does not discover unplayed characters from the account roster. No mail subject, body, items, or gold amounts are stored. Character and recipient records use the existing account-wide saved variables.
 
 Toggle **Mail recipients: alts and recents** in `/fclassmate` settings independently of the class bar. The panel appears only beside the native Send Mail tab, hides in combat, and uses no polling. It fills the selected name; sending remains the normal game action.
 

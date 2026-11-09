@@ -14,27 +14,32 @@ local function Realm(value)
     value=String(value)
     return value and value:gsub('%s+','') or nil
 end
-function Mail.Recipient(value,homeRealm)
+function Mail.Recipient(value)
     value=String(value)
     if not value then return nil end
     value=value:match('^%s*(.-)%s*$')
-    local name,realm=value:match('^([^%-]+)%-(.+)$')
-    if not name then name=value;realm=homeRealm end
-    realm=Realm(realm)
-    if not realm or realm=='' or name=='' or #name>48 or name:find('[%s%p%d]') then return nil end
-    return {name=name,realm=realm,address=name..'-'..realm,key=(name..'-'..realm):lower()}
+    local key=value:gsub('[ %-]+',' '):match('^%s*(.-)%s*$')
+    if not key:match('^%S+ %S+') then return nil end
+    -- A native Forever address contains both name parts. A hyphen is not
+    -- evidence of a realm suffix. Preserve the complete observed address.
+    return {name=value,address=value,key=key:lower()}
 end
 local function Scope(player)
     return (player.realmID and ('id:'..player.realmID) or ('realm:'..player.realm:lower()))..'/'..player.faction
 end
 function Mail.Player()
-    local name,realm=Core.Call(UnitFullName,'player')
-    realm=Realm(Core.Call(GetNormalizedRealmName)) or Realm(realm) or Realm(Core.Call(GetRealmName))
-    local recipient=Mail.Recipient(name,realm)
+    local recipient=Mail.Recipient(Core.Call(GetUnitName,'player'))
+    if not recipient then
+        -- In Forever the second tuple value is a surname, not a realm.
+        local first,last=Core.Call(UnitFullName,'player')
+        if String(first) and String(last) then recipient=Mail.Recipient(first..' '..last) end
+    end
+    local realm=Realm(Core.Call(GetNormalizedRealmName)) or Realm(Core.Call(GetRealmName))
     local faction=Core.Call(UnitFactionGroup,'player')
-    if not recipient or (faction~='Alliance' and faction~='Horde') then return nil end
+    if not recipient or not realm or realm=='' or (faction~='Alliance' and faction~='Horde') then return nil end
     local realmID=Core.Call(GetRealmID)
     if type(GetRealmID)=='function' and (not Core.IsNumber(realmID) or realmID<=0) then return nil end
+    recipient.realm=realm;recipient.fullName=true
     recipient.realmID=Core.IsNumber(realmID) and realmID>0 and realmID or nil
     recipient.faction=faction;recipient.scope=Scope(recipient)
     recipient.savedKey=recipient.scope..'/'..recipient.key
@@ -71,9 +76,10 @@ function Mail.Alts(player)
     local result,seen={},{}
     if not db or not player then return result end
     for key,record in pairs(db.characters) do
-        if type(record)=='table' then
-            local item=Mail.Recipient(record.name,record.realm)
-            if item and record.faction==player.faction and SameRealm({realm=item.realm,realmID=record.realmID},player)
+        if type(record)=='table' and record.fullName==true then
+            local item=Mail.Recipient(record.address or record.name)
+            local realm=Realm(record.realm)
+            if item and realm and realm~='' and record.faction==player.faction and SameRealm({realm=realm,realmID=record.realmID},player)
                 and item.key~=player.key and not seen[item.key] then
                 seen[item.key]=true;item.savedKey=key;result[#result+1]=item
             end
@@ -86,7 +92,7 @@ function Mail.Recents(player)
     local result,seen={},{}
     if not db or not player or type(db.recents[player.scope])~='table' then return result end
     for _,address in ipairs(db.recents[player.scope]) do
-        local item=Mail.Recipient(address,player.realm)
+        local item=Mail.Recipient(address)
         if item and item.key~=player.key and not seen[item.key] then
             seen[item.key]=true;result[#result+1]=item
             if #result==20 then break end
@@ -134,8 +140,7 @@ local function Fill(item,player)
     if not Enabled() or suspended or closed or pending~=nil or not OutOfCombat() or not Visible(owner) then return end
     local edit=SendMailNameEditBox
     if not Public(edit) or Core.Call(edit.IsEnabled,edit)~=true or type(edit.SetText)~='function' then return end
-    local address=item.realm:lower()==player.realm:lower() and item.name or item.address
-    if pcall(edit.SetText,edit,address) then Core.Call(edit.ClearFocus,edit) end
+    if pcall(edit.SetText,edit,item.address) then Core.Call(edit.ClearFocus,edit) end
 end
 local function Text(parent,value,x,y,width,height)
     local label=parent:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall')
@@ -164,7 +169,7 @@ local function CreatePanel()
             row:SetSize(196,24);row:SetPoint('TOPLEFT',panel,'TOPLEFT',12,y-22-(rowIndex-1)*25)
             row:RegisterForClicks('LeftButtonUp','RightButtonUp')
             local hover=row:CreateTexture(nil,'HIGHLIGHT');hover:SetAllPoints();hover:SetColorTexture(1,0.8,0.3,0.18)
-            row.label=Text(row,'',6,-4,184);row.label:SetWordWrap(false)
+            row.label=Text(row,'',6,0,184,24);row.label:SetWordWrap(true)
             row:SetScript('OnClick',function(self,button)
                 local player=Mail.Player()
                 if not Enabled() or not self.item or not player or pending~=nil or not OutOfCombat() then return end
@@ -205,7 +210,7 @@ Refresh=function()
         for index,row in ipairs(group.rows) do
             local item=entries[(group.page-1)*pageSize+index]
             row.item=item;row:SetShown(item~=nil);row:SetEnabled(pending==nil)
-            if item then row.label:SetText(item.realm:lower()==player.realm:lower() and item.name or item.address) end
+            if item then row.label:SetText(item.name) end
         end
     end
     panel:Show()
@@ -227,7 +232,7 @@ local function HookSend()
         -- success event. Omit history rather than attribute it to a guessed name.
         if pending~=nil then pending=false;Refresh();return end
         local player=Mail.Player()
-        local item=player and Mail.Recipient(recipient,player.realm)
+        local item=player and Mail.Recipient(recipient)
         pending=item and {player=player,recipient=item} or false
         Refresh()
     end)
@@ -270,5 +275,11 @@ function Mail.Initialize(saved)
     db=saved.mail
     if type(db.characters)~='table' then db.characters={} end
     if type(db.recents)~='table' then db.recents={} end
+    if db.nameFormat~=2 then
+        -- 0.30.0 appended a supposed realm to incomplete names. Those strings
+        -- cannot recover a surname safely; retain them outside active history.
+        if next(db.recents) then db.legacyRecents=db.recents end
+        db.recents={};db.nameFormat=2
+    end
     Mail.Apply()
 end

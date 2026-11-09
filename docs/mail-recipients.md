@@ -1,9 +1,9 @@
 # Mail recipients: alts and recents
 
-Classmate 0.30.0 adds a compact side panel to the native **Send Mail** tab. It
+Classmate 0.30.1 provides a compact side panel to the native **Send Mail** tab. It
 shows both **Alts** and **Recent recipients**, with five rows and independent
 pagination for each list. Click a name to fill the recipient field; right-click
-to forget its saved record. Full names and realm suffixes are available on hover.
+to forget its saved record. Names include both first name and surname, with wrapping inside the existing row size and complete addresses on hover.
 
 ## Discovery and persistence
 
@@ -15,7 +15,7 @@ to forget its saved record. Full names and realm suffixes are available on hover
   observed character's renamed entry without parsing GUID components.
 - Recents keep the newest 20 successful destinations per sending realm/faction,
   shared across characters in that context. Reusing a recipient moves it to the
-  front. Explicit cross-realm destinations preserve their realm suffix.
+  front. The complete successful native address is retained unchanged; the helper does not interpret a surname as a realm or append a guessed realm.
 - Data uses `ForeverUtilitiesDB.mail.characters` and `.recents`. Class positions
   and preferences are preserved. Normal WoW logout handles persistence through
   the existing `SavedVariables` declaration.
@@ -26,6 +26,42 @@ Only character identities and recipient names are stored. Mail subjects,
 bodies, attachments, and money amounts are not read or persisted by this helper.
 No recipient is inserted merely by opening the panel. A click fills the field;
 the user completes the normal sending action and any native confirmation.
+
+## Forever names and migration from 0.30.0
+
+Forever uses two-part character names. Read the full native name with
+`GetUnitName('player')`. Its `UnitName`, `UnitNameUnmodified`, and `UnitFullName`
+tuples return first name and surname; the second value must not be treated as a
+realm. Classmate falls back to joining two readable `UnitFullName` components
+only when a complete native name is unavailable. Actual realm context still
+comes from the independent realm APIs.
+
+The lists and clicked recipient include the full name. A one-part name is not
+eligible for a suggestion. Recent addresses are retained as observed on a
+successful send; spacing/hyphen spelling may normalize for deduplication without
+changing the stored address used by a click.
+
+Version 0.30.0 recorded incomplete alt names and could append a supposed realm
+to recent recipients. Those strings cannot reliably reveal a missing surname.
+With `mail.nameFormat=2`, old recent lists are preserved under `.legacyRecents`
+but stay outside active history. Old alt records stay hidden until the alt logs
+in again. A readable matching player GUID replaces that character's old entry;
+other character records and class preferences remain intact. Future successful
+sends rebuild complete-name history normally.
+
+Evidence checked November 8, 2026:
+
+- [Blizzard's naming overview](https://worldofwarcraft.blizzard.com/en-gb/news/24304161/create-a-name-of-your-own-in-wow-forever)
+  confirms first and second names together identify a character within a region.
+- [The AllTheThings author's observed API results](https://github.com/ATTWoWAddon/AllTheThings/issues/2630)
+  document the surname tuple behavior and full `GetUnitName` string. These are
+  author-reported client observations; generated documentation still labels a
+  tuple field as a server, so its field name is not proof of Forever behavior.
+- [Bulk Mail's Forever correction](https://www.wowace.com/projects/bulkmail/files/8999065)
+  independently records a first-name-only self-check failure and its switch to
+  the complete `GetUnitName` result.
+- The user's November 8 screenshot shows Classmate 0.30.0 listing and filling
+  only the first name, which reproduced the faulty code path.
 
 ## Settings and lifecycle
 

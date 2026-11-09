@@ -1,3 +1,12 @@
+## 0.30.1
+
+- Fixed missing surnames in the mail sidebar and recipient filling. Forever's complete name comes from GetUnitName; its UnitFullName tuple contains first name and surname, with realm context read separately.
+- Alts sharing a first name stay distinct by their full names. Recent recipients preserve the exact successful native address, and hyphens are no longer split as supposed realm suffixes. Full names can wrap within the unchanged panel rows.
+- Incomplete 0.30.0 alt records stay hidden until each alt logs in again; a matching readable GUID replaces its old record. Ambiguous old recent strings are retained in legacyRecents, outside the active list, rather than inventing a missing surname. Existing class settings are preserved.
+- Added regressions for full English/Chinese names, separate surname tuple results, restricted surnames, duplicate first names, and migration from 0.30.0.
+
+Use `/reload`, then log into each alt once to refresh its full name. Automated checks use mocked APIs; live client confirmation is still needed.
+
 ## 0.30.0
 
 - Added a compact recipient panel beside native Send Mail, with Alts and Recent recipients visible together. Click a name to fill the recipient field; right-click to forget its saved entry. Each list has five rows and pagination.

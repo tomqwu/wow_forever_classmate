@@ -1,6 +1,6 @@
 # Standard class modules
 
-Version 0.30.0 supports Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock alongside the existing Hunter and Shaman companions. The standard modules share `ClassContext.lua` and `StandardClasses.lua`, but each has an independent `ForeverUtilitiesDB.<class>` table and command.
+Version 0.30.1 supports Paladin, Warrior, Rogue, Druid, Mage, Priest, and Warlock alongside the existing Hunter and Shaman companions. The standard modules share `ClassContext.lua` and `StandardClasses.lua`, but each has an independent `ForeverUtilitiesDB.<class>` table and command.
 
 For every class, left-clicking the Classmate minimap button opens settings and right-clicking it opens WoW's native Inspect window for an eligible targeted player. The right-click shortcut has a per-class toggle and does not change the bar's information slots.
 
@@ -8,7 +8,7 @@ Every class also has an independent **Sleeping bag buff reminder (below level 60
 
 The separate **Food XP buff reminder (below level 60)** warns at levels 1–59 outside combat when Well Fed is confirmed absent. Visible Well Fed clears it; the hidden XP effect is not a measured multiplier, so use food whose tooltip grants +5% XP from kills. Either leveling reminder keeps the bar bright, independently of class upkeep and the other reminder. Both follow **Flash missing buffs** and retain the existing bar size. See [food reminder sources and limits](food-xp.md).
 
-Every class exposes **Mail recipients: alts and recents**, independent of the class bar. The shared mail service records logged-in characters and successful recipients in account-wide saved variables, and offers two paginated lists beside native Send Mail. Click to fill, right-click to forget. Alts are limited to the current realm and faction; recents retain up to 20 successful recipients per sending realm/faction. See [mail behavior and API sources](mail-recipients.md).
+Every class exposes **Mail recipients: alts and recents**, independent of the class bar. The shared mail service records logged-in characters and successful recipients in account-wide saved variables, and offers two paginated lists beside native Send Mail. Names include both first name and surname; selection fills the complete native address. Click to fill, right-click to forget. After 0.30.0, log into each alt again to refresh incomplete legacy names. Alts are limited to the current realm and faction; recents retain up to 20 successful recipients per sending realm/faction. See [mail behavior and API sources](mail-recipients.md).
 
 ## Display model
 
