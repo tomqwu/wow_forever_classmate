@@ -166,7 +166,7 @@ function Tracker.Create(parent,db,module,keys,color)
         end)
     end
     function frame.Refresh(enabled)
-        local wanted=enabled and db.showMultiDots~=false
+        local wanted=enabled and db.showMultiDots~=false and not db.collapsed
         if not wanted then
             if active then for _,event in ipairs(events) do frame:UnregisterEvent(event) end end
             active=false;tokens={};observations={};Hide();return

@@ -1,6 +1,6 @@
 # Forever Classmate development
 
-Active source: `addons/ForeverUtilities/`. The folder, TOC filename, saved-variable name, and release tag prefix remain stable for upgrades. Version 0.30.1 supports all nine classes through the registry in `Core.lua`.
+Active source: `addons/ForeverUtilities/`. The folder, TOC filename, saved-variable name, and release tag prefix remain stable for upgrades. Version 0.31.0 supports all nine classes through the registry in `Core.lua`.
 
 The [November 1 API review](forever-api-review-2026-11-01.md) compares the October client changes with Classmate's call sites and records the gap between the latest public UI source (70532) and the installed `wowf` client (70707). The launch client uses `_forever_`; detect the active product before deploying rather than assuming the historical `_classic_beta_` folder.
 
@@ -44,3 +44,5 @@ Use learned spellbook discovery and localized spell metadata. Never guess an exa
 Run `python3 scripts/check.py`, `git diff --check`, and `python3 scripts/package.py`. Follow `AGENTS.md` for local installation, versioned GitHub releases, CurseForge receipts, synchronized descriptions, and file retention.
 
 CurseForge publishing follows the [file retention policy](curseforge-retention.md). Cleanup requires the author dashboard; CI reports it as pending.
+
+`Folded.lua` renders a 64 × 64 collapsed icon through the shared class host. `ClassHost.SetWarning` receives confirmed upkeep state from the standard, Shaman and Hunter modules; no aura or spell state is inferred by the summary. Leveling badges are re-anchored inside the icon. The full content is reparented into a hidden visual container, which removes its hit targets; the host forwards its existing OnUpdate callback only while its logical frame remains shown, preserving countdowns without reviving death/world suspension. Multi-target DoT tracking suspends while collapsed. Expansion restores the saved full/compact geometry. The host uses the existing mouseover updater; no new aura polling or events are introduced solely for folding.

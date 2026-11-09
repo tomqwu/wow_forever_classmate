@@ -1,3 +1,12 @@
+## 0.31.0
+
+- Added a saved collapsed view for every class: a 64 × 64 Classmate icon with confirmed class upkeep badges on the left and food/sleeping-bag reminders on the right. Existing warning eligibility and unreadable-data rules are preserved.
+- Click the small < control beside the expanded bar to fold it, and click the large icon to expand. Added Collapsed warning icon and Show collapse button preferences, with English/Simplified Chinese labels. Dragging the icon respects the existing lock setting.
+- Missing warnings keep the icon bright and follow Flash missing buffs. Hover reveals an idle icon. The hidden full bar has no invisible hit targets; its existing updater remains live through the host while enabled and unsuspended. DoT sidebars suspend until expanded.
+- Expansion restores the original class layout and scale. Class positions, warning toggles, and mail recipient records are preserved.
+
+Use `/reload`, then click < beside the bar or enable Collapsed warning icon in `/fclassmate`. Automated checks use mocked APIs; live rendering still needs confirmation.
+
 ## 0.30.1
 
 - Fixed missing surnames in the mail sidebar and recipient filling. Forever's complete name comes from GetUnitName; its UnitFullName tuple contains first name and surname, with realm context read separately.

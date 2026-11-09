@@ -223,3 +223,46 @@ Event('UNIT_AURA','player');service.Refresh()
 check(not next(service.controller.events) and reads==0,'queued events cannot reenable tracking from a stale pre-level-up UnitLevel result')
 level=60;service.Refresh();check(not bag.button.shown and not food.button.shown,'level 60 stays excluded')
 print('PASS: '..count..' leveling-buff reminder checks')
+
+-- Folding hides the visual container, while the existing updater stays live.
+function methods:SetTexture(value) self.texture=value end
+function methods:GetScript(event) return self.scripts[event] end
+function methods:SetParent(parent) self.parent=parent end
+assert(loadfile(root..'Folded.lua'))('ForeverUtilities',NS)
+level=59;dead=false;combat=false;auras={}
+local foldedDB={enabled=true,locked=true,x=0,y=0,scale=1,collapsed=true,flashMissingBuffs=true}
+local foldHost,foldContent
+local foldModule={command='/ftest'}
+local foldInstance=NS.ClassHost.Create(foldModule,foldedDB,function(owner)
+    foldHost=owner;foldContent=object()
+    foldContent.Refresh=function() NS.ClassHost.SetFade(owner,foldContent,0.2) end
+    foldContent.Status=function() return 'test' end
+    return foldContent
+end)
+foldModule.Apply=foldInstance.Apply;foldInstance.Apply()
+local summary=foldInstance.folded
+check(foldHost.width==64 and foldHost.height==64 and not foldInstance.visual.shown and summary.button.shown,'collapsed host is a large icon with hidden full-bar controls')
+local badges=foldInstance.levelingBuffs.indicators
+check(badges.food.button.width==20 and badges.food.button.x==-3 and badges.food.button.y==-41,
+    'food badge stays inside the collapsed icon')
+check(badges.sleepingBag.button.y==-3 and summary.button.alpha==1,'sleeping warning stays inside the top right and keeps icon bright')
+NS.ClassHost.SetWarning(foldHost,'upkeep',true,777,'Armor missing')
+check(summary.badges[1].shown and summary.badges[1].texture==777,'confirmed armor warning appears inside icon')
+NS.ClassHost.SetWarning(foldHost,'upkeep',false,nil,'Armor missing')
+check(not summary.badges[1].shown,'unknown or restored armor removes its badge')
+local ticks=0
+foldContent:SetScript('OnUpdate',function() ticks=ticks+1 end)
+foldHost.scripts.OnUpdate(foldHost,0.3)
+check(ticks==1,'host forwards the existing updater while visuals are folded')
+foldContent:Hide();foldHost.scripts.OnUpdate(foldHost,0.3)
+check(ticks==1,'suspended hidden content does not get revived by collapsed forwarding')
+foldContent:Show();foldedDB.flashMissingBuffs=false;foldInstance.Apply()
+check(not summary.border.warningPulseGroup.playing and summary.button.alpha==1,'static collapsed warnings respect flash toggle')
+summary.button.scripts.OnClick()
+check(not foldedDB.collapsed and foldHost.width==426 and foldInstance.visual.shown and not summary.button.shown,
+    'click expands to the original bar size')
+summary.fold.scripts.OnClick()
+check(foldedDB.collapsed and foldHost.width==64,'fold control collapses the expanded bar')
+foldedDB.enabled=false;foldInstance.Apply()
+check(not summary.button.shown and not summary.border.warningPulseGroup.playing,'disable clears collapsed presentation and animation')
+print('PASS: folded layout, warning, lifecycle and update regressions')

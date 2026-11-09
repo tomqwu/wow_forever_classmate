@@ -79,7 +79,7 @@ function Buffs.Create(host,content,db)
         local icon=button:CreateTexture(nil,'ARTWORK')
         icon:SetSize(12,12);icon:SetPoint('CENTER')
         icon:SetTexture(Core.Icon(Core.Call(C_Item and C_Item.GetItemIconByID,definition.itemID)) or definition.fallback)
-        indicators[definition.key]={button=button,border=border,pulse=Core.CreateWarningPulse(host,border)}
+        indicators[definition.key]={button=button,border=border,icon=icon,pulse=Core.CreateWarningPulse(host,border)}
         button:SetScript('OnEnter',function(self)
             if not GameTooltip then return end
             GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(NS.L(definition.title))
@@ -125,7 +125,10 @@ function Buffs.Create(host,content,db)
             local indicator=indicators[definition.key]
             if db[definition.option]~=false and states[definition.key]==true then
                 indicator.button:ClearAllPoints()
-                if db.rangeIconOnly then indicator.button:SetPoint('TOPLEFT',host,'TOPRIGHT',3,-20*(index-1))
+                indicator.button:SetSize(db.collapsed and 20 or 16,db.collapsed and 20 or 16)
+                indicator.icon:SetSize(db.collapsed and 16 or 12,db.collapsed and 16 or 12)
+                if db.collapsed then indicator.button:SetPoint('TOPRIGHT',host,'TOPRIGHT',-3,-3-38*(index-1))
+                elseif db.rangeIconOnly then indicator.button:SetPoint('TOPLEFT',host,'TOPRIGHT',3,-20*(index-1))
                 else indicator.button:SetPoint('TOPRIGHT',host,'TOPRIGHT',-8,1-42*(index-1)) end
                 indicator.button:Show();indicator.pulse(db.flashMissingBuffs~=false)
                 host.levelingBuffMissing=true

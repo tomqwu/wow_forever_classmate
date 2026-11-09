@@ -29,3 +29,5 @@ The shared mail utility adds paginated Alts and Recent recipients lists beside n
 ## Keywords
 
 WoW Forever, class helper, Hunter, Shaman, Paladin, Warrior, Rogue, Druid, Mage, Priest, Warlock, racials, cooldowns, resources, pets, totems
+
+**Foldable bar:** click the small **<** button beside the bar to fold it into a **64 × 64** Classmate icon. Confirmed class upkeep warnings appear inside the left edge; missing food and sleeping-bag buffs appear inside the right edge. Warning borders follow **Flash missing buffs**, and active warnings keep the icon bright. Click the large icon to expand. **Collapsed warning icon** and **Show collapse button** are independent settings; each class remembers its view. Unlocking allows the icon to be dragged. Existing warning eligibility, level limits, and unreadable-data rules still apply.

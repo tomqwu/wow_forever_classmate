@@ -5,12 +5,13 @@
 ## Notes-zhCN: 魔兽世界：永恒职业助手，提供升级增益提醒、小号及最近邮件收件人列表。
 ## IconTexture: Interface\AddOns\ForeverUtilities\Textures\ForeverClassmate
 ## Author: Codex
-## Version: 0.30.1
+## Version: 0.31.0
 ## SavedVariables: ForeverUtilitiesDB
 Core.lua
 Locale.lua
 MailRecipients.lua
 LevelingBuffs.lua
+Folded.lua
 ClassHost.lua
 TargetContext.lua
 PetDatabase.lua

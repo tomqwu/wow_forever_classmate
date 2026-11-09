@@ -10,6 +10,9 @@ end
 GetLocale=function() return 'zhCN' end
 assert(loadfile(root..'Locale.lua'))('ForeverUtilities',NS)
 check(NS.Locale,'zhCN','selected locale')
+check(NS.L('Collapsed warning icon'),'折叠为警告图标','collapse setting')
+check(NS.L('Click to expand'),'点击展开','expand action')
+check(NS.L('Armor missing'),'缺少护甲增益','compact armor warning')
 check(NS.L('Missing'),'缺失','missing armor warning label')
 check(NS.L('Flash missing buffs'),'缺少增益时闪烁','flash preference label')
 check(NS.L('Sleeping bag buff reminder (below level 60)'),'睡袋增益提醒（60级以下）','sleeping bag preference label')
@@ -50,6 +53,7 @@ check(NS.PetDatabase.familyNames['猫科'],2,'localized pet family without reada
 GetLocale=function() return 'enUS' end
 NS.L=function(value) return value end
 assert(loadfile(root..'Locale.lua'))('ForeverUtilities',NS)
+check(NS.L('Collapsed warning icon'),'Collapsed warning icon','English collapse setting')
 check(NS.L('No target'),'No target','English fallback')
 check(NS.L('Ammo: 525'),'Ammo: 525','English dynamic fallback')
 check(NS.L('Sleeping bag buff reminder (below level 60)'),'Sleeping bag buff reminder (below level 60)','English sleeping bag setting')

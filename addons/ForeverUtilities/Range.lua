@@ -114,6 +114,7 @@ function Range.Create(host, db)
     local pulseAspect=Core.CreateWarningPulse(frame,aspectBorder)
     local function UpdateAspect()
         local missing=db.aspectWarning~=false and NS.TargetContext.AspectMissing(aspectNames)==true
+        NS.ClassHost.SetWarning(host,'aspect',missing,'Interface\\Icons\\Spell_Nature_RavenForm','Aspect missing')
         aspectIcon:SetShown(missing);aspectBorder:SetShown(missing)
         pulseAspect(missing and not db.rangeIconOnly and db.flashMissingBuffs~=false)
     end
@@ -407,7 +408,7 @@ function Range.Create(host, db)
     local rangeEvents={'PLAYER_TARGET_CHANGED','SPELLS_CHANGED','LEARNED_SPELL_IN_SKILL_LINE','PLAYER_ENTERING_WORLD',
         'PLAYER_LEAVING_WORLD','PLAYER_DEAD','PLAYER_ALIVE','PLAYER_UNGHOST','PLAYER_EQUIPMENT_CHANGED','UNIT_FLAGS','UNIT_TARGET','UNIT_NAME_UPDATE','UNIT_PORTRAIT_UPDATE','BAG_UPDATE_DELAYED','UNIT_INVENTORY_CHANGED','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED','UNIT_HEALTH','UNIT_MAXHEALTH','UNIT_PET','UNIT_AURA','UNIT_HAPPINESS'}
     local function Refresh()
-        if db.rangeIconOnly then pulseAspect(false) end
+        if db.rangeIconOnly then pulseAspect(false);NS.ClassHost.SetWarning(host,'aspect',false,nil,'Aspect missing') end
         frame:SetScript('OnUpdate',nil)
         frame:SetShown(db.enabled)
         ContextLayout()
