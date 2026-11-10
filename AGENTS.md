@@ -124,4 +124,4 @@ Core.CreateWarningPulse owns gentle native alpha pulses on warning decorations, 
 
 Collapsed presentation is owned by `Folded.lua` and `ClassHost.lua`. Keep confirmed warning decisions in the class/leveling services and feed `ClassHost.SetWarning`; the summary must not query or infer extra aura state. The host forwards existing content updates through a hidden visual container while collapsed, only while logical content remains shown. Do not revive dead/disabled/world-suspended content or expose hidden bar hit targets. Keep the 64 × 64 icon, independent view/control toggles, original expanded geometry and saved positions.
 
-Secondary folded warnings must sit in a separate row below the 64 × 64 main icon, with a six-pixel gap. Reserve a 64 × 94 footprint for screen clamping. Never overlay the main artwork with warning strips or smaller icons.
+Secondary folded warnings sit in a connected lower section below the 64 × 64 main artwork. Reserve a 64 × 88 footprint for screen clamping. Use one outline around both sections and no added solid backgrounds. Never overlay the main artwork with warning strips or smaller icons.

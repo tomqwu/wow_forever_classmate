@@ -179,10 +179,10 @@ local function CreateIndicator(module,config,host,db)
         end)
         cell:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
     end
-    Tooltip(resource,function() return config.label..' resources' end,function() return 'Live readable player resource state.' end)
+    Tooltip(resource,function() return 'Player resources' end,function() return 'Live readable player resource state.' end)
     Tooltip(upkeep,function() return config.upkeepLabel end,function() return 'Shows learned upkeep from your current auras or equipped weapon coatings.' end)
     Tooltip(target,function() return config.targetLabel end,function() return 'Tracks your readable target effects.' end)
-    Tooltip(ability,function() return config.label..' ability' end,function() return 'Tracks a readable proc or learned usable ability.' end)
+    Tooltip(ability,function() return 'Ability' end,function() return 'Tracks a readable proc or learned usable ability.' end)
     Tooltip(racial,function() return racial.state and racial.state.spell.name or 'Racial ability' end,function()
         return 'The learned active racial with its real cooldown and current usability. Context means the game reports it unusable now.'
     end)
@@ -226,7 +226,7 @@ local function CreateIndicator(module,config,host,db)
             local shards=Context.ItemCount('Soul Shard')
             if shards then resourceBottom=(resourceBottom~='' and (resourceBottom..'/') or '')..'S'..shards;resourceLines[#resourceLines+1]='Soul Shards: '..shards end
         end
-        resource.tooltipTitle=config.label..' resources';resource.tooltipLines=resourceLines
+        resource.tooltipTitle='Player resources';resource.tooltipLines=resourceLines
         local resourceIcon=config.icon
         if config.resourceTextOnly then
             resourceIcon=nil
@@ -382,7 +382,7 @@ local function CreateIndicator(module,config,host,db)
             abilityLines[#abilityLines+1]=cue.spell.name..': '..detail
         end
         target.tooltipTitle=config.targetLabel;target.tooltipLines=targetLines
-        ability.tooltipTitle=config.label..' ability';ability.tooltipLines=abilityLines
+        ability.tooltipTitle='Ability';ability.tooltipLines=abilityLines
         Paint(target,targetIcon,targetText,hostile and targetText and 'Effect' or '',targetColor,targetDim)
         target:SetShown(showTarget and targetText~=nil)
         Paint(ability,abilityIcon,abilityText,abilityText and 'Ability' or '',abilityColor,abilityDim or not abilityIcon)

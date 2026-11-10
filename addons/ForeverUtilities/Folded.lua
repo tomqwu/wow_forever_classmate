@@ -3,16 +3,16 @@ local Core=NS.Core
 NS.Folded={}
 function NS.Folded.Create(host,content,db,module)
     local button=CreateFrame('Button',nil,host)
-    button:SetSize(64,64);button:SetPoint('TOPLEFT',host,'TOPLEFT',0,0);button:RegisterForDrag('LeftButton');button:EnableMouse(true)
-    local background=button:CreateTexture(nil,'BACKGROUND');background:SetAllPoints();background:SetColorTexture(0.025,0.025,0.03,0.95)
-    local logo=button:CreateTexture(nil,'ARTWORK');logo:SetPoint('TOPLEFT',3,-3);logo:SetPoint('BOTTOMRIGHT',-3,3)
+    button:SetSize(64,88);button:SetPoint('TOPLEFT',host,'TOPLEFT',0,0);button:RegisterForDrag('LeftButton');button:EnableMouse(true)
+    local main=CreateFrame('Frame',nil,button);main:SetSize(64,64);main:SetPoint('TOPLEFT',button,'TOPLEFT',0,0)
+    local logo=main:CreateTexture(nil,'ARTWORK');logo:SetPoint('TOPLEFT',3,-3);logo:SetPoint('BOTTOMRIGHT',-3,3)
     local _,token=Core.Call(UnitClass,'player')
     local classIcons={WARLOCK='Spell_Shadow_DemonArmor',MAGE='Spell_Frost_FrostArmor02',PRIEST='Spell_Holy_InnerFire',
         WARRIOR='Ability_Warrior_BattleShout',ROGUE='Ability_Stealth',DRUID='Spell_Nature_Regeneration',
         HUNTER='Ability_Hunter_BeastCall',SHAMAN='Spell_Nature_LightningShield',PALADIN='Spell_Holy_DevotionAura'}
     local fallback='Interface\\Icons\\'..(classIcons[token] or 'Spell_Holy_SealOfProtection')
     -- Pulse only a one-pixel outline, never a solid rectangle behind transparent artwork.
-    local border=CreateFrame('Frame',nil,button);border:SetAllPoints()
+    local border=CreateFrame('Frame',nil,button);border:SetSize(64,88);border:SetPoint('TOPLEFT',button,'TOPLEFT',0,0)
     local edges={}
     for _,side in ipairs({'TOP','BOTTOM','LEFT','RIGHT'}) do
         local edge=border:CreateTexture(nil,'OVERLAY');edge:SetColorTexture(0.55,0.5,0.35,1)
@@ -22,8 +22,7 @@ function NS.Folded.Create(host,content,db,module)
     end
     local pulse=Core.CreateWarningPulse(button,border)
     local row=CreateFrame('Button',nil,button);row:SetSize(64,24)
-    row:SetPoint('TOPLEFT',button,'BOTTOMLEFT',0,-6);row:RegisterForDrag('LeftButton');row:EnableMouse(true)
-    local strip=row:CreateTexture(nil,'BACKGROUND');strip:SetAllPoints(row);strip:SetColorTexture(0.02,0.02,0.025,0.92)
+    row:SetPoint('TOPLEFT',main,'BOTTOMLEFT',0,0);row:RegisterForDrag('LeftButton');row:EnableMouse(true)
     local badges={}
     for index=1,3 do
         local badge=row:CreateTexture(nil,'ARTWORK');badge:SetSize(20,20);badge:Hide();badges[index]=badge
@@ -74,6 +73,9 @@ function NS.Folded.Create(host,content,db,module)
         logo:SetTexture(primary and Core.Icon(primary.icon) or fallback)
         local count=math.min(3,math.max(0,#visibleWarnings-1))
         row:SetShown(count>0)
+        local outlineHeight=count>0 and 88 or 64
+        border:SetSize(64,outlineHeight)
+        edges[3]:SetSize(1,outlineHeight);edges[4]:SetSize(1,outlineHeight)
         for index,badge in ipairs(badges) do
             local warning=visibleWarnings[index+1]
             badge:SetShown(index<=count)
@@ -89,5 +91,5 @@ function NS.Folded.Create(host,content,db,module)
     end
     host.foldRefresh=Refresh
     content:HookScript('OnHide',Refresh);content:HookScript('OnShow',Refresh)
-    return {Refresh=Refresh,button=button,fold=fold,badges=badges,border=border,primary=logo,strip=strip,edges=edges,row=row}
+    return {Refresh=Refresh,button=button,fold=fold,badges=badges,border=border,primary=logo,main=main,edges=edges,row=row}
 end

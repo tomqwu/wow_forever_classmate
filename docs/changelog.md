@@ -1,3 +1,12 @@
+## 0.31.3
+
+- Unified the folded main icon and secondary warnings under one continuous outline. The lower section is directly attached beneath the artwork, with no separate black strip or added solid backdrop. The main image remains unobscured.
+- Reserved a 64 × 88 footprint for the combined control. When no secondary warnings exist, the outline shrinks to the 64 × 64 main icon without moving it. Existing click, drag, fade and warning behavior is preserved.
+- Removed redundant class names from resource/ability hover labels and the class slash command from the movement hint; useful resource values, spell names and warnings remain.
+- Added layout checks for the connected lower section and shared outline, plus Chinese localization for the generic resource tooltip.
+
+Use `/reload`. Automated checks use mocked APIs; live rendering still needs confirmation.
+
 ## 0.31.2
 
 - Moved extra folded warnings into a separate row six pixels below the main icon. The main 64 × 64 artwork stays fully visible, with no warning strip or icons covering it.

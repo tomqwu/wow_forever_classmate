@@ -75,14 +75,14 @@ function Host.Create(module,db,contentFactory)
     Apply=function()
         height=type(module.height)=='function' and module.height(db) or (module.height or 56)
         width=type(module.width)=='function' and module.width(db) or (module.width or NS.ClassBarWidth)
-        if db.collapsed then width,height=64,94 end
+        if db.collapsed then width,height=64,88 end
         host:SetShown(db.enabled);host:SetSize(width,height)
         visual:SetShown(not db.collapsed)
         host:SetScale(db.scale);host:ClearAllPoints();host:SetPoint('CENTER',UIParent,'CENTER',db.x,db.y)
         host:EnableMouse(db.enabled)
         host:SetScript('OnUpdate',db.enabled and CheckHover or nil)
         if not db.enabled then host.hovered=false;hoverElapsed=0 end
-        host.hint:SetText((db.locked or db.collapsed) and '' or (NS.L('Drag to move')..' | '..module.command..' lock'))
+        host.hint:SetText((db.locked or db.collapsed) and '' or NS.L('Drag to move'))
         lock:SetShown(db.showLockButton~=false and (not module.lockVisible or module.lockVisible(db)))
         right:SetShown(db.locked)
         for _,texture in ipairs({body,left,top,right}) do
