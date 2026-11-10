@@ -233,6 +233,9 @@ function methods:SetBackdropColor(...) self.backdropColor={...} end
 function methods:SetParent(parent) self.parent=parent end
 function methods:SetAllPoints(relative) self.allPoints=relative or self.parent end
 function methods:SetClampedToScreen(value) self.clamped=value end
+function methods:SetMovable(value) self.movable=value end
+function methods:SetDontSavePosition(value) self.dontSavePosition=value end
+function methods:SetUserPlaced(value) self.userPlaced=value end
 assert(loadfile(root..'Folded.lua'))('ForeverUtilities',NS)
 level=59;dead=false;combat=false;auras={}
 local foldedDB={enabled=true,locked=true,x=0,y=0,scale=1,collapsed=true,flashMissingBuffs=true}
@@ -265,6 +268,23 @@ check(foldInstance.shell.backdrop.bgFile and summary.border.backdrop.edgeFile an
     'one image-based shell owns frame artwork and contains the inset logical host')
 check(foldInstance.shell.clamped and not rawget(foldHost,'clamped'),
     'only the outer container clamps to screen so the inset host cannot shift independently')
+check(foldHost.dontSavePosition and foldHost.userPlaced==false and foldHost.movable==false
+    and foldInstance.shell.dontSavePosition and foldInstance.shell.movable,
+    'native position caching is disabled and only the anonymous outer shell can move')
+check(foldHost.events.PLAYER_LOGIN and foldHost.events.PLAYER_ENTERING_WORLD,
+    'enabled host repairs its layout after native startup restoration')
+-- Reproduce the old named Warlock frame record found in layout-local.txt.
+foldHost:SetPoint('BOTTOMLEFT',UIParent,'BOTTOMLEFT',53,257);foldHost:SetSize(64,64)
+foldHost.scripts.OnEvent(foldHost,'PLAYER_LOGIN')
+check(foldHost.point=='TOPLEFT' and foldHost.relative==foldInstance.shell and foldHost.relativePoint=='TOPLEFT'
+    and foldHost.x==4 and foldHost.y==-4 and foldHost.width==66 and foldHost.height==32,
+    'startup restores the inset and current compact dimensions after an old Warlock cache record')
+-- Mage had a separate stale full-bar record; world entry must repair it too.
+foldHost:SetPoint('LEFT',UIParent,'LEFT',69,-261);foldHost:SetSize(426,56)
+foldHost.scripts.OnEvent(foldHost,'PLAYER_ENTERING_WORLD')
+check(foldHost.point=='TOPLEFT' and foldHost.relative==foldInstance.shell and foldHost.x==4 and foldHost.y==-4
+    and foldHost.width==66 and foldHost.height==32 and foldedDB.x==0 and foldedDB.y==0,
+    'world entry repairs a stale Mage record without replacing the saved container position')
 check(foldHost.hint.text=='','collapsed drag instructions stay on hover')
 NS.ClassHost.SetWarning(foldHost,'upkeep',true,777,'Armor missing')
 check(summary.badges[1].texture==777 and summary.badges[3].shown and not summary.badges[4].shown
@@ -361,4 +381,8 @@ summary.fold.scripts.OnClick()
 check(foldedDB.collapsed and foldHost.width==66 and foldHost.height==32,'fold control collapses to the current reminder row')
 foldedDB.enabled=false;foldInstance.Apply()
 check(not summary.button.shown and not summary.border.warningPulseGroup.playing,'disable clears collapsed presentation and animation')
+check(not next(foldHost.events),'disabled host unregisters native-layout lifecycle listeners')
+foldHost:SetPoint('LEFT',UIParent,'LEFT',69,-261)
+foldHost.scripts.OnEvent(foldHost,'PLAYER_ENTERING_WORLD')
+check(not foldInstance.shell.shown and foldHost.point=='LEFT','queued layout events cannot revive a disabled helper')
 print('PASS: folded layout, warning, lifecycle and update regressions')

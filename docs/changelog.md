@@ -1,3 +1,12 @@
+## 0.31.7
+
+- Fixed a second position owner left over from the pre-container implementation. Native `layout-local.txt` records for the named class host could restore it away from the anonymous shell, leaving warning icons outside their border.
+- Disabled native position saving and cleared user-placed state on the shell and inset host. Only the shell can move; position remains owned by existing SavedVariables.
+- Reapply the layout at player login/world entry after native startup restoration. Disabled helpers unregister those listeners and ignore queued events.
+- Added regression cases using the old Warlock and Mage layout records observed locally. They check restored inset anchors, compact dimensions, preserved saved coordinates and disabled lifecycle. Warning eligibility and visual design are unchanged.
+
+Use `/reload`. Automated checks simulate native layout restoration; live rendering still needs in-game confirmation.
+
 ## 0.31.6
 
 - Removed the fixed square warning canvas that left unused space above and below a single row of reminders. The image-based frame and its click area now fit the visible rows, with four-pixel padding.

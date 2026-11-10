@@ -18,10 +18,15 @@ function Host.Create(module,db,contentFactory)
     local height=type(module.height)=='function' and module.height(db) or (module.height or 56)
     local width=type(module.width)=='function' and module.width(db) or (module.width or NS.ClassBarWidth)
     local shell=CreateFrame('Frame',nil,UIParent,'BackdropTemplate')
+    shell:SetDontSavePosition(true);shell:SetUserPlaced(false)
     shell:SetFrameStrata('MEDIUM');shell:SetMovable(true);shell:SetClampedToScreen(true)
     shell:SetBackdrop({bgFile='Interface\\Tooltips\\UI-Tooltip-Background',tile=true,tileSize=16})
     shell:SetBackdropColor(0.04,0.045,0.055,0.55)
     local host=CreateFrame('Frame',module.frameName,shell)
+    -- Older releases let this named frame move independently. Characters may
+    -- still have its position/size in layout-local.txt. SavedVariables now own
+    -- placement; the host must remain an inset of the anonymous shell.
+    host:SetDontSavePosition(true);host:SetUserPlaced(false);host:SetMovable(false)
     host.shell=shell
     local outline=CreateFrame('Frame',nil,shell,'BackdropTemplate');outline:SetAllPoints(shell)
     outline:SetBackdrop({edgeFile='Interface\\Tooltips\\UI-Tooltip-Border',edgeSize=8})
@@ -31,7 +36,7 @@ function Host.Create(module,db,contentFactory)
     host:SetSize(width,height);host:SetFrameStrata('MEDIUM')
     -- Only the shell clamps to the screen; its inset host must keep its anchor
     -- as compact content grows and shrinks.
-    host:SetMovable(true);host:RegisterForDrag('LeftButton')
+    host:RegisterForDrag('LeftButton')
     host.hint=host:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall')
     host.hint:SetPoint('BOTTOM',host,'TOP',0,4)
     local visual=CreateFrame('Frame',nil,host);visual:SetAllPoints(host)
@@ -96,6 +101,9 @@ function Host.Create(module,db,contentFactory)
         shell:SetScale(db.scale);shell:ClearAllPoints();shell:SetPoint('CENTER',UIParent,'CENTER',db.x,db.y)
         host:ClearAllPoints();host:SetPoint('TOPLEFT',shell,'TOPLEFT',4,-4)
         host:EnableMouse(db.enabled)
+        for _,event in ipairs({'PLAYER_LOGIN','PLAYER_ENTERING_WORLD'}) do
+            if db.enabled then host:RegisterEvent(event) else host:UnregisterEvent(event) end
+        end
         host:SetScript('OnUpdate',db.enabled and CheckHover or nil)
         if not db.enabled then host.hovered=false;hoverElapsed=0 end
         host.hint:SetText((db.locked or db.collapsed) and '' or NS.L('Drag to move'))
@@ -109,6 +117,11 @@ function Host.Create(module,db,contentFactory)
         if levelingBuffs then levelingBuffs.Refresh() end
         if folded then folded.Refresh() end
     end
+    -- Reapply after native startup layout restoration, including old cache
+    -- records left by the pre-shell implementation. Disabled hosts do no work.
+    host:SetScript('OnEvent',function()
+        if db.enabled then Apply() end
+    end)
     host:SetScript('OnDragStart',function(self) if db.enabled and not db.locked then shell:StartMoving() end end)
     host:SetScript('OnDragStop',function(self)
         shell:StopMovingOrSizing()
