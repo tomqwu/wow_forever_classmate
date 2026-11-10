@@ -29,7 +29,9 @@ function Host.Create(module,db,contentFactory)
     host.outline=outline
     host.foldWarnings={};host.hovered=false
     host:SetSize(width,height);host:SetFrameStrata('MEDIUM')
-    host:SetMovable(true);host:SetClampedToScreen(true);host:RegisterForDrag('LeftButton')
+    -- Only the shell clamps to the screen; its inset host must keep its anchor
+    -- as compact content grows and shrinks.
+    host:SetMovable(true);host:RegisterForDrag('LeftButton')
     host.hint=host:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall')
     host.hint:SetPoint('BOTTOM',host,'TOP',0,4)
     local visual=CreateFrame('Frame',nil,host);visual:SetAllPoints(host)

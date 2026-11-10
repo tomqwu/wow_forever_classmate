@@ -1,3 +1,12 @@
+## 0.31.6
+
+- Removed the fixed square warning canvas that left unused space above and below a single row of reminders. The image-based frame and its click area now fit the visible rows, with four-pixel padding.
+- All warning icons are 32 × 32. One or two reminders use one row; three or four use two rows, with the final row centered. Artwork anchors directly to the inset logical host; only the outer shell clamps to the screen.
+- The neutral 64 × 64 expand logo remains when there are no confirmed warnings. Saved center position, expanded bar size, warning eligibility, independent toggles and outline flashing are preserved.
+- Regression checks now measure occupied artwork bounds and frame dimensions for zero through four warnings, instead of merely checking that icons fit inside a large canvas.
+
+Use `/reload`. Automated checks use mocked APIs; actual frame rendering still needs in-game confirmation.
+
 ## 0.31.5
 
 - Corrected folded warning presentation: food, sleeping bag and class upkeep use equal 28 × 28 icons in a centered two-column grid. Food no longer becomes oversized main artwork while other reminders shrink underneath it.

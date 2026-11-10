@@ -4,7 +4,7 @@ NS.Folded={}
 function NS.Folded.Create(host,content,db,module)
     local button=CreateFrame('Button',nil,host)
     button:SetSize(64,64);button:SetPoint('TOPLEFT',host,'TOPLEFT',0,0);button:RegisterForDrag('LeftButton');button:EnableMouse(true)
-    local main=CreateFrame('Frame',nil,button);main:SetSize(64,64);main:SetPoint('TOPLEFT',button,'TOPLEFT',0,0)
+    local main=CreateFrame('Frame',nil,button);main:SetAllPoints(button)
     local logo=main:CreateTexture(nil,'ARTWORK');logo:SetPoint('TOPLEFT',3,-3);logo:SetPoint('BOTTOMRIGHT',-3,3);logo:SetTexCoord(0.08,0.92,0.08,0.92)
     -- Neutral identity art is never a claim that a class buff is missing/active.
     local fallback='Interface\\AddOns\\ForeverUtilities\\Textures\\ForeverClassmate'
@@ -14,7 +14,7 @@ function NS.Folded.Create(host,content,db,module)
     local row=CreateFrame('Frame',nil,main);row:SetAllPoints(main)
     local badges={}
     for index=1,4 do
-        local badge=row:CreateTexture(nil,'ARTWORK');badge:SetSize(28,28)
+        local badge=row:CreateTexture(nil,'ARTWORK');badge:SetSize(32,32)
         badge:SetTexCoord(0.08,0.92,0.08,0.92);badge:Hide();badges[index]=badge
     end
     local visibleWarnings={}
@@ -59,6 +59,16 @@ function NS.Folded.Create(host,content,db,module)
         end
         logo:SetTexture(fallback)
         local count=math.min(4,#visibleWarnings)
+        -- Size the actual host and shell to the visible rows, not an empty
+        -- square above/below them. The saved shell center remains unchanged.
+        local columns=math.min(2,count)
+        local rows=math.ceil(count/2)
+        local width=count>0 and columns*34-2 or 64
+        local height=count>0 and rows*34-2 or 64
+        if collapsed then
+            host:SetSize(width,height);button:SetSize(width,height)
+            host.shell:SetSize(width+8,height+8)
+        end
         logo:SetShown(count==0)
         row:SetShown(count>0)
         for index,badge in ipairs(badges) do
@@ -67,10 +77,9 @@ function NS.Folded.Create(host,content,db,module)
             if warning and index<=count then
                 badge:SetTexture(Core.Icon(warning.icon))
                 local line=math.floor((index-1)/2)
-                local columns=math.min(2,count-line*2)
-                local rows=math.ceil(count/2)
-                badge:ClearAllPoints();badge:SetPoint('TOPLEFT',row,'TOPLEFT',
-                    (64-(columns*30-2))/2+((index-1)%2)*30,-(64-(rows*30-2))/2-line*30)
+                local lineColumns=math.min(2,count-line*2)
+                badge:ClearAllPoints();badge:SetPoint('TOPLEFT',host,'TOPLEFT',
+                    (width-(lineColumns*34-2))/2+((index-1)%2)*34,-line*34)
             end
         end
         local warning=count>0
