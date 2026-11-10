@@ -228,6 +228,8 @@ print('PASS: '..count..' leveling-buff reminder checks')
 function methods:SetText(value) self.text=value end
 function methods:SetTexture(value) self.texture=value end
 function methods:GetScript(event) return self.scripts[event] end
+function methods:SetBackdrop(value) self.backdrop=value end
+function methods:SetBackdropColor(...) self.backdropColor={...} end
 function methods:SetParent(parent) self.parent=parent end
 assert(loadfile(root..'Folded.lua'))('ForeverUtilities',NS)
 level=59;dead=false;combat=false;auras={}
@@ -250,9 +252,11 @@ check(not badges.food.button.shown and not badges.sleepingBag.button.shown,
     'folded mode suppresses the old floating corner controls')
 check(summary.primary.texture==foldHost.foldLevelWarnings.food.icon and summary.badges[1].texture==foldHost.foldLevelWarnings.sleepingBag.icon,
     'main warning is large native food art, with sleeping bag in the secondary row')
-check(summary.border.height==88 and summary.edges[3].height==88,'one continuous outline includes the lower warning row')
-check(summary.edges[1].width==64 and summary.edges[1].height==1 and foldHost.hint.text=='',
-    'warning outline is one pixel and collapsed drag instructions are hidden')
+check(summary.border==foldHost.outline and foldInstance.shell.width==72 and foldInstance.shell.height==96,
+    'compact components share one padded image-based container and outline')
+check(foldInstance.shell.backdrop.bgFile and summary.border.backdrop.edgeFile and foldHost.relative==foldInstance.shell and foldHost.x==4,
+    'one image-based shell owns frame artwork and contains the inset logical host')
+check(foldHost.hint.text=='','collapsed drag instructions stay on hover')
 NS.ClassHost.SetWarning(foldHost,'upkeep',true,777,'Armor missing')
 check(summary.primary.texture==777 and summary.badges[2].shown and summary.badges[1].width==20
     and summary.badges[2].x-summary.badges[1].x==22,'armor takes primary position with food and sleeping warnings grouped below')
@@ -260,7 +264,13 @@ NS.ClassHost.SetWarning(foldHost,'upkeep',false,nil,'Armor missing')
 check(summary.primary.texture==foldHost.foldLevelWarnings.food.icon and not summary.badges[2].shown,'cleared armor immediately restores the next real warning')
 auras={{spellId=429959,name='Well-Rested'},{spellId=1248420,name='Well Fed'}}
 foldInstance.levelingBuffs.Refresh()
-check(not summary.row.shown and foldHost.height==88 and summary.main.height==64 and summary.border.height==64,'unused lower section hides and the outline returns to the main icon bounds')
+check(not summary.row.shown and foldHost.height==88 and summary.main.height==64, 'unused lower section hides inside the same stable container')
+foldInstance.shell.IsMouseOver=function() return true end
+foldHost.scripts.OnUpdate(foldHost,0.2)
+check(foldHost.hovered and summary.button.alpha==1,'hovering the container padding reveals its components')
+foldInstance.shell.IsMouseOver=function() return false end
+foldHost.scripts.OnUpdate(foldHost,0.2)
+check(not foldHost.hovered and summary.button.alpha==0.35,'leaving the container restores idle icon fade')
 auras={};foldInstance.levelingBuffs.Refresh()
 check(summary.row:GetScript('OnClick')==summary.button:GetScript('OnClick'),'the separated warning row keeps the same expand action')
 local ticks=0
@@ -272,6 +282,8 @@ check(ticks==1,'suspended hidden content does not get revived by collapsed forwa
 foldContent:Show();foldedDB.flashMissingBuffs=false;foldInstance.Apply()
 check(not summary.border.warningPulseGroup.playing and summary.button.alpha==1,'static collapsed warnings respect flash toggle')
 summary.button.scripts.OnClick()
+check(summary.fold.relative==foldInstance.shell and summary.fold.x==-5,'collapse control belongs to the internal container rail')
+check(foldInstance.shell.width==450 and foldInstance.shell.height==64,'expanded container reserves padding and an internal control rail')
 check(not foldedDB.collapsed and foldHost.width==426 and foldInstance.visual.shown and not summary.button.shown,
     'click expands to the original bar size')
 summary.fold.scripts.OnClick()

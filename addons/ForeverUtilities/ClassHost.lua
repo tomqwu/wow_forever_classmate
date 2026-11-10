@@ -17,7 +17,16 @@ end
 function Host.Create(module,db,contentFactory)
     local height=type(module.height)=='function' and module.height(db) or (module.height or 56)
     local width=type(module.width)=='function' and module.width(db) or (module.width or NS.ClassBarWidth)
-    local host=CreateFrame('Frame',module.frameName,UIParent)
+    local shell=CreateFrame('Frame',nil,UIParent,'BackdropTemplate')
+    shell:SetFrameStrata('MEDIUM');shell:SetMovable(true);shell:SetClampedToScreen(true)
+    shell:SetBackdrop({bgFile='Interface\\Tooltips\\UI-Tooltip-Background',tile=true,tileSize=16})
+    shell:SetBackdropColor(0.04,0.045,0.055,0.55)
+    local host=CreateFrame('Frame',module.frameName,shell)
+    host.shell=shell
+    local outline=CreateFrame('Frame',nil,shell,'BackdropTemplate');outline:SetAllPoints(shell)
+    outline:SetBackdrop({edgeFile='Interface\\Tooltips\\UI-Tooltip-Border',edgeSize=8})
+    outline:SetBackdropBorderColor(0.65,0.65,0.65,0.85)
+    host.outline=outline
     host.foldWarnings={};host.hovered=false
     host:SetSize(width,height);host:SetFrameStrata('MEDIUM')
     host:SetMovable(true);host:SetClampedToScreen(true);host:RegisterForDrag('LeftButton')
@@ -40,9 +49,12 @@ function Host.Create(module,db,contentFactory)
     local top=Block(8,2,5,-4)
     local right=Block(2,7,11,-4)
     local function MouseOver()
+        local shellOver=NS.Core.Call(shell.IsMouseOver,shell)
+        if shellOver==true then return true end
         if type(host.IsMouseOver)~='function' then return nil end
         local ok,over=pcall(host.IsMouseOver,host)
         if ok and type(over)=='boolean' then return over end
+        if shellOver==false then return false end
     end
     local function Hover(over)
         if not db.enabled or host.hovered==over then return end
@@ -76,9 +88,11 @@ function Host.Create(module,db,contentFactory)
         height=type(module.height)=='function' and module.height(db) or (module.height or 56)
         width=type(module.width)=='function' and module.width(db) or (module.width or NS.ClassBarWidth)
         if db.collapsed then width,height=64,88 end
-        host:SetShown(db.enabled);host:SetSize(width,height)
+        shell:SetShown(db.enabled);host:SetShown(db.enabled);host:SetSize(width,height)
+        shell:SetSize(width+8+(db.collapsed and 0 or 16),height+8)
         visual:SetShown(not db.collapsed)
-        host:SetScale(db.scale);host:ClearAllPoints();host:SetPoint('CENTER',UIParent,'CENTER',db.x,db.y)
+        shell:SetScale(db.scale);shell:ClearAllPoints();shell:SetPoint('CENTER',UIParent,'CENTER',db.x,db.y)
+        host:ClearAllPoints();host:SetPoint('TOPLEFT',shell,'TOPLEFT',4,-4)
         host:EnableMouse(db.enabled)
         host:SetScript('OnUpdate',db.enabled and CheckHover or nil)
         if not db.enabled then host.hovered=false;hoverElapsed=0 end
@@ -93,13 +107,13 @@ function Host.Create(module,db,contentFactory)
         if levelingBuffs then levelingBuffs.Refresh() end
         if folded then folded.Refresh() end
     end
-    host:SetScript('OnDragStart',function(self) if db.enabled and not db.locked then self:StartMoving() end end)
+    host:SetScript('OnDragStart',function(self) if db.enabled and not db.locked then shell:StartMoving() end end)
     host:SetScript('OnDragStop',function(self)
-        self:StopMovingOrSizing()
-        local x,y=self:GetCenter();local cx,cy=UIParent:GetCenter()
-        local ratio=self:GetEffectiveScale()/UIParent:GetEffectiveScale()
+        shell:StopMovingOrSizing()
+        local x,y=shell:GetCenter();local cx,cy=UIParent:GetCenter()
+        local ratio=shell:GetEffectiveScale()/UIParent:GetEffectiveScale()
         db.x,db.y=x-cx/ratio,y-cy/ratio
         Apply()
     end)
-    return {Apply=Apply,Status=content.Status,content=content,lock=lock,levelingBuffs=levelingBuffs,folded=folded,visual=visual}
+    return {Apply=Apply,Status=content.Status,content=content,lock=lock,levelingBuffs=levelingBuffs,folded=folded,visual=visual,shell=shell}
 end

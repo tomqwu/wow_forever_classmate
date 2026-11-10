@@ -5,21 +5,14 @@ function NS.Folded.Create(host,content,db,module)
     local button=CreateFrame('Button',nil,host)
     button:SetSize(64,88);button:SetPoint('TOPLEFT',host,'TOPLEFT',0,0);button:RegisterForDrag('LeftButton');button:EnableMouse(true)
     local main=CreateFrame('Frame',nil,button);main:SetSize(64,64);main:SetPoint('TOPLEFT',button,'TOPLEFT',0,0)
-    local logo=main:CreateTexture(nil,'ARTWORK');logo:SetPoint('TOPLEFT',3,-3);logo:SetPoint('BOTTOMRIGHT',-3,3)
+    local logo=main:CreateTexture(nil,'ARTWORK');logo:SetPoint('TOPLEFT',3,-3);logo:SetPoint('BOTTOMRIGHT',-3,3);logo:SetTexCoord(0.08,0.92,0.08,0.92)
     local _,token=Core.Call(UnitClass,'player')
     local classIcons={WARLOCK='Spell_Shadow_DemonArmor',MAGE='Spell_Frost_FrostArmor02',PRIEST='Spell_Holy_InnerFire',
         WARRIOR='Ability_Warrior_BattleShout',ROGUE='Ability_Stealth',DRUID='Spell_Nature_Regeneration',
         HUNTER='Ability_Hunter_BeastCall',SHAMAN='Spell_Nature_LightningShield',PALADIN='Spell_Holy_DevotionAura'}
     local fallback='Interface\\Icons\\'..(classIcons[token] or 'Spell_Holy_SealOfProtection')
-    -- Pulse only a one-pixel outline, never a solid rectangle behind transparent artwork.
-    local border=CreateFrame('Frame',nil,button);border:SetSize(64,88);border:SetPoint('TOPLEFT',button,'TOPLEFT',0,0)
-    local edges={}
-    for _,side in ipairs({'TOP','BOTTOM','LEFT','RIGHT'}) do
-        local edge=border:CreateTexture(nil,'OVERLAY');edge:SetColorTexture(0.55,0.5,0.35,1)
-        edge:SetPoint(side,border,side,0,0)
-        edge:SetSize((side=='TOP' or side=='BOTTOM') and 64 or 1,(side=='TOP' or side=='BOTTOM') and 1 or 64)
-        edges[#edges+1]=edge
-    end
+    -- Both views use the same image-based frame, owned by the host.
+    local border=host.outline
     local pulse=Core.CreateWarningPulse(button,border)
     local row=CreateFrame('Button',nil,button);row:SetSize(64,24)
     row:SetPoint('TOPLEFT',main,'BOTTOMLEFT',0,0);row:RegisterForDrag('LeftButton');row:EnableMouse(true)
@@ -28,12 +21,12 @@ function NS.Folded.Create(host,content,db,module)
         local badge=row:CreateTexture(nil,'ARTWORK');badge:SetSize(20,20);badge:Hide();badges[index]=badge
     end
     local visibleWarnings={}
-    local fold=CreateFrame('Button',nil,host,'UIPanelButtonTemplate')
-    fold:SetSize(18,18);fold:SetPoint('BOTTOMRIGHT',host,'TOPRIGHT',0,3);fold:SetText('<')
+    local fold=CreateFrame('Button',nil,host.shell,'UIPanelButtonTemplate')
+    fold:SetSize(14,18);fold:SetPoint('RIGHT',host.shell,'RIGHT',-5,0);fold:SetText('<')
     fold:SetScript('OnClick',function() db.collapsed=true;module.Apply() end)
     local dragged=false
     button:SetScript('OnMouseDown',function() dragged=false end)
-    button:SetScript('OnDragStart',function() if not db.locked then dragged=true;host:StartMoving() end end)
+    button:SetScript('OnDragStart',function() if not db.locked then dragged=true;host.shell:StartMoving() end end)
     button:SetScript('OnDragStop',function() local fn=host:GetScript('OnDragStop');if fn then fn(host) end end)
     button:SetScript('OnClick',function() if not dragged then db.collapsed=false;module.Apply() end end)
     button:SetScript('OnEnter',function(self)
@@ -73,9 +66,6 @@ function NS.Folded.Create(host,content,db,module)
         logo:SetTexture(primary and Core.Icon(primary.icon) or fallback)
         local count=math.min(3,math.max(0,#visibleWarnings-1))
         row:SetShown(count>0)
-        local outlineHeight=count>0 and 88 or 64
-        border:SetSize(64,outlineHeight)
-        edges[3]:SetSize(1,outlineHeight);edges[4]:SetSize(1,outlineHeight)
         for index,badge in ipairs(badges) do
             local warning=visibleWarnings[index+1]
             badge:SetShown(index<=count)
@@ -85,11 +75,14 @@ function NS.Folded.Create(host,content,db,module)
             end
         end
         local warning=primary~=nil
-        button:SetAlpha((warning or host.hovered) and 1 or math.max(0.35,content.baseAlpha or 1))
-        for _,edge in ipairs(edges) do edge:SetColorTexture(warning and 1 or 0.55,warning and 0.6 or 0.5,warning and 0.15 or 0.35,1) end
+        local alpha=(warning or host.hovered) and 1 or (collapsed and math.max(0.35,content.baseAlpha or 1) or (content.baseAlpha or 1))
+        button:SetAlpha(alpha);fold:SetAlpha(alpha)
+        host.shell:SetBackdropColor(0.04,0.045,0.055,0.55*alpha)
+        border:SetBackdropBorderColor(warning and 1 or 0.65,warning and 0.65 or 0.65,warning and 0.2 or 0.65,0.9)
         pulse(collapsed and db.enabled and warning and db.flashMissingBuffs~=false)
+        border:SetAlpha(alpha)
     end
     host.foldRefresh=Refresh
     content:HookScript('OnHide',Refresh);content:HookScript('OnShow',Refresh)
-    return {Refresh=Refresh,button=button,fold=fold,badges=badges,border=border,primary=logo,main=main,edges=edges,row=row}
+    return {Refresh=Refresh,button=button,fold=fold,badges=badges,border=border,primary=logo,main=main,row=row}
 end

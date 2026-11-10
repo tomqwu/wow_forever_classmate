@@ -49,7 +49,7 @@ end
 
 function Tracker.Create(parent,db,module,keys,color)
     local frame=CreateFrame('Frame',nil,parent)
-    frame:SetSize(212,20);frame:SetPoint('TOPLEFT',parent,'TOPRIGHT',6,0);frame:Hide()
+    frame:SetSize(212,20);frame:SetPoint('TOPLEFT',type(parent.foldShell)=='table' and parent.foldShell or parent,'TOPRIGHT',6,0);frame:Hide()
     local background=frame:CreateTexture(nil,'BACKGROUND');background:SetAllPoints(frame)
     background:SetColorTexture(0.012,0.02,0.035,0.94)
     local heading=frame:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall')

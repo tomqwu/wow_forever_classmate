@@ -1,3 +1,12 @@
+## 0.31.4
+
+- Replaced the patchwork folded borders with one actual image-based container shared by compact and expanded views. It uses native WoW tooltip frame artwork, one translucent background, and consistent four-pixel padding.
+- Compact mode contains the main icon and warning row inside a 72 × 96 frame. Expanded mode contains the unchanged 426 × 56 bar and an internal collapse control inside a 450 × 64 frame. The control no longer floats outside the container.
+- Movement, scaling and screen clamping now apply to the shared container. Its background and outline follow fading; warning pulses affect only the image outline. Cropped icon artwork reduces nested decorative borders.
+- DoT sidebars anchor outside the container's control rail. Mail data, warning eligibility and class settings are preserved. Added compact/expanded container size regressions.
+
+Use `/reload`. Automated checks use mocked APIs; actual frame rendering still needs in-game confirmation.
+
 ## 0.31.3
 
 - Unified the folded main icon and secondary warnings under one continuous outline. The lower section is directly attached beneath the artwork, with no separate black strip or added solid backdrop. The main image remains unobscured.

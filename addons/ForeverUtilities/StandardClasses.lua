@@ -127,6 +127,7 @@ end
 
 local function CreateIndicator(module,config,host,db)
     local frame=CreateFrame('Frame',module.indicatorName,host);frame:SetSize(NS.ClassBarWidth,NS.ClassBarHeight);frame:SetPoint('TOPLEFT',host,'TOPLEFT',0,0)
+    frame.foldShell=host.shell
     local background=frame:CreateTexture(nil,'BACKGROUND');background:SetAllPoints(frame);background:SetColorTexture(0.012,0.02,0.035,0.94)
     local accent=frame:CreateTexture(nil,'ARTWORK');accent:SetPoint('TOPLEFT');accent:SetPoint('BOTTOMLEFT');accent:SetWidth(4);accent:SetColorTexture(unpack(config.color))
     local resource=MakeCell(frame,7,75);local upkeep=MakeCell(frame,82,80);local target=MakeCell(frame,162,80)
