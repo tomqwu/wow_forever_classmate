@@ -255,14 +255,17 @@ local function CreateIndicator(module,config,host,db)
 
         local upkeepTotal,upkeepActive,upkeepMissing,upkeepUnknown=0,0,0,0
         local missingBuff=false;local missingArmor=false
-        local upkeepLines={};local upkeepIcon;local upkeepDim=false
+        local upkeepLines={};local upkeepIcon;local missingIcon;local upkeepDim=false
         if db.showUpkeep~=false and config.weaponCoatings then
             local coatings=Context.WeaponCoatings()
             if coatings then
                 if coatings.equipped>0 then
                     upkeepTotal=upkeepTotal+1
                     if coatings.active>=coatings.equipped then upkeepActive=upkeepActive+1
-                    else upkeepMissing=upkeepMissing+1;upkeepDim=true;missingBuff=true end
+                    else
+                        upkeepMissing=upkeepMissing+1;upkeepDim=true;missingBuff=true
+                        missingIcon='Interface\\Icons\\Ability_Poisons'
+                    end
                     upkeepLines[#upkeepLines+1]='Weapon coatings: '..coatings.active..' / '..coatings.equipped..' active'
                 else upkeepLines[#upkeepLines+1]='Weapon coatings: no equipped weapons' end
             else upkeepTotal=upkeepTotal+1;upkeepUnknown=upkeepUnknown+1;upkeepLines[#upkeepLines+1]='Weapon coatings: unavailable' end
@@ -283,7 +286,7 @@ local function CreateIndicator(module,config,host,db)
                 elseif aura==false then
                     confirmedUpkeep[group.label]=nil
                     upkeepMissing=upkeepMissing+1;upkeepIcon=upkeepIcon or learned.icon;upkeepDim=true
-                    if group.wakeOnMissing~=false then missingBuff=true end
+                    if group.wakeOnMissing~=false then missingBuff=true;missingIcon=missingIcon or Core.Icon(learned.icon) end
                     if config.key=='warlock' and group.label=='Armor' then missingArmor=true end
                     upkeepLines[#upkeepLines+1]=group.label..': missing'
                 else
@@ -312,7 +315,7 @@ local function CreateIndicator(module,config,host,db)
         armorWarning:SetSize(upkeepIcon and 28 or 3,28)
         armorWarning:SetShown(missingBuff)
         pulseUpkeep(missingBuff and db.flashMissingBuffs~=false)
-        NS.ClassHost.SetWarning(host,'upkeep',missingBuff,upkeepIcon,missingArmor and 'Armor missing' or 'Class upkeep missing')
+        NS.ClassHost.SetWarning(host,'upkeep',missingBuff,missingIcon,missingArmor and 'Armor missing' or 'Class upkeep missing')
         local upkeepWarn=missingBuff or (inCombat and upkeepMissing>0)
         local shieldAura,protectedAbsorb,hasProtectedAbsorb
         if config.key=='mage' and db.showMageShield~=false then

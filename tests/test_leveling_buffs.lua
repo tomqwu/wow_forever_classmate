@@ -244,27 +244,63 @@ local foldInstance=NS.ClassHost.Create(foldModule,foldedDB,function(owner)
 end)
 foldModule.Apply=foldInstance.Apply;foldInstance.Apply()
 local summary=foldInstance.folded
-check(foldHost.width==64 and foldHost.height==88 and not foldInstance.visual.shown and summary.button.shown,'collapsed host is a large icon with hidden full-bar controls')
-check(summary.main.width==64 and summary.main.height==64 and summary.button.height==88 and summary.row.y==0 and summary.row.height==24 and summary.row.relative==summary.main and summary.row.relativePoint=='BOTTOMLEFT',
-    'secondary warnings occupy a connected lower section outside the complete main artwork')
+check(foldHost.width==64 and foldHost.height==64 and not foldInstance.visual.shown and summary.button.shown,'collapsed host is a square with hidden full-bar controls')
+check(summary.main.width==64 and summary.main.height==64 and summary.button.height==64,
+    'all warnings fit within the same square instead of an oversized primary and footer')
 local badges=foldInstance.levelingBuffs.indicators
 check(not badges.food.button.shown and not badges.sleepingBag.button.shown,
     'folded mode suppresses the old floating corner controls')
-check(summary.primary.texture==foldHost.foldLevelWarnings.food.icon and summary.badges[1].texture==foldHost.foldLevelWarnings.sleepingBag.icon,
-    'main warning is large native food art, with sleeping bag in the secondary row')
-check(summary.border==foldHost.outline and foldInstance.shell.width==72 and foldInstance.shell.height==96,
-    'compact components share one padded image-based container and outline')
+check(not summary.primary.shown and summary.badges[1].texture==foldHost.foldLevelWarnings.food.icon
+    and summary.badges[2].texture==foldHost.foldLevelWarnings.sleepingBag.icon
+    and summary.badges[1].width==28 and summary.badges[2].width==28,
+    'food and sleeping bag are equally sized warnings rather than primary and secondary decoration')
+check(summary.badges[2].x-summary.badges[1].x==30 and summary.badges[1].y==-18,
+    'two warnings are centered in one row with a two-pixel gap')
+check(summary.border==foldHost.outline and foldInstance.shell.width==72 and foldInstance.shell.height==72,
+    'compact warnings share one square padded image-based container and outline')
 check(foldInstance.shell.backdrop.bgFile and summary.border.backdrop.edgeFile and foldHost.relative==foldInstance.shell and foldHost.x==4,
     'one image-based shell owns frame artwork and contains the inset logical host')
 check(foldHost.hint.text=='','collapsed drag instructions stay on hover')
 NS.ClassHost.SetWarning(foldHost,'upkeep',true,777,'Armor missing')
-check(summary.primary.texture==777 and summary.badges[2].shown and summary.badges[1].width==20
-    and summary.badges[2].x-summary.badges[1].x==22,'armor takes primary position with food and sleeping warnings grouped below')
+check(summary.badges[1].texture==777 and summary.badges[3].shown and not summary.badges[4].shown
+    and summary.badges[1].width==summary.badges[3].width and summary.badges[3].x==18,
+    'armor, food and sleeping bag have equal weight with the last row centered')
 NS.ClassHost.SetWarning(foldHost,'upkeep',false,nil,'Armor missing')
-check(summary.primary.texture==foldHost.foldLevelWarnings.food.icon and not summary.badges[2].shown,'cleared armor immediately restores the next real warning')
+check(summary.badges[1].texture==foldHost.foldLevelWarnings.food.icon and not summary.badges[3].shown,
+    'cleared armor removes only its warning')
+NS.ClassHost.SetWarning(foldHost,'imbue',true,778,'Weapon imbue missing')
+NS.ClassHost.SetWarning(foldHost,'shield',true,779,'Elemental shield missing')
+check(summary.badges[4].shown and summary.badges[1].texture==778 and summary.badges[2].texture==779
+    and summary.badges[3].texture==foldHost.foldLevelWarnings.food.icon
+    and summary.badges[4].texture==foldHost.foldLevelWarnings.sleepingBag.icon,
+    'all four Shaman reminders fit without dropping or enlarging any warning')
+for _,badge in ipairs(summary.badges) do
+    check(badge.x>=0 and badge.x+badge.width<=64 and badge.y<=0 and badge.y-badge.height>=-64,
+        'every warning stays inside the compact image frame')
+end
+NS.ClassHost.SetWarning(foldHost,'imbue',false,nil,'Weapon imbue missing')
+NS.ClassHost.SetWarning(foldHost,'shield',false,nil,'Elemental shield missing')
+NS.ClassHost.SetWarning(foldHost,'upkeep',true,nil,'Class upkeep missing')
+check(summary.badges[1].texture==foldHost.foldLevelWarnings.food.icon and not summary.badges[3].shown,
+    'missing artwork cannot substitute an unrelated class icon as a warning')
+NS.ClassHost.SetWarning(foldHost,'upkeep',false,nil,'Class upkeep missing')
+foldedDB.foodXPReminder=false;foldInstance.levelingBuffs.Refresh()
+check(summary.badges[1].texture==foldHost.foldLevelWarnings.sleepingBag.icon and not summary.badges[2].shown,
+    'disabled food tracking removes its warning independently')
+foldedDB.foodXPReminder=true;combat=true
+foldInstance.levelingBuffs.controller.scripts.OnEvent(nil,'PLAYER_REGEN_DISABLED')
+check(not summary.row.shown and summary.primary.shown and summary.button.alpha==0.35,
+    'combat clears leveling warnings without retaining stale missing claims')
+combat=false;foldInstance.levelingBuffs.controller.scripts.OnEvent(nil,'PLAYER_REGEN_ENABLED')
+check(summary.badges[2].shown,'readable post-combat absence restores eligible reminders')
+auras={secret};foldInstance.levelingBuffs.Refresh()
+check(not summary.row.shown and summary.primary.shown and not summary.border.warningPulseGroup.playing,
+    'restricted aura reads cannot create warning artwork or a pulse')
 auras={{spellId=429959,name='Well-Rested'},{spellId=1248420,name='Well Fed'}}
 foldInstance.levelingBuffs.Refresh()
-check(not summary.row.shown and foldHost.height==88 and summary.main.height==64, 'unused lower section hides inside the same stable container')
+check(not summary.row.shown and summary.primary.shown and foldHost.height==64
+    and summary.primary.texture=='Interface\\AddOns\\ForeverUtilities\\Textures\\ForeverClassmate',
+    'all buffs present restores neutral addon art without a blank warning footer or implied class-buff state')
 foldInstance.shell.IsMouseOver=function() return true end
 foldHost.scripts.OnUpdate(foldHost,0.2)
 check(foldHost.hovered and summary.button.alpha==1,'hovering the container padding reveals its components')
@@ -272,7 +308,7 @@ foldInstance.shell.IsMouseOver=function() return false end
 foldHost.scripts.OnUpdate(foldHost,0.2)
 check(not foldHost.hovered and summary.button.alpha==0.35,'leaving the container restores idle icon fade')
 auras={};foldInstance.levelingBuffs.Refresh()
-check(summary.row:GetScript('OnClick')==summary.button:GetScript('OnClick'),'the separated warning row keeps the same expand action')
+check(summary.button:GetScript('OnClick')~=nil,'the entire square remains the expand control')
 local ticks=0
 foldContent:SetScript('OnUpdate',function() ticks=ticks+1 end)
 foldHost.scripts.OnUpdate(foldHost,0.3)

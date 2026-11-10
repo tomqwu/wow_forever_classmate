@@ -31,6 +31,7 @@ check(NS.L('Checks Well Fed; the hidden XP bonus is not measured. Shown below le
 check(NS.L('Cozy Sleeping Bag'),'舒适的睡袋','sleeping bag tooltip title')
 check(NS.L('Well-Rested is missing. Rest in a sleeping bag to gain the buff.'),'缺少睡袋经验增益。躺进睡袋休息即可获得。','sleeping bag missing-buff explanation')
 check(NS.L('Any active stack clears this reminder. Shown below level 60, outside combat.'),'拥有任意一层增益即隐藏提醒；仅在60级以下、脱离战斗时显示。','strict sleeping bag level and combat limits')
+check(NS.L('No confirmed missing buffs'),'未确认有缺失的增益','neutral folded-state tooltip')
 check(NS.L('No target'),'无目标','Hunter no-target label')
 check(NS.L('Ammo: 525'),'弹药：525','Hunter live ammo count')
 check(NS.L('Shooting | ~8-35 yd'),'射击范围内 | ~8-35 码','Hunter range bracket')
@@ -55,6 +56,7 @@ GetLocale=function() return 'enUS' end
 NS.L=function(value) return value end
 assert(loadfile(root..'Locale.lua'))('ForeverUtilities',NS)
 check(NS.L('Collapsed warning icon'),'Collapsed warning icon','English collapse setting')
+check(NS.L('No confirmed missing buffs'),'No confirmed missing buffs','English neutral folded-state tooltip')
 check(NS.L('No target'),'No target','English fallback')
 check(NS.L('Ammo: 525'),'Ammo: 525','English dynamic fallback')
 check(NS.L('Sleeping bag buff reminder (below level 60)'),'Sleeping bag buff reminder (below level 60)','English sleeping bag setting')

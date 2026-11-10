@@ -231,6 +231,17 @@ NS.Druid.spells={markWild={id=2101,name='Mark of the Wild',icon=62,kind='upkeep'
 C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
     if unit=='player' and filter=='HELPFUL' and index==1 then return {name='Thorns',icon=63,expirationTime=130,sourceUnit='player'} end
 end
+-- An earlier active upkeep group must not supply a later missing group's icon.
+C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
+    if unit=='player' and filter=='HELPFUL' and index==1 then return {name='Mark of the Wild',icon=62,sourceUnit='player'} end
+end
+druidIndicator.Update()
+check(named.ForeverClassmateDruidFrame.foldWarnings.upkeep.active
+    and named.ForeverClassmateDruidFrame.foldWarnings.upkeep.icon==63,
+    'folded upkeep uses missing Thorns artwork even when Mark of the Wild is active')
+C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
+    if unit=='player' and filter=='HELPFUL' and index==1 then return {name='Thorns',icon=63,expirationTime=130,sourceUnit='player'} end
+end
 local savedPowerType=UnitPowerType;UnitPowerType=nil
 local ok=pcall(druidIndicator.Update)
 check(ok and druidIndicator.cells.resource.top.text=='' and druidIndicator.cells.resource.bottom.text=='Base',

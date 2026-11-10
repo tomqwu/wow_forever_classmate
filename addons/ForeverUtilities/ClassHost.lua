@@ -87,7 +87,7 @@ function Host.Create(module,db,contentFactory)
     Apply=function()
         height=type(module.height)=='function' and module.height(db) or (module.height or 56)
         width=type(module.width)=='function' and module.width(db) or (module.width or NS.ClassBarWidth)
-        if db.collapsed then width,height=64,88 end
+        if db.collapsed then width,height=64,64 end
         shell:SetShown(db.enabled);host:SetShown(db.enabled);host:SetSize(width,height)
         shell:SetSize(width+8+(db.collapsed and 0 or 16),height+8)
         visual:SetShown(not db.collapsed)

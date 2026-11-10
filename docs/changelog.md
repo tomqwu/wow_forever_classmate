@@ -1,3 +1,12 @@
+## 0.31.5
+
+- Corrected folded warning presentation: food, sleeping bag and class upkeep use equal 28 × 28 icons in a centered two-column grid. Food no longer becomes oversized main artwork while other reminders shrink underneath it.
+- The compact image-based frame is now 72 × 72 with no empty footer. Its neutral Classmate logo appears only when there are no confirmed warnings and acts as the expand button; it makes no class-buff status claim.
+- Fixed upkeep warning artwork when an earlier buff is active and a later buff is missing. The summary now uses the missing buff's icon, and never substitutes unrelated class artwork for unavailable warning art.
+- Kept independent toggles, level limits, combat restrictions, hover reveal, full brightness for warnings and optional outline flashing. Added regressions for all four Shaman reminders, independent clearing, restricted reads, combat transitions and neutral EN/zhCN tooltip text.
+
+Use `/reload`. Automated checks use mocked APIs; actual in-game rendering still needs confirmation.
+
 ## 0.31.4
 
 - Replaced the patchwork folded borders with one actual image-based container shared by compact and expanded views. It uses native WoW tooltip frame artwork, one translucent background, and consistent four-pixel padding.
