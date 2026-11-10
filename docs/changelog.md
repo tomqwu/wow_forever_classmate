@@ -1,3 +1,11 @@
+## 0.31.2
+
+- Moved extra folded warnings into a separate row six pixels below the main icon. The main 64 × 64 artwork stays fully visible, with no warning strip or icons covering it.
+- Secondary icons are 20 × 20 with two-pixel spacing. The folded host reserves 64 × 94 pixels so the complete row stays within screen clamping. The row shares expand, hover and drag behavior with the main icon and hides when there are no additional warnings.
+- Added layout regressions for the separate row, gap, icon spacing, and reserved footprint. Existing warning logic, fading, expanded layout and preferences are preserved.
+
+Use `/reload`. Automated checks use mocked APIs; live client rendering still needs confirmation.
+
 ## 0.31.1
 
 - Reworked the cluttered collapsed icon shown in the user screenshot. The highest-priority confirmed warning now uses large native spell/food artwork; additional warnings form one bottom row. With no confirmed warnings, the icon shows class artwork.

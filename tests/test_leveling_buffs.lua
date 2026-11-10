@@ -113,7 +113,7 @@ function methods:UnregisterEvent(event) self.events[event]=nil end
 function methods:CreateTexture() return object() end
 function methods:CreateFontString() return object() end
 function methods:SetSize(w,h) self.width,self.height=w,h end
-function methods:SetPoint(point,relative,relativePoint,x,y) self.point,self.x,self.y=point,x,y end
+function methods:SetPoint(point,relative,relativePoint,x,y) self.point,self.x,self.y=point,x,y;self.relative,self.relativePoint=relative,relativePoint end
 function methods:SetAlpha(value) self.alpha=value end
 function methods:IsShown() return self.shown end
 function methods:IsVisible() return self.shown end
@@ -242,7 +242,9 @@ local foldInstance=NS.ClassHost.Create(foldModule,foldedDB,function(owner)
 end)
 foldModule.Apply=foldInstance.Apply;foldInstance.Apply()
 local summary=foldInstance.folded
-check(foldHost.width==64 and foldHost.height==64 and not foldInstance.visual.shown and summary.button.shown,'collapsed host is a large icon with hidden full-bar controls')
+check(foldHost.width==64 and foldHost.height==94 and not foldInstance.visual.shown and summary.button.shown,'collapsed host is a large icon with hidden full-bar controls')
+check(summary.button.width==64 and summary.button.height==64 and summary.row.y==-6 and summary.row.height==24 and summary.row.relative==summary.button and summary.row.relativePoint=='BOTTOMLEFT',
+    'secondary warnings occupy a separate row six pixels below the complete main icon')
 local badges=foldInstance.levelingBuffs.indicators
 check(not badges.food.button.shown and not badges.sleepingBag.button.shown,
     'folded mode suppresses the old floating corner controls')
@@ -251,9 +253,15 @@ check(summary.primary.texture==foldHost.foldLevelWarnings.food.icon and summary.
 check(summary.edges[1].width==64 and summary.edges[1].height==1 and foldHost.hint.text=='',
     'warning outline is one pixel and collapsed drag instructions are hidden')
 NS.ClassHost.SetWarning(foldHost,'upkeep',true,777,'Armor missing')
-check(summary.primary.texture==777 and summary.badges[2].shown,'armor takes primary position with food and sleeping warnings grouped below')
+check(summary.primary.texture==777 and summary.badges[2].shown and summary.badges[1].width==20
+    and summary.badges[2].x-summary.badges[1].x==22,'armor takes primary position with food and sleeping warnings grouped below')
 NS.ClassHost.SetWarning(foldHost,'upkeep',false,nil,'Armor missing')
 check(summary.primary.texture==foldHost.foldLevelWarnings.food.icon and not summary.badges[2].shown,'cleared armor immediately restores the next real warning')
+auras={{spellId=429959,name='Well-Rested'},{spellId=1248420,name='Well Fed'}}
+foldInstance.levelingBuffs.Refresh()
+check(not summary.row.shown and foldHost.height==94 and summary.button.height==64,'unused secondary row hides without resizing or moving the main icon')
+auras={};foldInstance.levelingBuffs.Refresh()
+check(summary.row:GetScript('OnClick')==summary.button:GetScript('OnClick'),'the separated warning row keeps the same expand action')
 local ticks=0
 foldContent:SetScript('OnUpdate',function() ticks=ticks+1 end)
 foldHost.scripts.OnUpdate(foldHost,0.3)

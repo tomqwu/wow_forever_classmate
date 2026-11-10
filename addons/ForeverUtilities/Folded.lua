@@ -3,7 +3,7 @@ local Core=NS.Core
 NS.Folded={}
 function NS.Folded.Create(host,content,db,module)
     local button=CreateFrame('Button',nil,host)
-    button:SetAllPoints(host);button:RegisterForDrag('LeftButton');button:EnableMouse(true)
+    button:SetSize(64,64);button:SetPoint('TOPLEFT',host,'TOPLEFT',0,0);button:RegisterForDrag('LeftButton');button:EnableMouse(true)
     local background=button:CreateTexture(nil,'BACKGROUND');background:SetAllPoints();background:SetColorTexture(0.025,0.025,0.03,0.95)
     local logo=button:CreateTexture(nil,'ARTWORK');logo:SetPoint('TOPLEFT',3,-3);logo:SetPoint('BOTTOMRIGHT',-3,3)
     local _,token=Core.Call(UnitClass,'player')
@@ -21,10 +21,12 @@ function NS.Folded.Create(host,content,db,module)
         edges[#edges+1]=edge
     end
     local pulse=Core.CreateWarningPulse(button,border)
-    local strip=button:CreateTexture(nil,'OVERLAY');strip:SetPoint('BOTTOMLEFT',2,2);strip:SetSize(60,22);strip:SetColorTexture(0.02,0.02,0.025,0.92)
+    local row=CreateFrame('Button',nil,button);row:SetSize(64,24)
+    row:SetPoint('TOPLEFT',button,'BOTTOMLEFT',0,-6);row:RegisterForDrag('LeftButton');row:EnableMouse(true)
+    local strip=row:CreateTexture(nil,'BACKGROUND');strip:SetAllPoints(row);strip:SetColorTexture(0.02,0.02,0.025,0.92)
     local badges={}
     for index=1,3 do
-        local badge=button:CreateTexture(nil,'OVERLAY',nil,1);badge:SetSize(18,18);badge:Hide();badges[index]=badge
+        local badge=row:CreateTexture(nil,'ARTWORK');badge:SetSize(20,20);badge:Hide();badges[index]=badge
     end
     local visibleWarnings={}
     local fold=CreateFrame('Button',nil,host,'UIPanelButtonTemplate')
@@ -48,6 +50,9 @@ function NS.Folded.Create(host,content,db,module)
         host.hovered=false;if GameTooltip then GameTooltip:Hide() end
         if content.baseAlpha then NS.ClassHost.SetFade(host,content,content.baseAlpha) end
     end)
+    for _,event in ipairs({'OnMouseDown','OnDragStart','OnDragStop','OnClick','OnEnter','OnLeave'}) do
+        row:SetScript(event,button:GetScript(event))
+    end
     local function Refresh()
         local collapsed=db.collapsed==true
         button:SetShown(db.enabled and collapsed)
@@ -68,13 +73,13 @@ function NS.Folded.Create(host,content,db,module)
         local primary=visibleWarnings[1]
         logo:SetTexture(primary and Core.Icon(primary.icon) or fallback)
         local count=math.min(3,math.max(0,#visibleWarnings-1))
-        strip:SetShown(count>0)
+        row:SetShown(count>0)
         for index,badge in ipairs(badges) do
             local warning=visibleWarnings[index+1]
             badge:SetShown(index<=count)
             if warning and index<=count then
                 badge:SetTexture(Core.Icon(warning.icon) or fallback)
-                badge:ClearAllPoints();badge:SetPoint('BOTTOMLEFT',button,'BOTTOMLEFT',(64-count*20)/2+(index-1)*20+1,4)
+                badge:ClearAllPoints();badge:SetPoint('TOPLEFT',row,'TOPLEFT',(64-(count*22-2))/2+(index-1)*22,-2)
             end
         end
         local warning=primary~=nil
@@ -84,5 +89,5 @@ function NS.Folded.Create(host,content,db,module)
     end
     host.foldRefresh=Refresh
     content:HookScript('OnHide',Refresh);content:HookScript('OnShow',Refresh)
-    return {Refresh=Refresh,button=button,fold=fold,badges=badges,border=border,primary=logo,strip=strip,edges=edges}
+    return {Refresh=Refresh,button=button,fold=fold,badges=badges,border=border,primary=logo,strip=strip,edges=edges,row=row}
 end
