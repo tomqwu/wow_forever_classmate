@@ -8,25 +8,43 @@ function Host.SetWarning(host,key,active,icon,label)
     if host.foldRefresh then host.foldRefresh() end
 end
 
+-- The alpha the content actually renders at. Frame art uses the same value so a
+-- leveling reminder or hover never leaves bright icons inside a faded frame.
+function Host.ContentAlpha(host,content)
+    if host.hovered==true or host.levelingBuffMissing==true then return 1 end
+    local alpha=content.baseAlpha
+    return type(alpha)=='number' and alpha or 1
+end
+
 function Host.SetFade(host,content,alpha)
     content.baseAlpha=alpha
-    content:SetAlpha((host.hovered==true or host.levelingBuffMissing==true) and 1 or alpha)
+    content:SetAlpha(Host.ContentAlpha(host,content))
+    if host.updatePolling then host.updatePolling() end
     if host.foldRefresh then host.foldRefresh() end
+end
+
+-- Native SetUserPlaced throws on a frame that is neither movable nor resizable,
+-- so the flag is cleared while movable and the final movability restored after.
+local function DetachNativePlacement(frame,movable)
+    NS.Core.Call(frame.SetDontSavePosition,frame,true)
+    frame:SetMovable(true)
+    pcall(frame.SetUserPlaced,frame,false)
+    frame:SetMovable(movable)
 end
 
 function Host.Create(module,db,contentFactory)
     local height=type(module.height)=='function' and module.height(db) or (module.height or 56)
     local width=type(module.width)=='function' and module.width(db) or (module.width or NS.ClassBarWidth)
     local shell=CreateFrame('Frame',nil,UIParent,'BackdropTemplate')
-    shell:SetDontSavePosition(true);shell:SetUserPlaced(false)
-    shell:SetFrameStrata('MEDIUM');shell:SetMovable(true);shell:SetClampedToScreen(true)
+    DetachNativePlacement(shell,true)
+    shell:SetFrameStrata('MEDIUM');shell:SetClampedToScreen(true)
     shell:SetBackdrop({bgFile='Interface\\Tooltips\\UI-Tooltip-Background',tile=true,tileSize=16})
     shell:SetBackdropColor(0.04,0.045,0.055,0.55)
     local host=CreateFrame('Frame',module.frameName,shell)
     -- Older releases let this named frame move independently. Characters may
     -- still have its position/size in layout-local.txt. SavedVariables now own
     -- placement; the host must remain an inset of the anonymous shell.
-    host:SetDontSavePosition(true);host:SetUserPlaced(false);host:SetMovable(false)
+    DetachNativePlacement(host,false)
     host.shell=shell
     local outline=CreateFrame('Frame',nil,shell,'BackdropTemplate');outline:SetAllPoints(shell)
     outline:SetBackdrop({edgeFile='Interface\\Tooltips\\UI-Tooltip-Border',edgeSize=8})
@@ -66,7 +84,8 @@ function Host.Create(module,db,contentFactory)
     local function Hover(over)
         if not db.enabled or host.hovered==over then return end
         host.hovered=over
-        if content.baseAlpha then Host.SetFade(host,content,content.baseAlpha) end
+        if content.baseAlpha then Host.SetFade(host,content,content.baseAlpha)
+        elseif host.updatePolling then host.updatePolling() end
     end
     local hoverElapsed=0
     host:SetScript('OnEnter',function() Hover(true) end)
@@ -82,6 +101,20 @@ function Host.Create(module,db,contentFactory)
         local over=MouseOver()
         if over~=nil then Hover(over) end
     end
+    -- Hover only changes anything while something is faded; collapsed hosts also
+    -- forward the hidden content updater. Otherwise no per-frame work runs.
+    local polling=false
+    host.updatePolling=function()
+        local wanted=db.enabled==true and (db.collapsed==true or host.hovered==true or Host.ContentAlpha(host,content)<1)
+        if wanted==polling then return end
+        polling=wanted;hoverElapsed=0
+        host:SetScript('OnUpdate',wanted and CheckHover or nil)
+        if wanted and not db.collapsed then
+            -- Pick up a pointer already resting on the bar when fading resumes.
+            local over=MouseOver()
+            if over~=nil then Hover(over) end
+        end
+    end
     local Apply
     lock:SetScript('OnClick',function() db.locked=not db.locked;module.Apply() end)
     lock:SetScript('OnEnter',function(self)
@@ -96,7 +129,9 @@ function Host.Create(module,db,contentFactory)
         width=type(module.width)=='function' and module.width(db) or (module.width or NS.ClassBarWidth)
         if db.collapsed then width,height=64,64 end
         shell:SetShown(db.enabled);host:SetShown(db.enabled);host:SetSize(width,height)
-        shell:SetSize(width+8+(db.collapsed and 0 or 16),height+8)
+        -- The right rail exists only to hold the collapse button.
+        local rail=not db.collapsed and NS.Folded~=nil and db.showFoldButton~=false
+        shell:SetSize(width+8+(rail and 16 or 0),height+8)
         visual:SetShown(not db.collapsed)
         shell:SetScale(db.scale);shell:ClearAllPoints();shell:SetPoint('CENTER',UIParent,'CENTER',db.x,db.y)
         host:ClearAllPoints();host:SetPoint('TOPLEFT',shell,'TOPLEFT',4,-4)
@@ -104,8 +139,8 @@ function Host.Create(module,db,contentFactory)
         for _,event in ipairs({'PLAYER_LOGIN','PLAYER_ENTERING_WORLD'}) do
             if db.enabled then host:RegisterEvent(event) else host:UnregisterEvent(event) end
         end
-        host:SetScript('OnUpdate',db.enabled and CheckHover or nil)
-        if not db.enabled then host.hovered=false;hoverElapsed=0 end
+        if not db.enabled then host.hovered=false end
+        host.updatePolling()
         host.hint:SetText((db.locked or db.collapsed) and '' or NS.L('Drag to move'))
         lock:SetShown(db.showLockButton~=false and (not module.lockVisible or module.lockVisible(db)))
         right:SetShown(db.locked)

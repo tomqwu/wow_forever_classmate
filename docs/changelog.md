@@ -1,3 +1,14 @@
+## 0.31.8
+
+- Fixed a Lua error on login in 0.31.7: `Frame:SetUserPlaced(): Frame is not movable or resizable`. The client rejects that call on a non-movable frame, which stopped the class bar from being created. The native placement flag is now cleared while the frame is movable, then the inset host is made non-movable again. Test mocks now enforce the client rule and reproduce the original error.
+- Frame art now fades with the bar's actual opacity. A sleeping bag or food reminder no longer leaves bright contents inside a faint frame.
+- The collapse control is a plain `<` glyph on the shared outline, without a second button border, and has a tooltip. Hiding it removes its empty 16-pixel rail (434 × 64 instead of 450 × 64).
+- More than four folded warnings keep the four-icon frame; the fourth icon shows a `+N` count of the hidden ones, and the tooltip still lists every warning.
+- The expanded frame outline turns amber for confirmed warnings, without a second pulse on top of the in-bar warning.
+- Hover checks now run only while the bar is collapsed, hovered or faded, instead of ten times a second whenever the class is enabled.
+
+Use `/reload`. Automated checks use mocked APIs; in-game rendering still needs confirmation.
+
 ## 0.31.7
 
 - Fixed a second position owner left over from the pre-container implementation. Native `layout-local.txt` records for the named class host could restore it away from the anonymous shell, leaving warning icons outside their border.

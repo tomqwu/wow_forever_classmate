@@ -230,12 +230,18 @@ function methods:SetTexture(value) self.texture=value end
 function methods:GetScript(event) return self.scripts[event] end
 function methods:SetBackdrop(value) self.backdrop=value end
 function methods:SetBackdropColor(...) self.backdropColor={...} end
+function methods:SetBackdropBorderColor(...) self.backdropBorderColor={...} end
 function methods:SetParent(parent) self.parent=parent end
 function methods:SetAllPoints(relative) self.allPoints=relative or self.parent end
 function methods:SetClampedToScreen(value) self.clamped=value end
 function methods:SetMovable(value) self.movable=value end
 function methods:SetDontSavePosition(value) self.dontSavePosition=value end
-function methods:SetUserPlaced(value) self.userPlaced=value end
+-- Forever 1.60 throws "Frame is not movable or resizable" here (live 0.31.7 error).
+function methods:SetUserPlaced(value)
+    if not rawget(self,'movable') and not rawget(self,'resizable') then error('Frame:SetUserPlaced(): Frame is not movable or resizable') end
+    self.userPlaced=value
+end
+function methods:SetTextColor(...) self.textColor={...} end
 assert(loadfile(root..'Folded.lua'))('ForeverUtilities',NS)
 level=59;dead=false;combat=false;auras={}
 local foldedDB={enabled=true,locked=true,x=0,y=0,scale=1,collapsed=true,flashMissingBuffs=true}
@@ -377,8 +383,47 @@ check(summary.fold.relative==foldInstance.shell and summary.fold.x==-5,'collapse
 check(foldInstance.shell.width==450 and foldInstance.shell.height==64,'expanded container reserves padding and an internal control rail')
 check(not foldedDB.collapsed and foldHost.width==426 and foldInstance.visual.shown and not summary.button.shown,
     'click expands to the original bar size')
+check(summary.fold.glyph.text=='<' and summary.fold.glyph.textColor[1]==0.8,'collapse control is a plain glyph without a second button border')
+local tooltip={}
+GameTooltip={SetOwner=function() end,SetText=function(_,text) tooltip.text=text end,AddLine=function() end,Show=function() end,Hide=function() end}
+summary.fold.scripts.OnEnter(summary.fold)
+check(tooltip.text=='Collapse to warning icons','collapse control explains itself like the lock button')
+summary.fold.scripts.OnLeave(summary.fold);GameTooltip=nil
+check(summary.border.backdropBorderColor[1]==1 and summary.border.backdropBorderColor[2]==0.65
+    and not summary.border.warningPulseGroup.playing,
+    'expanded bar warms its outline for confirmed warnings without a second pulse')
+-- Leveling reminders show full-brightness content; the frame art must match it.
+foldedDB.flashMissingBuffs=true
+check(foldHost.levelingBuffMissing and foldContent.alpha==1 and summary.fold.alpha==1 and summary.border.alpha==1,
+    'frame art follows the content alpha raised by a leveling reminder')
+auras={{spellId=429959,name='Well-Rested'},{spellId=1248420,name='Well Fed'}};foldInstance.levelingBuffs.Refresh()
+check(foldContent.alpha==0.2 and summary.fold.alpha==0.2 and summary.border.alpha==0.2
+    and summary.border.backdropBorderColor[1]==0.65,'idle expanded frame art fades with its content')
+check(foldHost.scripts.OnUpdate~=nil,'faded bar keeps hover detection')
+foldContent.Refresh=function() NS.ClassHost.SetFade(foldHost,foldContent,1) end;foldInstance.Apply()
+check(foldHost.scripts.OnUpdate==nil,'fully visible expanded bar runs no hover poll')
+foldInstance.shell.IsMouseOver=function() return true end
+foldContent.Refresh=function() NS.ClassHost.SetFade(foldHost,foldContent,0.2) end;foldInstance.Apply()
+check(foldHost.scripts.OnUpdate~=nil and foldHost.hovered and foldContent.alpha==1,
+    'resumed fading immediately honors a pointer already over the bar')
+foldInstance.shell.IsMouseOver=function() return false end;foldHost.scripts.OnUpdate(foldHost,0.2)
+check(not foldHost.hovered and foldContent.alpha==0.2,'leaving after resume restores the fade')
+foldedDB.showFoldButton=false;foldInstance.Apply()
+check(foldInstance.shell.width==434 and not summary.fold.shown,'hidden collapse button leaves no empty rail')
+foldedDB.showFoldButton=true;foldInstance.Apply()
+check(foldInstance.shell.width==450,'shown collapse button restores the control rail')
+auras={};foldInstance.levelingBuffs.Refresh()
 summary.fold.scripts.OnClick()
 check(foldedDB.collapsed and foldHost.width==66 and foldHost.height==32,'fold control collapses to the current reminder row')
+-- Six confirmed warnings: four icons, the last one counts the hidden two.
+NS.ClassHost.SetWarning(foldHost,'imbue',true,778,'Weapon imbue missing')
+NS.ClassHost.SetWarning(foldHost,'shield',true,779,'Elemental shield missing')
+NS.ClassHost.SetWarning(foldHost,'upkeep',true,777,'Armor missing')
+NS.ClassHost.SetWarning(foldHost,'aspect',true,780,'Aspect missing')
+check(summary.badges[4].shown and summary.overflow.shown and summary.overflow.text=='+2' and foldHost.width==66 and foldHost.height==66,
+    'overflow keeps the four-icon frame and counts hidden warnings')
+for _,key in ipairs({'imbue','shield','upkeep','aspect'}) do NS.ClassHost.SetWarning(foldHost,key,false,nil,'x') end
+check(not summary.overflow.shown,'overflow count clears with the extra warnings')
 foldedDB.enabled=false;foldInstance.Apply()
 check(not summary.button.shown and not summary.border.warningPulseGroup.playing,'disable clears collapsed presentation and animation')
 check(not next(foldHost.events),'disabled host unregisters native-layout lifecycle listeners')

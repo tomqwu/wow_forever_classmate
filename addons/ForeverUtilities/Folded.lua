@@ -18,9 +18,26 @@ function NS.Folded.Create(host,content,db,module)
         badge:SetTexCoord(0.08,0.92,0.08,0.92);badge:Hide();badges[index]=badge
     end
     local visibleWarnings={}
-    local fold=CreateFrame('Button',nil,host.shell,'UIPanelButtonTemplate')
-    fold:SetSize(14,18);fold:SetPoint('RIGHT',host.shell,'RIGHT',-5,0);fold:SetText('<')
+    -- More than four warnings: the tooltip lists all, the last icon counts the rest.
+    local overflow=row:CreateFontString(nil,'OVERLAY','NumberFontNormal')
+    overflow:SetPoint('BOTTOMRIGHT',badges[4],'BOTTOMRIGHT',-1,1);overflow:Hide()
+    -- A plain glyph on the shell's own outline; no second button border.
+    local fold=CreateFrame('Button',nil,host.shell)
+    fold:SetSize(14,24);fold:SetPoint('RIGHT',host.shell,'RIGHT',-5,0)
+    local glyph=fold:CreateFontString(nil,'OVERLAY','GameFontHighlight');glyph:SetPoint('CENTER',fold,'CENTER',0,0);glyph:SetText('<')
+    glyph:SetTextColor(0.8,0.85,0.9)
+    fold.glyph=glyph
     fold:SetScript('OnClick',function() db.collapsed=true;module.Apply() end)
+    fold:SetScript('OnEnter',function(self)
+        glyph:SetTextColor(1,1,1)
+        if GameTooltip then
+            GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(NS.L('Collapse to warning icons'));GameTooltip:Show()
+        end
+    end)
+    fold:SetScript('OnLeave',function()
+        glyph:SetTextColor(0.8,0.85,0.9)
+        if GameTooltip then GameTooltip:Hide() end
+    end)
     local dragged=false
     button:SetScript('OnMouseDown',function() dragged=false end)
     button:SetScript('OnDragStart',function() if not db.locked then dragged=true;host.shell:StartMoving() end end)
@@ -45,7 +62,9 @@ function NS.Folded.Create(host,content,db,module)
         button:SetShown(db.enabled and collapsed)
         fold:SetShown(db.enabled and not collapsed and db.showFoldButton~=false)
         visibleWarnings={}
-        if collapsed and db.enabled and not Core.PlayerDead() then
+        -- Collected in both views: collapsed shows the icons, expanded only
+        -- warms the outline (its slots already carry the detail and pulse).
+        if db.enabled and not Core.PlayerDead() then
             if content:IsShown() then
                 for _,key in ipairs({'upkeep','imbue','shield','aspect'}) do
                     local warning=host.foldWarnings and host.foldWarnings[key]
@@ -58,7 +77,8 @@ function NS.Folded.Create(host,content,db,module)
             end
         end
         logo:SetTexture(fallback)
-        local count=math.min(4,#visibleWarnings)
+        local total=collapsed and #visibleWarnings or 0
+        local count=math.min(4,total)
         -- Size the actual host and shell to the visible rows, not an empty
         -- square above/below them. The saved shell center remains unchanged.
         local columns=math.min(2,count)
@@ -82,8 +102,12 @@ function NS.Folded.Create(host,content,db,module)
                     (width-(lineColumns*34-2))/2+((index-1)%2)*34,-line*34)
             end
         end
-        local warning=count>0
-        local alpha=(warning or host.hovered) and 1 or (collapsed and math.max(0.35,content.baseAlpha or 1) or (content.baseAlpha or 1))
+        overflow:SetShown(total>4);overflow:SetText(total>4 and ('+'..(total-4)) or '')
+        local warning=#visibleWarnings>0
+        -- Frame art follows the content's rendered alpha. Collapsed icons keep
+        -- a readable floor and warnings stay fully visible.
+        local alpha=NS.ClassHost.ContentAlpha(host,content)
+        if collapsed then alpha=(warning or host.hovered) and 1 or math.max(0.35,alpha) end
         button:SetAlpha(alpha);fold:SetAlpha(alpha)
         host.shell:SetBackdropColor(0.04,0.045,0.055,0.55*alpha)
         border:SetBackdropBorderColor(warning and 1 or 0.65,warning and 0.65 or 0.65,warning and 0.2 or 0.65,0.9)
@@ -92,5 +116,5 @@ function NS.Folded.Create(host,content,db,module)
     end
     host.foldRefresh=Refresh
     content:HookScript('OnHide',Refresh);content:HookScript('OnShow',Refresh)
-    return {Refresh=Refresh,button=button,fold=fold,badges=badges,border=border,primary=logo,main=main,row=row}
+    return {Refresh=Refresh,overflow=overflow,button=button,fold=fold,badges=badges,border=border,primary=logo,main=main,row=row}
 end
