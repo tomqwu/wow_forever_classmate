@@ -1,3 +1,11 @@
+## 0.37.0
+
+- Standard class bars (Paladin, Warrior, Rogue, Druid, Mage, Priest, Warlock) now lead with your class crest inside the bar. It replaces the old fixed class spell icon in the resource slot, which duplicated the crest and could be mistaken for an active buff. The crest no longer also hangs outside the frame for these classes. Hunter and Shaman keep the outside crest because their first slot shows live range or totem state.
+- Slots are rebalanced so the crest and resource text share the first slot: Resource 7–96, Upkeep 96–170, Target 170–244, Ability 244–320, Racial 320–398. Slots still never shift during play.
+- Abilities and racials the client reports unusable now read **Context** in full instead of the abbreviation "Ctx".
+
+Use `/reload`. Automated checks use mocked frames; in-game rendering still needs confirmation.
+
 ## 0.36.0
 
 - The expanded bar now matches the compact card. It uses the same engraved frame, tinted in your class color, with your class crest clasping its left edge, in place of the plain tooltip border.

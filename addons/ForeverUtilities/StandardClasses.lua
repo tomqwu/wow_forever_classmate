@@ -110,7 +110,7 @@ end
 local function Paint(cell,icon,top,bottom,color,dim)
     cell.icon:SetTexture(icon);cell.icon:SetShown(icon~=nil)
     cell.icon:SetVertexColor(dim and 0.42 or 1,dim and 0.42 or 1,dim and 0.45 or 1,1)
-    local textX=icon and 31 or 3
+    local textX=icon and 31 or (type(cell.textInset)=='number' and cell.textInset or 3)
     if cell.textX~=textX then
         cell.top:ClearAllPoints();cell.top:SetPoint('TOPLEFT',cell,'TOPLEFT',textX,-8);cell.top:SetWidth(cell:GetWidth()-textX-3)
         cell.bottom:ClearAllPoints();cell.bottom:SetPoint('TOPLEFT',cell,'TOPLEFT',textX,-26);cell.bottom:SetWidth(cell:GetWidth()-textX-3)
@@ -132,11 +132,21 @@ local function CreateIndicator(module,config,host,db)
     frame.foldShell=host.shell
     local background=frame:CreateTexture(nil,'BACKGROUND');background:SetAllPoints(frame);background:SetColorTexture(0.012,0.02,0.035,0.94)
     -- The class crest and tinted frame carry identity; no separate color stripe.
-    local resource=MakeCell(frame,7,75);local upkeep=MakeCell(frame,82,80);local target=MakeCell(frame,162,80)
-    local ability=MakeCell(frame,242,80);local racial=MakeCell(frame,322,76)
+    -- Resource 7-96 | Upkeep 96-170 | Target 170-244 | Ability 244-320 | Racial 320-398.
+    local resource=MakeCell(frame,7,89);local upkeep=MakeCell(frame,96,74);local target=MakeCell(frame,170,74)
+    local ability=MakeCell(frame,244,76);local racial=MakeCell(frame,320,78)
+    -- The class crest leads the bar. It identifies the class only (never a
+    -- buff state) and stays while the resource slot hides unreadable values.
+    local crestGlow=frame:CreateTexture(nil,'BORDER');crestGlow:SetTexture(Core.Media..'Glow');crestGlow:SetSize(56,56)
+    crestGlow:SetVertexColor(config.color[1],config.color[2],config.color[3],0.45)
+    if crestGlow.SetBlendMode then crestGlow:SetBlendMode('ADD') end
+    local crest=frame:CreateTexture(nil,'ARTWORK');crest:SetSize(36,36);crest:SetPoint('LEFT',frame,'LEFT',8,0)
+    crest:SetTexture(Core.Media..'Classes\\'..module.classToken);crestGlow:SetPoint('CENTER',crest,'CENTER',0,0)
+    frame.crest=crest
+    resource.textInset=41
     if config.key=='mage' then
-        resource.meter=MakeMeter(resource,4,9,{0.2,0.65,1})
-        upkeep.meter=MakeMeter(upkeep,72,4,{0.4,0.85,1})
+        resource.meter=MakeMeter(resource,40,9,{0.2,0.65,1})
+        upkeep.meter=MakeMeter(upkeep,68,4,{0.4,0.85,1})
     end
     frame.cells={resource=resource,upkeep=upkeep,target=target,ability=ability,racial=racial}
     local armorWarning=upkeep:CreateTexture(nil,'BACKGROUND')
@@ -230,15 +240,13 @@ local function CreateIndicator(module,config,host,db)
             if shards then resourceBottom=(resourceBottom~='' and (resourceBottom..'/') or '')..'S'..shards;resourceLines[#resourceLines+1]='Soul Shards: '..shards end
         end
         resource.tooltipTitle='Player resources';resource.tooltipLines=resourceLines
-        local resourceIcon=config.icon
-        if config.resourceTextOnly then
-            resourceIcon=nil
-            resourceBottom=''
-        end
+        -- The crest replaces the old fixed class spell icon in this slot.
+        local resourceIcon=nil
+        if config.resourceTextOnly then resourceBottom='' end
         Paint(resource,resourceIcon,resourceTop,resourceBottom,config.color,power==nil and not hasProtectedPercent)
         local meterOK=false
         if config.key=='mage' then
-            resource.top:ClearAllPoints();resource.top:SetPoint('TOPLEFT',resource,'TOPLEFT',18,-17);resource.top:SetWidth(53)
+            resource.top:ClearAllPoints();resource.top:SetPoint('TOPLEFT',resource,'TOPLEFT',52,-17);resource.top:SetWidth(35)
             resource.bottom:SetText('')
             local meterValue=power and power.percent or protectedPercent
             if power or hasProtectedPercent then
@@ -383,7 +391,7 @@ local function CreateIndicator(module,config,host,db)
             abilityIcon=cue.spell.icon
             if cue.status=='ready' then abilityText='Ready';abilityColor={0.3,1,0.48}
             elseif cue.status=='cooldown' then abilityText=Context.FormatTime(cue.left) or 'CD'
-            elseif cue.status=='context' then abilityText='Ctx';abilityDim=true end
+            elseif cue.status=='context' then abilityText='Context';abilityDim=true end
             local detail=cue.status=='cooldown' and (Context.FormatTime(cue.left) or 'cooldown') or cue.status
             abilityLines[#abilityLines+1]=cue.spell.name..': '..detail
         end
@@ -404,7 +412,7 @@ local function CreateIndicator(module,config,host,db)
             local status,color
             if racialState.status=='ready' then status='Ready';color={0.3,1,0.48}
             elseif racialState.status=='cooldown' then status=Context.FormatTime(racialState.left);color={1,0.72,0.28}
-            elseif racialState.status=='context' then status='Ctx';color={0.65,0.7,0.78} end
+            elseif racialState.status=='context' then status='Context';color={0.65,0.7,0.78} end
             racial.tooltipTitle=racialState.spell.name;racial.tooltipLines={}
             for _,state in ipairs(racialStates) do
                 if state.status~='unknown' then
@@ -497,7 +505,7 @@ for token,config in pairs(configs) do
         enableLabel='Enable '..config.label:lower()..' bar',width=NS.ClassBarWidth,height=NS.ClassBarHeight,
         frameName='ForeverClassmate'..config.label..'Frame',lockName='ForeverClassmate'..config.label..'Lock',
         panelName='ForeverClassmate'..config.label..'Options',minimapName='ForeverClassmate'..config.label..'Minimap',
-        indicatorName='ForeverClassmate'..config.label..'Indicator',normalize=Normalize,options=OptionsFor(config),
+        indicatorName='ForeverClassmate'..config.label..'Indicator',normalize=Normalize,options=OptionsFor(config),innerCrest=true,
         defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showMinimap=true,groupMinimapButtons=true,minimapInspect=true,showLockButton=true,showResource=true,
             showUpkeep=true,showTarget=true,showAbilities=true,showRacial=true,showMageShield=true,flashMissingBuffs=true,sleepingBagReminder=true,foodXPReminder=true,mailRecipients=true,collapsed=false,showFoldButton=true,autoFold=false,fadeOutOfCombat=true,minimapAngle=35}}
     if config.dotKeys then module.defaults.showMultiDots=true end

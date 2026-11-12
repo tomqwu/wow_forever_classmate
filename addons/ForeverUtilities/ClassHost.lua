@@ -265,8 +265,9 @@ function Host.Create(module,db,contentFactory)
         -- The right rail exists only to hold the collapse button.
         local rail=not db.collapsed and NS.Folded~=nil and db.showFoldButton~=false
         shell:SetSize(width+8+(rail and 16 or 0),height+8)
-        -- Full bars get the crest clasp; Hunter's 42px icon mode stays bare.
-        host.outline.Layout(width+8+(rail and 16 or 0),height+8,not db.collapsed and width>=300)
+        -- Full Hunter and Shaman bars get the crest clasp; standard classes draw
+        -- the crest inside their first slot, and Hunter's 42px icon mode stays bare.
+        host.outline.Layout(width+8+(rail and 16 or 0),height+8,not db.collapsed and width>=300 and not module.innerCrest)
         visual:SetShown(not db.collapsed)
         shell:SetScale(db.scale);Host.Place(host,db)
         host:ClearAllPoints();host:SetPoint('TOPLEFT',shell,'TOPLEFT',4,-4)

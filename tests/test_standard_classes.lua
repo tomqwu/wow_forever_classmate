@@ -151,7 +151,13 @@ host.scripts.OnDragStart(host);check(rawget(host,'moving')==nil,'locked bar rema
 host.scripts.OnLeave(host);NS.Paladin.db.locked=false;NS.Paladin.Apply()
 check(rawget(indicator,'dotTracker')==nil and not NS.Paladin.db.showMultiDots,'Paladin has no DoT side strip')
 check(indicator.events.LEARNED_SPELL_IN_SKILL_LINE and not indicator.events.LEARNED_SPELL_IN_TAB,'class discovery uses the Forever learned-spell event')
-check(indicator.cells.resource.icon.width==24 and indicator.cells.resource.top.width==41,'readable icon slots fit the native-width bar')
+check(indicator.cells.resource.top.width==45 and not indicator.cells.resource.icon.shown
+    and indicator.crest.shown and indicator.crest.width==36 and indicator.crest.x==8
+    and indicator.crest.texture=='Interface\\AddOns\\ForeverUtilities\\Textures\\Classes\\PALADIN',
+    'the class crest leads the bar in place of the old class spell icon, with resource text beside it')
+check(indicator.cells.upkeep.x==96 and indicator.cells.target.x==170 and indicator.cells.ability.x==244
+    and indicator.cells.racial.x==320,'slots are rebalanced so the crest and resource text share the first slot')
+check(not host.outline.crest.shown,'standard classes do not repeat the crest outside the frame')
 check(indicator.cells.racial.x+indicator.cells.racial.width==398,'all five class slots end before the lock control')
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')
@@ -208,6 +214,10 @@ end
 NS.Paladin.db.showTarget=false;indicator.Update()
 check(targetReads==0,'disabled target block does not read target auras')
 check(not indicator.cells.target.shown and indicator.cells.ability.shown and indicator.cells.ability.top.text=='Ready','ability display remains independent of target display')
+local usableCheck=C_Spell.IsSpellUsable
+C_Spell.IsSpellUsable=function() return false,false end;indicator.Update()
+check(indicator.cells.ability.top.text=='Context','an ability the client reports unusable reads Context in full, not Ctx')
+C_Spell.IsSpellUsable=usableCheck;indicator.Update()
 NS.Paladin.db.showTarget=true
 NS.Paladin.db.showAbilities=false;indicator.Update()
 check(indicator.cells.target.shown and not indicator.cells.ability.shown and indicator.cells.target.top.text=='12s','target display remains independent of ability display')
@@ -297,7 +307,8 @@ UnitExists=function() return false end;UnitAffectingCombat=function() return fal
 mage.Update()
 check(mage.alpha==0.75,'Mage bar remains readable with no target outside combat')
 check(not mage.cells.resource.icon.shown and mage.cells.resource.top.text=='70%' and mage.cells.resource.bottom.text==''
-    and mage.cells.resource.meter.value==70 and mage.cells.resource.top.width==53,'Mage mana uses a compact vertical meter and percentage without a redundant label')
+    and mage.cells.resource.meter.value==70 and mage.cells.resource.top.width==35 and mage.crest.shown,
+    'Mage mana uses the crest, a compact vertical meter and a percentage without a redundant label')
 check(mage.cells.upkeep.icon.shown and mage.cells.upkeep.icon.texture==500,'active Mage armor keeps its own icon')
 check(not mage.cells.target.shown and not mage.cells.ability.shown,
     'empty target and ability slots disappear instead of displaying placeholder status')

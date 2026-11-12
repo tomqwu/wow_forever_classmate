@@ -375,7 +375,7 @@ local function CreateIndicator(host,db)
             local state=NS.ClassContext.BestCue(Shaman.spells,{'lightningMastery','stormstrike','totemicCall'})
             if state then
                 icon=state.spell.icon
-                local status=state.status=='ready' and 'Ready' or state.status=='context' and 'Ctx'
+                local status=state.status=='ready' and 'Ready' or state.status=='context' and 'Context'
                     or Context.FormatTime(state.left) or 'CD'
                 compactStatus=NS.L(status);helper=state.spell.name..' '..compactStatus
                 if state.ready then color={0.25,1,0.45} end
