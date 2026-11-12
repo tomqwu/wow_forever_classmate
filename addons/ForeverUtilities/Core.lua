@@ -9,6 +9,73 @@ NS.L = function(text) return text end
 NS.ClassBarWidth = 426
 NS.ClassBarHeight = 56
 
+Core.Media='Interface\\AddOns\\ForeverUtilities\\Textures\\'
+Core.Amber={1,0.85,0.45}
+
+-- Keep a decoration's visibility in step with the texture it dresses, so
+-- module code that shows/hides the original keeps working unchanged.
+local function Mirror(source,target,onChange)
+    for _,method in ipairs({'Show','Hide','SetShown'}) do
+        local original=source[method]
+        if type(original)=='function' then
+            source[method]=function(self,...)
+                original(self,...)
+                local shown=Core.Call(self.IsShown,self)==true
+                target:SetShown(shown)
+                if onChange then onChange(shown) end
+            end
+        end
+    end
+    local shown=Core.Call(source.IsShown,source)==true
+    target:SetShown(shown)
+    if onChange then onChange(shown) end
+end
+Core.Mirror=Mirror
+
+-- Turn a 1px separator into the engraved vertical divider. The original
+-- texture stays as the invisible anchor that module layouts already move.
+function Core.EngraveDivider(line,parent,tint)
+    line:SetColorTexture(0,0,0,0)
+    local art=parent:CreateTexture(nil,'ARTWORK')
+    art:SetTexture(Core.Media..'Divider');art:SetSize(6,42);art:SetPoint('CENTER',line,'CENTER',0,0)
+    -- Rotate the horizontal divider a quarter turn.
+    art:SetTexCoord(0,0,1,0,0,1,1,1)
+    local c=tint or {0.75,0.78,0.85}
+    art:SetVertexColor(c[1],c[2],c[3],0.9)
+    Mirror(line,art)
+    line.engraved=art
+    return art
+end
+
+-- Dress a solid warning square as an engraved frame with an ember halo.
+-- `cover` is an optional neutral frame on the same icon; it steps aside while
+-- the warning shows, so two frames never stack and the pulse stays visible.
+function Core.StyleWarningFrame(texture,parent,color,cover)
+    local c=color or Core.Amber
+    texture:SetTexture(Core.Media..'IconFrame');texture:SetVertexColor(c[1],c[2],c[3],1)
+    -- Above each module's dark fill, just below its icon.
+    if texture.SetDrawLayer then texture:SetDrawLayer('ARTWORK',-1) end
+    local halo=parent:CreateTexture(nil,'BORDER',nil,-8)
+    halo:SetTexture(Core.Media..'CellGlow')
+    -- Six pixels of glow on every side, following the frame as it resizes.
+    halo:SetPoint('TOPLEFT',texture,'TOPLEFT',-6,6);halo:SetPoint('BOTTOMRIGHT',texture,'BOTTOMRIGHT',6,-6)
+    local glow=color and {color[1],color[2]*0.6,color[3]*0.3} or {1,0.5,0.12}
+    halo:SetVertexColor(glow[1],glow[2],glow[3],0.6)
+    if halo.SetBlendMode then halo:SetBlendMode('ADD') end
+    Mirror(texture,halo,cover and function(shown) cover:SetAlpha(shown and 0 or 1) end)
+    texture.halo=halo
+    return halo
+end
+
+-- Neutral engraved frame around an icon, shown only while the icon shows.
+function Core.IconFrame(parent,icon,size)
+    local frame=parent:CreateTexture(nil,'OVERLAY')
+    frame:SetTexture(Core.Media..'IconFrame');frame:SetSize(size,size);frame:SetPoint('CENTER',icon,'CENTER',0,0)
+    frame:SetVertexColor(0.78,0.8,0.86,1)
+    Mirror(icon,frame)
+    return frame
+end
+
 function Core.IsReadable(value)
     return not (issecretvalue and issecretvalue(value))
 end

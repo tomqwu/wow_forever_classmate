@@ -75,10 +75,11 @@ function Buffs.Create(host,content,db)
     for _,definition in ipairs(definitions) do
         local button=CreateFrame('Button',nil,host)
         button:SetSize(16,16);button:EnableMouse(true);button:Hide()
-        local border=button:CreateTexture(nil,'BACKGROUND')
-        border:SetAllPoints();border:SetColorTexture(1,0.4,0.08,1)
+        -- Same amber cell as the compact card: engraved frame, ember halo, cropped icon.
+        local border=button:CreateTexture(nil,'ARTWORK')
+        border:SetAllPoints();Core.StyleWarningFrame(border,button)
         local icon=button:CreateTexture(nil,'ARTWORK')
-        icon:SetSize(12,12);icon:SetPoint('CENTER')
+        icon:SetSize(16,16);icon:SetPoint('CENTER');icon:SetTexCoord(0.08,0.92,0.08,0.92)
         icon:SetTexture(Core.Icon(Core.Call(C_Item and C_Item.GetItemIconByID,definition.itemID)) or definition.fallback)
         indicators[definition.key]={button=button,border=border,icon=icon,pulse=Core.CreateWarningPulse(host,border)}
         host.foldLevelWarnings[definition.key]={active=false,icon=Core.Icon(Core.Call(C_Item and C_Item.GetItemIconByID,definition.itemID)) or definition.fallback,label=definition.hint}
@@ -124,16 +125,21 @@ function Buffs.Create(host,content,db)
         local bag,food=Buffs.Missing(level,wantBag,wantFood)
         local states={sleepingBag=bag,food=food}
         host.levelingBuffMissing=false
+        local slot=0
         for index,definition in ipairs(definitions) do
             local indicator=indicators[definition.key]
             host.foldLevelWarnings[definition.key].active=db[definition.option]~=false and states[definition.key]==true
             if host.foldLevelWarnings[definition.key].active then
+                slot=slot+1
                 indicator.button:ClearAllPoints()
-                indicator.button:SetSize(db.collapsed and 20 or 16,db.collapsed and 20 or 16)
-                indicator.icon:SetSize(db.collapsed and 16 or 12,db.collapsed and 16 or 12)
+                local size=db.rangeIconOnly and 18 or 22
+                indicator.button:SetSize(size,size);indicator.icon:SetSize(size-6,size-6)
                 if db.collapsed then indicator.button:SetPoint('TOPRIGHT',host,'TOPRIGHT',-3,-3-38*(index-1))
                 elseif db.rangeIconOnly then indicator.button:SetPoint('TOPLEFT',host,'TOPRIGHT',3,-20*(index-1))
-                else indicator.button:SetPoint('TOPRIGHT',host,'TOPRIGHT',-8,1-42*(index-1)) end
+                else
+                    -- A small tab above the bar's right end, clear of the lock and slots.
+                    indicator.button:SetPoint('BOTTOMRIGHT',host,'TOPRIGHT',-26*(slot-1),10)
+                end
                 indicator.button:SetShown(not db.collapsed);indicator.pulse(not db.collapsed and db.flashMissingBuffs~=false)
                 host.levelingBuffMissing=true
             else

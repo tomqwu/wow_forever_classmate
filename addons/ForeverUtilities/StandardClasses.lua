@@ -101,8 +101,10 @@ local function MakeCell(frame,x,width)
     top:SetWidth(width-34);top:SetJustifyH('LEFT');top:SetWordWrap(false);top:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',10,'OUTLINE')
     local bottom=cell:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');bottom:SetPoint('TOPLEFT',cell,'TOPLEFT',31,-26)
     bottom:SetWidth(width-34);bottom:SetJustifyH('LEFT');bottom:SetWordWrap(false);bottom:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',9,'OUTLINE')
-    local line=frame:CreateTexture(nil,'ARTWORK');line:SetSize(1,36);line:SetPoint('RIGHT',cell,'RIGHT',0,0);line:SetColorTexture(0.6,0.7,0.85,0.18)
+    local line=frame:CreateTexture(nil,'ARTWORK');line:SetSize(1,36);line:SetPoint('RIGHT',cell,'RIGHT',0,0)
+    Core.EngraveDivider(line,frame)
     cell.icon,cell.top,cell.bottom,cell.line=icon,top,bottom,line
+    cell.iconFrame=Core.IconFrame(cell,icon,28)
     return cell
 end
 local function Paint(cell,icon,top,bottom,color,dim)
@@ -129,7 +131,7 @@ local function CreateIndicator(module,config,host,db)
     local frame=CreateFrame('Frame',module.indicatorName,host);frame:SetSize(NS.ClassBarWidth,NS.ClassBarHeight);frame:SetPoint('TOPLEFT',host,'TOPLEFT',0,0)
     frame.foldShell=host.shell
     local background=frame:CreateTexture(nil,'BACKGROUND');background:SetAllPoints(frame);background:SetColorTexture(0.012,0.02,0.035,0.94)
-    local accent=frame:CreateTexture(nil,'ARTWORK');accent:SetPoint('TOPLEFT');accent:SetPoint('BOTTOMLEFT');accent:SetWidth(4);accent:SetColorTexture(unpack(config.color))
+    -- The class crest and tinted frame carry identity; no separate color stripe.
     local resource=MakeCell(frame,7,75);local upkeep=MakeCell(frame,82,80);local target=MakeCell(frame,162,80)
     local ability=MakeCell(frame,242,80);local racial=MakeCell(frame,322,76)
     if config.key=='mage' then
@@ -139,7 +141,7 @@ local function CreateIndicator(module,config,host,db)
     frame.cells={resource=resource,upkeep=upkeep,target=target,ability=ability,racial=racial}
     local armorWarning=upkeep:CreateTexture(nil,'BACKGROUND')
     armorWarning:SetSize(28,28);armorWarning:SetPoint('LEFT',upkeep,'LEFT',1,0)
-    armorWarning:SetColorTexture(1,0.2,0.08,1);armorWarning:Hide()
+    armorWarning:Hide();Core.StyleWarningFrame(armorWarning,upkeep,nil,upkeep.iconFrame)
     upkeep.armorWarning=armorWarning
     local pulseUpkeep=Core.CreateWarningPulse(frame,armorWarning)
     local dots=config.dotKeys and NS.DotTracker.Create(frame,db,module,config.dotKeys,config.color)

@@ -143,7 +143,11 @@ local service=instance.levelingBuffs
 local bag,food=service.indicators.sleepingBag,service.indicators.food
 local function Event(event,arg) service.controller.scripts.OnEvent(service.controller,event,arg) end
 check(bag and bag.button.shown and host.levelingBuffMissing and content.alpha==1,'shared host displays the reminder at full opacity')
-check(host.width==426 and host.height==56 and bag.button.point=='TOPRIGHT','sleeping-bag reminder does not resize the full bar')
+check(host.width==426 and host.height==56 and bag.button.point=='BOTTOMRIGHT' and bag.button.relativePoint=='TOPRIGHT'
+    and bag.button.x==0 and bag.button.y==10 and bag.button.width==22,
+    'the sleeping-bag reminder sits in a tab above the bar without resizing it')
+check(bag.border.halo and bag.border.halo.shown and bag.icon.width==16,
+    'the reminder uses the amber cell with an ember halo and a 16px icon')
 check(bag.border.warningPulseGroup.playing,'missing sleeping-bag buff uses the saved flash preference')
 check(not bag.button.scripts.OnUpdate and not content.scripts.OnUpdate,'sleeping-bag checks add no polling')
 NS.ClassHost.SetFade(host,content,0.6)
@@ -179,10 +183,10 @@ check(not bag.button.shown and not host.levelingBuffMissing,'events cannot reviv
 host:Show();check(bag.button.shown,'showing the host refreshes the reminder')
 -- Each reminder can be enabled independently, and either one keeps the bar bright.
 db.rangeIconOnly=false;db.foodXPReminder=true;auras={};service.Refresh()
-check(bag.button.shown and food.button.shown and bag.button.y==1 and food.button.y==-41,
-    'both reminders fit around the lock without increasing the bar size')
-check(food.button.x==-8 and bag.button.x==-8 and host.width==426 and host.height==56,
-    'food and bag share the right edge of the unchanged bar')
+check(bag.button.shown and food.button.shown and bag.button.y==10 and food.button.y==10,
+    'both reminders share one row in the tab above the bar')
+check(bag.button.x==0 and food.button.x==-26 and host.width==426 and host.height==56,
+    'the tab packs from the right edge with a four-pixel gap, leaving the bar size unchanged')
 db.flashMissingBuffs=true;service.Refresh()
 check(food.border.warningPulseGroup.playing and bag.border.warningPulseGroup.playing,'both use the shared flash preference')
 auras={{spellId=429959,name='Well-Rested'}};service.Refresh()
@@ -294,12 +298,12 @@ check(summary.glows[1].shown and summary.glows[2].shown and not summary.glows[3]
     and summary.glows[1].width==42 and summary.glows[1].x==1 and summary.glows[1].y==-54
     and summary.halos.warningPulseGroup and summary.halos.warningPulseGroup.playing,
     'each warning cell gets a warm halo that breathes with the frame pulse')
-check(summary.border==foldHost.outline and not summary.border.shown and foldInstance.shell.backdropColor[4]==0
+check(summary.border==foldHost.outline and not summary.border.shown and foldHost.shellFill.alpha==0
     and foldInstance.shell.width==86 and foldInstance.shell.height==105,
     'the card replaces the expanded panel and outline')
 check(foldInstance.shell.point=='TOP' and foldInstance.shell.x==0 and foldInstance.shell.y==28,
     'the crest stays centered on the saved point; the card grows below it')
-check(foldInstance.shell.backdrop.bgFile and summary.border.backdrop.edgeFile and foldHost.relative==foldInstance.shell and foldHost.x==4,
+check(#summary.border.slices==9 and summary.border.slices[1].texture=='Interface\\AddOns\\ForeverUtilities\\Textures\\IconFrame' and foldHost.relative==foldInstance.shell and foldHost.x==4,
     'one image-based shell owns frame artwork and contains the inset logical host')
 check(foldInstance.shell.clamped and not rawget(foldHost,'clamped'),
     'only the outer container clamps to screen so the inset host cannot shift independently')
@@ -423,17 +427,20 @@ GameTooltip={SetOwner=function() end,SetText=function(_,text) tooltip.text=text 
 summary.fold.scripts.OnEnter(summary.fold)
 check(tooltip.text=='Collapse to warning icons','collapse control explains itself like the lock button')
 summary.fold.scripts.OnLeave(summary.fold);GameTooltip=nil
-check(summary.border.backdropBorderColor[1]==1 and summary.border.backdropBorderColor[2]==0.65
+check(summary.border.warm==true and summary.border.crest.shown and summary.border.crest.width==40
+    and summary.border.crest.texture=='Interface\\AddOns\\ForeverUtilities\\Textures\\Classes\\WARLOCK'
+    and summary.border.crest.point=='CENTER' and summary.border.crest.relativePoint=='LEFT' and summary.border.crest.x==-10
+    and summary.border.slices[1].width==12 and summary.border.slices[2].width==426
     and summary.border.shown and not summary.edges.warningPulseGroup.playing
     and foldInstance.shell.point=='CENTER' and foldInstance.shell.x==0,
-    'expanded bar warms its outline for confirmed warnings without a second pulse')
+    'the expanded engraved frame warms for warnings, without a second pulse, and the crest clasps its left edge')
 -- Leveling reminders show full-brightness content; the frame art must match it.
 foldedDB.flashMissingBuffs=true
 check(foldHost.levelingBuffMissing and foldContent.alpha==1 and summary.fold.alpha==1 and summary.border.alpha==1,
     'frame art follows the content alpha raised by a leveling reminder')
 auras={{spellId=429959,name='Well-Rested'},{spellId=1248420,name='Well Fed'}};foldInstance.levelingBuffs.Refresh()
 check(foldContent.alpha==0.2 and summary.fold.alpha==0.2 and summary.border.alpha==0.2
-    and summary.border.backdropBorderColor[1]==0.65,'idle expanded frame art fades with its content')
+    and summary.border.warm==false,'idle expanded frame art fades with its content and returns to the class tint')
 check(foldHost.scripts.OnUpdate~=nil,'faded bar keeps hover detection')
 foldContent.Refresh=function() NS.ClassHost.SetFade(foldHost,foldContent,1) end;foldInstance.Apply()
 check(foldHost.scripts.OnUpdate==nil,'fully visible expanded bar runs no hover poll')

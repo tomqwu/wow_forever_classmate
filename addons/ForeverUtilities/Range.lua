@@ -82,7 +82,11 @@ function Range.Create(host, db)
     accent:SetPoint('TOPLEFT',frame,'TOPLEFT',0,0)
     accent:SetPoint('BOTTOMLEFT',frame,'BOTTOMLEFT',0,0)
     accent:SetWidth(4)
+    -- The crest clasps this edge and the engraved range frame carries the
+    -- reach color, so the stripe stays as an invisible state holder.
+    accent:SetAlpha(0)
     local iconBorder = frame:CreateTexture(nil,'ARTWORK',nil,0)
+    iconBorder:SetTexture(NS.Core.Media..'IconFrame')
     iconBorder:SetSize(44,44); iconBorder:SetPoint('TOPLEFT',frame,'TOPLEFT',10,-6)
     local icon = frame:CreateTexture(nil,'ARTWORK',nil,1)
     icon:SetSize(38,38); icon:SetPoint('CENTER',iconBorder,'CENTER',0,0)
@@ -100,13 +104,13 @@ function Range.Create(host, db)
     local aspectNames={}
     local markBorder=frame:CreateTexture(nil,'ARTWORK',nil,0)
     markBorder:SetSize(24,24);markBorder:SetPoint('TOPLEFT',frame,'TOPLEFT',310,-27)
-    markBorder:SetColorTexture(1,0.65,0.1,1);markBorder:Hide()
+    markBorder:Hide();NS.Core.StyleWarningFrame(markBorder,frame)
     local markIcon=frame:CreateTexture(nil,'ARTWORK',nil,1)
     markIcon:SetSize(20,20);markIcon:SetPoint('CENTER',markBorder,'CENTER',0,0)
     markIcon:SetTexture('Interface\\Icons\\Ability_Hunter_SniperShot');markIcon:Hide()
     frame.markIcon=markIcon
     local aspectBorder=frame:CreateTexture(nil,'ARTWORK',nil,0)
-    aspectBorder:SetSize(24,24);aspectBorder:SetColorTexture(1,0.65,0.1,1);aspectBorder:Hide()
+    aspectBorder:SetSize(24,24);aspectBorder:Hide();NS.Core.StyleWarningFrame(aspectBorder,frame)
     local aspectIcon=frame:CreateTexture(nil,'ARTWORK',nil,1)
     aspectIcon:SetSize(20,20);aspectIcon:SetPoint('CENTER',aspectBorder,'CENTER',0,0)
     aspectIcon:SetTexture('Interface\\Icons\\Spell_Nature_RavenForm');aspectIcon:Hide()
@@ -120,7 +124,7 @@ function Range.Create(host, db)
     end
     local petHighlight=frame:CreateTexture(nil,'ARTWORK',nil,0)
     petHighlight:SetSize(44,44);petHighlight:SetPoint('RIGHT',frame,'RIGHT',-21,0)
-    petHighlight:SetColorTexture(1,0.1,0.1,1);petHighlight:Hide()
+    petHighlight:Hide();NS.Core.StyleWarningFrame(petHighlight,frame,{1,0.3,0.25})
     local portrait=frame:CreateTexture(nil,'ARTWORK',nil,1)
     portrait:SetSize(38,38);portrait:SetPoint('RIGHT',frame,'RIGHT',-24,0)
     portrait:Hide()
@@ -196,7 +200,7 @@ function Range.Create(host, db)
     local separators={}
     for _,key in ipairs({'combat','pet','inspect','control'}) do
         local line=frame:CreateTexture(nil,'ARTWORK',nil,0)
-        line:SetSize(1,36);line:SetColorTexture(0.65,0.75,0.8,0.18)
+        line:SetSize(1,36);NS.Core.EngraveDivider(line,frame)
         separators[key]=line
     end
     local layout
@@ -352,7 +356,7 @@ function Range.Create(host, db)
             label:SetShown(db.showRange~=false and (readable or text=='No target' or text=='Friendly target' or text=='Target dead'))
         end
         icon:SetVertexColor(unpack(c))
-        iconBorder:SetColorTexture(c[1],c[2],c[3],1)
+        iconBorder:SetVertexColor(c[1],c[2],c[3],1)
         accent:SetColorTexture(c[1],c[2],c[3],1)
         label:SetTextColor(1,1,1,1)
         label:SetText(NS.L(text))

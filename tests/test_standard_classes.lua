@@ -378,6 +378,18 @@ UnitAffectingCombat=function() return false end;warlock.Update()
 check(warlock.cells.upkeep.top.text=='Armor' and warlock.cells.upkeep.bottom.text=='Missing'
     and warlock.cells.upkeep.armorWarning.shown and warlock.alpha==1,
     'a readable out-of-combat absence shows an explicit armor warning at full visibility')
+local upkeepCell=warlock.cells.upkeep
+check(upkeepCell.armorWarning.texture=='Interface\\AddOns\\ForeverUtilities\\Textures\\IconFrame'
+    and upkeepCell.armorWarning.halo and upkeepCell.armorWarning.halo.shown and upkeepCell.iconFrame.alpha==0,
+    'the armor warning is an engraved amber frame with an ember halo, replacing the neutral icon frame')
+check(warlock.cells.resource.line.engraved and warlock.cells.resource.line.engraved.texture=='Interface\\AddOns\\ForeverUtilities\\Textures\\Divider'
+    and warlock.cells.resource.line.engraved.width==6,'slot separators are engraved dividers')
+upkeepCell.armorWarning:Hide()
+check(not upkeepCell.armorWarning.halo.shown and upkeepCell.iconFrame.alpha==1,'clearing the warning restores the neutral icon frame')
+upkeepCell.icon:SetShown(false)
+check(not upkeepCell.iconFrame.shown,'an icon frame never shows without its icon')
+warlock.Update()
+check(upkeepCell.armorWarning.shown and upkeepCell.armorWarning.halo.shown,'the next update restores the confirmed warning')
 NS.Warlock.db.showUpkeep=false;warlock.Update()
 check(warlock.alpha==0.6,'turning off upkeep removes the missing-buff fade override')
 NS.Warlock.db.showUpkeep=true

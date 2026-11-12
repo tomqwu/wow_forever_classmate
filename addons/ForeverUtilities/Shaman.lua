@@ -58,10 +58,12 @@ local function CreateIndicator(host,db)
     frame:SetSize(NS.ClassBarWidth,NS.ClassBarHeight);frame:SetPoint('TOPLEFT',host,'TOPLEFT',0,0)
     local background=frame:CreateTexture(nil,'BACKGROUND');background:SetAllPoints(frame)
     background:SetColorTexture(0.018,0.018,0.02,0.94)
-    local accent=frame:CreateTexture(nil,'ARTWORK');accent:SetPoint('TOPLEFT');accent:SetPoint('BOTTOMLEFT')
-    accent:SetWidth(4);accent:SetColorTexture(0.2,0.65,1,1)
+    -- The class crest and tinted frame carry identity; no separate color stripe.
     local separators={}
-    for i=1,2 do local line=frame:CreateTexture(nil,'ARTWORK');line:SetSize(1,36);line:SetColorTexture(0.7,0.7,0.72,0.22);separators[i]=line end
+    for i=1,2 do
+        local line=frame:CreateTexture(nil,'ARTWORK');line:SetSize(1,36);separators[i]=line
+        Core.EngraveDivider(line,frame)
+    end
 
     local elementInfo={
         {slot=2,label='Earth',color={0.72,0.55,0.3},fallback='Interface\\Icons\\Spell_Nature_StoneClawTotem'},
@@ -80,7 +82,10 @@ local function CreateIndicator(host,db)
         timer:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',10,'OUTLINE')
         local badge=button:CreateFontString(nil,'OVERLAY','GameFontNormalSmall');badge:SetPoint('TOPLEFT',button,'TOPLEFT',3,-2)
         badge:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',9,'OUTLINE')
-        return {button=button,background=background,stripe=stripe,icon=icon,timer=timer,badge=badge}
+        -- Engraved frame around every cell; it warms for a confirmed missing buff.
+        local edge=button:CreateTexture(nil,'OVERLAY',nil,-1);edge:SetAllPoints();edge:SetTexture(Core.Media..'IconFrame')
+        edge:SetVertexColor(0.78,0.8,0.86,1)
+        return {button=button,background=background,stripe=stripe,icon=icon,timer=timer,badge=badge,edge=edge}
     end
     for i,info in ipairs(elementInfo) do
         local cell=MakeCell(38);cell.info=info;totemCells[i]=cell
@@ -324,6 +329,7 @@ local function CreateIndicator(host,db)
             local warn=next(imbueNames)~=nil and not imbue.active
             imbueWarn=warn
             weapon.stripe:SetColorTexture(warn and 1 or 0.25,warn and 0.15 or 0.75,warn and 0.1 or 1,1)
+            if warn then weapon.edge:SetVertexColor(unpack(Core.Amber)) else weapon.edge:SetVertexColor(0.78,0.8,0.86,1) end
         end
         NS.ClassHost.SetWarning(host,'imbue',imbueWarn,imbue and imbue.icon,'Weapon imbue missing')
         pulseWeapon(imbueWarn and db.flashMissingBuffs~=false)
@@ -341,6 +347,7 @@ local function CreateIndicator(host,db)
             shield.badge:SetText(count and count>0 and tostring(count) or '')
             shield.timer:SetText(type(aura)=='table' and NS.L(Context.FormatTime(aura.left) or '') or '')
             shield.stripe:SetColorTexture(missingShield and 1 or 0.25,missingShield and 0.15 or 0.75,missingShield and 0.1 or 1,1)
+            if missingShield then shield.edge:SetVertexColor(unpack(Core.Amber)) else shield.edge:SetVertexColor(0.78,0.8,0.86,1) end
         end
         local inCombat=Core.Call(UnitAffectingCombat,'player')==true
         local hasTarget=Core.Call(UnitExists,'target')==true

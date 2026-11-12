@@ -189,9 +189,9 @@ function NS.Folded.Create(host,content,db,module)
         if collapsed then alpha=(warning or host.hovered) and 1 or math.max(0.8,alpha) end
         button:SetAlpha(alpha);fold:SetAlpha(alpha)
         -- The compact card brings its own frame; the expanded shell panel is hidden.
-        host.shell:SetBackdropColor(0.04,0.045,0.055,collapsed and 0 or 0.55*alpha)
+        if host.shellFill then host.shellFill:SetAlpha(collapsed and 0 or alpha) end
         border:SetShown(not collapsed)
-        border:SetBackdropBorderColor(warning and 1 or 0.65,warning and 0.65 or 0.65,warning and 0.2 or 0.65,0.9)
+        if border.SetWarm then border.SetWarm(warning) end
         pulse(collapsed and db.enabled and warning and db.flashMissingBuffs~=false)
         border:SetAlpha(alpha)
     end

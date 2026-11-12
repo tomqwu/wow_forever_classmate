@@ -26,6 +26,7 @@ function methods:SetTexture(v) self.texture=v end
 function methods:SetAlpha(v) self.alpha=v end
 function methods:SetDesaturated(v) self.desaturated=v end
 function methods:SetColorTexture(r,g,b,a) self.color={r,g,b,a} end
+function methods:SetVertexColor(r,g,b,a) self.vertexColor={r,g,b,a} end
 function methods:SetMovable(v) self.movable=v end
 function methods:StartMoving() self.moving=true end
 function methods:StopMovingOrSizing() self.moving=false end
@@ -296,12 +297,17 @@ indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD')
 local weaponPulse=indicator.weaponCell.stripe.warningPulseGroup
 check(weaponPulse.playing and indicator.alpha==1,
     'confirmed missing weapon imbue pulses and keeps Shaman readable outside combat')
+check(indicator.weaponCell.edge.texture=='Interface\\AddOns\\ForeverUtilities\\Textures\\IconFrame'
+    and indicator.weaponCell.edge.vertexColor[1]==1 and indicator.weaponCell.edge.vertexColor[2]==0.85,
+    'the missing-imbue cell warms its engraved frame to amber')
 C_Item.GetWeaponEnchantInfo=function() return {{hasEnchant=true,timeLeft=10000}} end
 UnitAffectingCombat=function() return true end
 C_UnitAuras.GetAuraDataByIndex=function() end
 indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')
 local shieldPulse=indicator.shieldCell.stripe.warningPulseGroup
 check(not weaponPulse.playing and shieldPulse.playing,'restored imbue stops its pulse while a confirmed missing shield pulses')
+check(indicator.weaponCell.edge.vertexColor[1]==0.78 and indicator.shieldCell.edge.vertexColor[2]==0.85,
+    'the restored imbue frame returns to neutral while the missing shield frame turns amber')
 C_UnitAuras.GetAuraDataByIndex=function() return {name=secret} end
 indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')
 check(not shieldPulse.playing,'restricted shield data immediately stops flashing')

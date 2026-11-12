@@ -1,3 +1,13 @@
+## 0.36.0
+
+- The expanded bar now matches the compact card. It uses the same engraved frame, tinted in your class color, with your class crest clasping its left edge, in place of the plain tooltip border.
+- Engraved dividers replace the thin grey separators, and slot icons sit in matching engraved frames.
+- Warnings use the amber frame and ember halo everywhere: missing armor and other upkeep, Hunter's Mark and aspect, and Shaman imbue and shield cells. Pet warnings stay red. The whole frame warms to amber while a warning is confirmed.
+- Food and sleeping bag reminders moved out of the cramped corner by the lock into a small tab of amber cells above the bar's right end.
+- Slot positions, the 426 × 56 bar size, warning rules and settings are unchanged.
+
+Use `/reload`. Automated checks use mocked frames; in-game rendering still needs confirmation.
+
 ## 0.35.0
 
 - New: **Group addon minimap buttons** (on by default, per class). Other addons' minimap buttons move into a framed tray behind the Classmate button, so it is the only icon around the map.

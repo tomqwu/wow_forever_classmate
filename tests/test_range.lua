@@ -65,6 +65,7 @@ function methods:CreateTexture()
  self.textures=rawget(self,"textures") or {};table.insert(self.textures,texture);return texture
 end
 function methods:SetColorTexture(r,g,b,a) self.color={r,g,b,a} end
+function methods:SetVertexColor(r,g,b,a) self.color={r,g,b,a} end
 function methods:CreateFontString() local f=setmetatable({}, {__index=methods});self.labels=rawget(self,'labels') or {};table.insert(self.labels,f);self.label=self.labels[1];return f end
 function methods:SetText(t) self.text=t end
 function methods:SetShown(v) self.shown=v end

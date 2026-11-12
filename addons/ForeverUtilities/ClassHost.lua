@@ -117,24 +117,68 @@ local function CreateTransition(shell,classToken)
     return transition
 end
 
+-- Engraved class-tinted nine-slice around the expanded bar, drawn above its
+-- content edges, with the class crest clasping the left side.
+function Host.CreateFrameArt(shell,classToken)
+    local media=NS.Core.Media
+    local art=CreateFrame('Frame',nil,shell);art:SetAllPoints(shell)
+    local base=shell.GetFrameLevel and shell:GetFrameLevel()
+    if type(base)=='number' and art.SetFrameLevel then art:SetFrameLevel(base+20) end
+    local color=NS.Folded and NS.Folded.ClassColors and NS.Folded.ClassColors[classToken] or {0.8,0.8,0.8}
+    local tint={0.55+0.45*color[1],0.55+0.45*color[2],0.55+0.45*color[3]}
+    art.slices={}
+    local k=12/64
+    for _,y in ipairs({{'TOP',0,k},{'MIDDLE',k,1-k},{'BOTTOM',1-k,1}}) do
+        for _,x in ipairs({{'LEFT',0,k},{'CENTER',k,1-k},{'RIGHT',1-k,1}}) do
+            local slice=art:CreateTexture(nil,'BORDER');slice:SetTexture(media..'IconFrame')
+            slice:SetTexCoord(x[2],x[3],y[2],y[3]);slice.column,slice.row=x[1],y[1]
+            art.slices[#art.slices+1]=slice
+        end
+    end
+    local glow=art:CreateTexture(nil,'ARTWORK',nil,-1);glow:SetTexture(media..'Glow');glow:SetSize(60,60)
+    glow:SetVertexColor(color[1],color[2],color[3],0.5)
+    if glow.SetBlendMode then glow:SetBlendMode('ADD') end
+    -- The crest identifies the class only; it never represents buff state.
+    local crest=art:CreateTexture(nil,'ARTWORK');crest:SetSize(40,40)
+    crest:SetTexture(classToken and (media..'Classes\\'..classToken) or (media..'ForeverClassmate'))
+    crest:SetPoint('CENTER',art,'LEFT',-10,0);glow:SetPoint('CENTER',crest,'CENTER',0,0)
+    art.crest,art.crestGlow=crest,glow
+    function art.SetWarm(warm)
+        local c=warm and NS.Core.Amber or tint
+        for _,slice in ipairs(art.slices) do slice:SetVertexColor(c[1],c[2],c[3],1) end
+        art.warm=warm==true
+    end
+    function art.Layout(width,height,showCrest)
+        for _,slice in ipairs(art.slices) do
+            local w=slice.column=='CENTER' and width-24 or 12
+            local h=slice.row=='MIDDLE' and height-24 or 12
+            local sx=slice.column=='LEFT' and 0 or (slice.column=='CENTER' and 12 or width-12)
+            local sy=slice.row=='TOP' and 0 or (slice.row=='MIDDLE' and 12 or height-12)
+            slice:SetSize(w,h);slice:ClearAllPoints();slice:SetPoint('TOPLEFT',art,'TOPLEFT',sx,-sy)
+        end
+        crest:SetShown(showCrest);glow:SetShown(showCrest)
+    end
+    art.SetWarm(false)
+    return art
+end
+
 function Host.Create(module,db,contentFactory)
     local height=type(module.height)=='function' and module.height(db) or (module.height or 56)
     local width=type(module.width)=='function' and module.width(db) or (module.width or NS.ClassBarWidth)
-    local shell=CreateFrame('Frame',nil,UIParent,'BackdropTemplate')
+    local shell=CreateFrame('Frame',nil,UIParent)
     DetachNativePlacement(shell,true)
     shell:SetFrameStrata('MEDIUM');shell:SetClampedToScreen(true)
-    shell:SetBackdrop({bgFile='Interface\\Tooltips\\UI-Tooltip-Background',tile=true,tileSize=16})
-    shell:SetBackdropColor(0.04,0.045,0.055,0.55)
+    -- Dark well behind the bar and its control rail.
+    local fill=shell:CreateTexture(nil,'BACKGROUND')
+    fill:SetPoint('TOPLEFT',shell,'TOPLEFT',3,-3);fill:SetPoint('BOTTOMRIGHT',shell,'BOTTOMRIGHT',-3,3)
+    fill:SetColorTexture(0.03,0.03,0.035,0.9)
     local host=CreateFrame('Frame',module.frameName,shell)
     -- Older releases let this named frame move independently. Characters may
     -- still have its position/size in layout-local.txt. SavedVariables now own
     -- placement; the host must remain an inset of the anonymous shell.
     DetachNativePlacement(host,false)
-    host.shell=shell
-    local outline=CreateFrame('Frame',nil,shell,'BackdropTemplate');outline:SetAllPoints(shell)
-    outline:SetBackdrop({edgeFile='Interface\\Tooltips\\UI-Tooltip-Border',edgeSize=8})
-    outline:SetBackdropBorderColor(0.65,0.65,0.65,0.85)
-    host.outline=outline
+    host.shell=shell;host.shellFill=fill
+    host.outline=Host.CreateFrameArt(shell,module.classToken)
     local transition=CreateTransition(shell,module.classToken)
     host.transition=transition
     shell:HookScript('OnHide',transition.Stop)
@@ -221,6 +265,8 @@ function Host.Create(module,db,contentFactory)
         -- The right rail exists only to hold the collapse button.
         local rail=not db.collapsed and NS.Folded~=nil and db.showFoldButton~=false
         shell:SetSize(width+8+(rail and 16 or 0),height+8)
+        -- Full bars get the crest clasp; Hunter's 42px icon mode stays bare.
+        host.outline.Layout(width+8+(rail and 16 or 0),height+8,not db.collapsed and width>=300)
         visual:SetShown(not db.collapsed)
         shell:SetScale(db.scale);Host.Place(host,db)
         host:ClearAllPoints();host:SetPoint('TOPLEFT',shell,'TOPLEFT',4,-4)
