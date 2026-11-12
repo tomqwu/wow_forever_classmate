@@ -62,7 +62,7 @@ GetTime=function() return now end
 GetTotemInfo=function() return false,'',0,0,0 end
 GetTotemTimeLeft=function() return 0 end
 GetInventoryItemID=function() return nil end
-Enum={WeaponSlot={MainHand=0},SpellBookSpellBank={Player=0}}
+Enum={WeaponSlot={MainHand=0,OffHand=1},SpellBookSpellBank={Player=0}}
 C_Item={GetWeaponEnchantInfo=function() return {} end}
 local book={
     [1]={spellID=1001,name='Maelstrom Weapon',iconID=501,isPassive=true},
@@ -312,6 +312,23 @@ check(indicator.weaponCell.edge.vertexColor[1]==0.78 and indicator.shieldCell.ed
 C_UnitAuras.GetAuraDataByIndex=function() return {name=secret} end
 indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')
 check(not shieldPulse.playing,'restricted shield data immediately stops flashing')
+-- Charges show on the main-hand cell; an imbued off hand appears only in the tooltip.
+C_Item.GetWeaponEnchantInfo=function(slot) return {{hasEnchant=true,timeLeft=slot==Enum.WeaponSlot.OffHand and 120000 or 300000,charges=3}} end
+indicator.Refresh()
+local lines={}
+GameTooltip={SetOwner=function() end,SetText=function(_,t) lines[#lines+1]=t end,AddLine=function(_,t) lines[#lines+1]=t end,Show=function() end,Hide=function() end}
+indicator.weaponCell.button.scripts.OnEnter(indicator.weaponCell.button)
+local text=table.concat(lines,'\n');GameTooltip=nil
+check(indicator.weaponCell.badge.text=='3' and text:find('Charges: 3',1,true) and text:find('Off-hand imbue active — 2m',1,true),
+    'imbue charges show on the cell and an imbued off hand is listed in the tooltip')
+C_Item.GetWeaponEnchantInfo=function(slot) if slot==Enum.WeaponSlot.OffHand then return {{hasEnchant=false}} end return {{hasEnchant=true,timeLeft=300000}} end
+indicator.Refresh()
+check(indicator.weaponCell.badge.text=='' and indicator.weaponCell.edge.vertexColor[1]==0.78,
+    'an un-imbued off hand (possibly a shield) never creates a warning')
+local savedSlots=Enum.WeaponSlot;Enum.WeaponSlot={MainHand=0}
+check(NS.ShamanContext.WeaponImbue(true)==nil and NS.ShamanContext.WeaponImbue().active,
+    'a client without an off-hand slot enum reports nothing for the off hand, never the main hand')
+Enum.WeaponSlot=savedSlots
 C_Item.GetWeaponEnchantInfo=function() return {} end
 C_UnitAuras.GetAuraDataByIndex=function() end
 db.flashMissingBuffs=false;indicator.Refresh()

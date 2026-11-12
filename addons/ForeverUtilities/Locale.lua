@@ -23,7 +23,7 @@ local zh={
     ['Shooting']='射击范围内',['Too far']='太远',['Distance']='距离',
     ['Out of range']='超出射程',['Target']='目标',['Enemy']='敌人',
     ['Ready']='就绪',['None']='无',['Effect']='效果',['Ability']='技能',
-    ['Racial']='种族技能',['Ctx']='条件不符',['Context']='条件不符',
+    ['Racial']='种族技能',['Active']='生效中',['All active']='全部生效',['combo']='连击',['shard']='碎片',['shards']='碎片',['Poison']='毒药',['Main-hand poison']='主手毒药',['Off-hand poison']='副手毒药',['left']='左',['right']='右',['Remaining: ']='剩余：',['Charges: ']='次数：',['Off-hand imbue active']='副手武器附魔生效',['Ctx']='条件不符',['Context']='条件不符',
     ['active']='生效中',['inactive']='未生效',['missing']='缺失',['unavailable']='不可用',
     ['ready']='就绪',['cooldown']='冷却中',['context']='条件不符',
     ['hidden']='已隐藏',['found']='已找到',['not found']='未找到',

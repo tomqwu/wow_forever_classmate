@@ -150,7 +150,7 @@ function Range.Create(host, db)
         elseif moodValue==2 then moodIcon:SetTexCoord(0.1875,0.375,0,0.359375) end
     end
     local angleLabel=frame:CreateFontString(nil,'OVERLAY','GameFontHighlight')
-    angleLabel:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',12,'OUTLINE')
+    angleLabel:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',10,'OUTLINE')
     angleLabel:SetJustifyH('LEFT');angleLabel:SetWordWrap(false)
     angleLabel:SetTextColor(0.9,0.93,1)
     angleLabel:SetPoint('TOPLEFT',frame,'TOPLEFT',190,-33)
@@ -281,7 +281,13 @@ function Range.Create(host, db)
         angleLabel:SetShown(db.showAngle~=false)
         if db.showAngle~=false then
             local angle=NS.TargetContext.ReadAngle()
-            angleLabel:SetText(Core.IsNumber(angle) and string.format('%+.0f°',angle) or '')
+            -- "12° left" / "12° right" reads better than a bare signed angle.
+            local text=''
+            if Core.IsNumber(angle) then
+                local degrees=math.floor(math.abs(angle)+0.5)
+                text=(degrees==0 or degrees==180) and (degrees..'°') or (degrees..'° '..NS.L(angle>0 and 'left' or 'right'))
+            end
+            angleLabel:SetText(text)
         end
     end
     local spells, shot, elapsed = {}, nil, 0

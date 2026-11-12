@@ -57,11 +57,11 @@ before the lock control:
 
 | Slot | Bounds | Visible status |
 | --- | --- | --- |
-| Resource | 7–82 | Percentage plus form, combo, health, or shard state (text only) |
-| Upkeep | 82–162 | Confirmed active/required count or missing state |
-| Target | 162–242 | Own confirmed target-effect timer, stacks, or absence |
-| Ability | 242–322 | Proc stacks/timer or learned ability readiness |
-| Racial | 322–398 | Best learned active-racial state |
+| Resource | 7–82 | Percentage, then the stance/form name, `3 combo`, or `5 shards` (text only) |
+| Upkeep | 82–162 | `Missing` + the missing buff's name; or one active buff's time + name; or `2/2` + `All active` (Warlock: demon health) |
+| Target | 162–242 | Own target-effect timer, stacks, or `None`, with the effect name below |
+| Ability | 242–322 | Proc stacks/timer or learned ability readiness, with the spell name below |
+| Racial | 322–398 | Best learned active-racial state, with the racial's name below |
 | Control | 400–420 | Shared lock button |
 
 Every full bar's 44 × 44 class crest is centered on the frame's left edge, half outside and half inside. First content starts 20px into the bar to clear it: Hunter's range icon (text at 76), Shaman's first totem, and the standard resource text (Mage meter at 22). Standard resource slots are text only; the old fixed class spell icon is gone. Mage uses a 9px vertical mana meter in the resource slot. An active Mana Shield or Ice Barrier uses a 4px coverage meter in upkeep, showing total absorbs against maximum health when the client exposes those values. Armor details remain on hover. This coverage is not a percentage of the shield’s original capacity.

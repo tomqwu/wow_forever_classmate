@@ -219,18 +219,23 @@ local function CreateIndicator(module,config,host,db)
         elseif hasProtectedPercent then resourceLines[#resourceLines+1]='Percentage is displayed by the client; exact values are restricted.'
         else resourceLines[#resourceLines+1]='The client did not expose a readable resource value.' end
         if db.showResource~=false and config.showCombo then
-            local cp=Context.ComboPoints();resourceBottom=cp and ('CP'..cp) or ''
+            local cp=Context.ComboPoints();resourceBottom=cp and (cp..' '..NS.L('combo')) or ''
             if cp then resourceLines[#resourceLines+1]='Combo points: '..cp..' / 5' end
         elseif db.showResource~=false and config.showForm then
-            local form=Context.Form();resourceBottom=form and 'Form' or 'Base'
+            -- The client's own stance or form name; nothing when in no form.
+            local form=Context.Form();resourceBottom=form and form.name or ''
             if form then resourceLines[#resourceLines+1]='Form or stance: '..form.name end
         elseif db.showResource~=false and config.showHealth then
-            local hp=Context.HealthPercent('player');resourceBottom=hp and ('H'..hp) or ''
+            -- Health stays in the tooltip; the bar line carries the class resource.
+            local hp=Context.HealthPercent('player')
             if hp then resourceLines[#resourceLines+1]='Health: '..hp..'%' end
         end
         if db.showResource~=false and config.showShards then
             local shards=Context.ItemCount('Soul Shard')
-            if shards then resourceBottom=(resourceBottom~='' and (resourceBottom..'/') or '')..'S'..shards;resourceLines[#resourceLines+1]='Soul Shards: '..shards end
+            if shards then
+                resourceBottom=(resourceBottom~='' and (resourceBottom..' · ') or '')..shards..' '..NS.L(shards==1 and 'shard' or 'shards')
+                resourceLines[#resourceLines+1]='Soul Shards: '..shards
+            end
         end
         resource.tooltipTitle='Player resources';resource.tooltipLines=resourceLines
         -- The clasped crest replaces the old fixed class spell icon here.
@@ -259,17 +264,34 @@ local function CreateIndicator(module,config,host,db)
         local upkeepTotal,upkeepActive,upkeepMissing,upkeepUnknown=0,0,0,0
         local missingBuff=false;local missingArmor=false
         local upkeepLines={};local upkeepIcon;local missingIcon;local upkeepDim=false
+        -- Names for the bar itself: what is missing, or what is keeping it green.
+        local missingNames,activeList={},{}
+        local petHealth
         if db.showUpkeep~=false and config.weaponCoatings then
             local coatings=Context.WeaponCoatings()
             if coatings then
                 if coatings.equipped>0 then
                     upkeepTotal=upkeepTotal+1
-                    if coatings.active>=coatings.equipped then upkeepActive=upkeepActive+1
+                    if coatings.active>=coatings.equipped then
+                        upkeepActive=upkeepActive+1
+                        local soonest
+                        for _,left in ipairs({coatings.mainLeft or math.huge,coatings.offLeft or math.huge}) do
+                            if left<math.huge and (not soonest or left<soonest) then soonest=left end
+                        end
+                        activeList[#activeList+1]={name=NS.L('Poison'),left=soonest}
                     else
                         upkeepMissing=upkeepMissing+1;upkeepDim=true;missingBuff=true
                         missingIcon='Interface\\Icons\\Ability_Poisons'
+                        if coatings.mainEquipped and not coatings.main then missingNames[#missingNames+1]=NS.L('Main-hand poison') end
+                        if coatings.offEquipped and not coatings.off then missingNames[#missingNames+1]=NS.L('Off-hand poison') end
                     end
                     upkeepLines[#upkeepLines+1]='Weapon coatings: '..coatings.active..' / '..coatings.equipped..' active'
+                    for _,hand in ipairs({{'main','Main hand'},{'off','Off hand'}}) do
+                        if coatings[hand[1]..'Equipped'] then
+                            local left=coatings[hand[1]..'Left']
+                            upkeepLines[#upkeepLines+1]=hand[2]..': '..(coatings[hand[1]] and ((left and Context.FormatTime(left)) or 'active') or 'no poison')
+                        end
+                    end
                 else upkeepLines[#upkeepLines+1]='Weapon coatings: no equipped weapons' end
             else upkeepTotal=upkeepTotal+1;upkeepUnknown=upkeepUnknown+1;upkeepLines[#upkeepLines+1]='Weapon coatings: unavailable' end
         end
@@ -283,12 +305,14 @@ local function CreateIndicator(module,config,host,db)
                 end
                 if type(aura)=='table' then
                     upkeepActive=upkeepActive+1;upkeepIcon=upkeepIcon or aura.icon or learned.icon
+                    activeList[#activeList+1]={name=aura.name,left=aura.left}
                     confirmedUpkeep[group.label]={name=aura.name,icon=Core.Icon(aura.icon) or Core.Icon(learned.icon)}
                     local remaining=Context.FormatTime(aura.left)
                     upkeepLines[#upkeepLines+1]=group.label..': '..aura.name..(remaining and (' '..remaining) or ' active')
                 elseif aura==false then
                     confirmedUpkeep[group.label]=nil
                     upkeepMissing=upkeepMissing+1;upkeepIcon=upkeepIcon or learned.icon;upkeepDim=true
+                    missingNames[#missingNames+1]=learned.name
                     if group.wakeOnMissing~=false then missingBuff=true;missingIcon=missingIcon or Core.Icon(learned.icon) end
                     if config.key=='warlock' and group.label=='Armor' then missingArmor=true end
                     upkeepLines[#upkeepLines+1]=group.label..': missing'
@@ -305,15 +329,27 @@ local function CreateIndicator(module,config,host,db)
             upkeepTotal=upkeepTotal+1
             local petExists=Core.Call(UnitExists,'pet')
             local petDead;if petExists==true then petDead=Core.Call(UnitIsDead,'pet') end
-            if petExists==true and petDead==false then upkeepActive=upkeepActive+1;upkeepLines[#upkeepLines+1]='Demon: active'
-            elseif petExists==false or petDead==true then upkeepMissing=upkeepMissing+1;upkeepDim=true;upkeepLines[#upkeepLines+1]='Demon: missing'
+            if petExists==true and petDead==false then
+                upkeepActive=upkeepActive+1
+                petHealth=Context.HealthPercent('pet')
+                upkeepLines[#upkeepLines+1]='Demon: active'..(petHealth and (' ('..petHealth..'% health)') or '')
+            elseif petExists==false or petDead==true then
+                upkeepMissing=upkeepMissing+1;upkeepDim=true;upkeepLines[#upkeepLines+1]='Demon: missing'
+                missingNames[#missingNames+1]=NS.L('Demon')
             else upkeepUnknown=upkeepUnknown+1;upkeepLines[#upkeepLines+1]='Demon: unavailable' end
         end
-        local upkeepTop=upkeepUnknown>0 and '' or (upkeepTotal>0 and (upkeepActive..'/'..upkeepTotal) or '')
-        local upkeepBottom=upkeepMissing>0 and ('!'..upkeepMissing) or (upkeepUnknown>0 and '' or (upkeepTotal>0 and 'OK' or ''))
-        -- The armor reminder stays explicit even if another upkeep reading (for
-        -- example demon existence) is unavailable; no aggregate count is implied.
-        if missingArmor then upkeepTop='Armor';upkeepBottom='Missing' end
+        -- Name what is missing first; otherwise name what keeps upkeep green.
+        -- An unavailable reading never produces a count or an all-clear.
+        local upkeepTop,upkeepBottom='',''
+        if upkeepMissing>0 and #missingNames>0 then
+            upkeepTop='Missing'
+            upkeepBottom=missingNames[1]..(#missingNames>1 and (' +'..(#missingNames-1)) or '')
+        elseif upkeepUnknown==0 and upkeepTotal==1 and #activeList==1 then
+            upkeepTop=Context.FormatTime(activeList[1].left) or 'Active';upkeepBottom=activeList[1].name
+        elseif upkeepUnknown==0 and upkeepTotal>1 and upkeepActive==upkeepTotal then
+            upkeepTop=upkeepActive..'/'..upkeepTotal
+            upkeepBottom=petHealth and (NS.L('Demon')..' '..petHealth..'%') or 'All active'
+        end
         -- With no icon, use a narrow warning stripe instead of an empty square.
         armorWarning:SetSize(upkeepIcon and 28 or 3,28)
         armorWarning:SetShown(missingBuff)
@@ -364,24 +400,29 @@ local function CreateIndicator(module,config,host,db)
         local cue=showAbilities and Context.BestCue(module.spells,module.cueKeys) or nil
         local targetText,abilityText,targetIcon,abilityIcon,targetColor,abilityColor,targetDim,abilityDim
         local targetLines,abilityLines={},{}
+        local targetName,abilityName
         if showTarget and type(targetAura)=='table' then
+            targetName=targetAura.name
             targetText=targetAura.applications and targetAura.applications>1 and ('×'..targetAura.applications) or (Context.FormatTime(targetAura.left) or 'On')
             targetIcon=targetAura.icon;targetColor=config.color
             local remaining=Context.FormatTime(targetAura.left)
             targetLines[#targetLines+1]=targetAura.name..(remaining and (' — '..remaining) or ' — active')
         elseif showTarget and hostile then
             local targetSpell=FirstSpell(module.spells,module.targetKeys)
-            if targetSpell and targetAura==false then targetText='None';targetDim=true;targetLines[#targetLines+1]='No tracked effect from you is active.'
+            if targetSpell and targetAura==false then
+                targetText='None';targetDim=true;targetName=targetSpell.name
+                targetLines[#targetLines+1]='No tracked effect from you is active.'
             end
             if targetText then targetIcon=targetSpell and targetSpell.icon end
         end
         if showAbilities and type(proc)=='table' then
+            abilityName=proc.name
             abilityText=proc.applications and proc.applications>1 and ('×'..proc.applications) or (Context.FormatTime(proc.left) or 'Proc')
             abilityIcon=proc.icon;abilityColor={0.3,1,0.48}
             local remaining=Context.FormatTime(proc.left)
             abilityLines[#abilityLines+1]=proc.name..(remaining and (' — '..remaining) or ' — active')
         elseif showAbilities and cue and cue.status~='unknown' then
-            abilityIcon=cue.spell.icon
+            abilityIcon=cue.spell.icon;abilityName=cue.spell.name
             if cue.status=='ready' then abilityText='Ready';abilityColor={0.3,1,0.48}
             elseif cue.status=='cooldown' then abilityText=Context.FormatTime(cue.left) or 'CD'
             elseif cue.status=='context' then abilityText='Context';abilityDim=true end
@@ -389,10 +430,10 @@ local function CreateIndicator(module,config,host,db)
             abilityLines[#abilityLines+1]=cue.spell.name..': '..detail
         end
         target.tooltipTitle=config.targetLabel;target.tooltipLines=targetLines
-        ability.tooltipTitle='Ability';ability.tooltipLines=abilityLines
-        Paint(target,targetIcon,targetText,hostile and targetText and 'Effect' or '',targetColor,targetDim)
+        ability.tooltipTitle=abilityName or 'Ability';ability.tooltipLines=abilityLines
+        Paint(target,targetIcon,targetText,hostile and targetText and targetName or '',targetColor,targetDim)
         target:SetShown(showTarget and targetText~=nil)
-        Paint(ability,abilityIcon,abilityText,abilityText and 'Ability' or '',abilityColor,abilityDim or not abilityIcon)
+        Paint(ability,abilityIcon,abilityText,abilityText and abilityName or '',abilityColor,abilityDim or not abilityIcon)
         ability:SetShown(showAbilities and abilityText~=nil)
 
         local racialStates=db.showRacial~=false and Context.RacialStates(module.spells,module.classToken) or {}
@@ -413,7 +454,7 @@ local function CreateIndicator(module,config,host,db)
                     racial.tooltipLines[#racial.tooltipLines+1]=state.spell.name..': '..stateText
                 end
             end
-            Paint(racial,racialState.spell.icon,status,'Racial',color,not racialState.ready)
+            Paint(racial,racialState.spell.icon,status,racialState.spell.name,color,not racialState.ready)
         else
             racial.tooltipTitle='Racial ability';racial.tooltipLines={}
             Paint(racial,nil,'','',nil,true)

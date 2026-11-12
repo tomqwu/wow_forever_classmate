@@ -41,15 +41,20 @@ function Context.Totem(slot)
         start=duration and start or nil,duration=duration,left=left}
 end
 
-function Context.WeaponImbue()
+-- Main hand by default; pass true for the off hand (tooltip detail only: an
+-- off-hand slot may hold a shield, so its absence is never a warning).
+function Context.WeaponImbue(offHand)
     if type(GetInventoryItemID)~='function' then return nil end
-    local ok,itemID=pcall(GetInventoryItemID,'player',16)
+    local inventorySlot=offHand and 17 or 16
+    local ok,itemID=pcall(GetInventoryItemID,'player',inventorySlot)
     if not ok or not Core.IsReadable(itemID) then return nil end
     if itemID==nil then return {equipped=false} end
     if not Core.IsNumber(itemID) or itemID<=0 then return nil end
-    local texture=Call(GetInventoryItemTexture,'player',16)
+    local texture=Call(GetInventoryItemTexture,'player',inventorySlot)
     local api=C_Item and C_Item.GetWeaponEnchantInfo
-    local slot=Enum and Enum.WeaponSlot and Enum.WeaponSlot.MainHand
+    local slots=Enum and Enum.WeaponSlot
+    -- Never fall back to the main hand when the off-hand enum is missing.
+    local slot=slots and (offHand and slots.OffHand or not offHand and slots.MainHand) or nil
     if type(api)~='function' or not Core.IsNumber(slot) then return nil end
     local enchants=Call(api,slot)
     if type(enchants)~='table' then return nil end

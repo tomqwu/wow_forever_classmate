@@ -1,3 +1,15 @@
+## 0.38.0
+
+- Slots now name what they show instead of repeating their own label. The bottom line is the target effect, the ready ability, or your racial (for example "Ready / Overpower", "12s / Rend", "Ready / Will to Survive"). Ability tooltips are titled with the spell name.
+- Upkeep names what matters. A missing buff reads "Missing / Thorns" (with "+1" when more are missing) instead of "!1". A single active buff shows its time and name ("28m / Seal of Command") instead of "1/1 OK". Several active buffs read "2/2 / All active".
+- Resource lines read naturally: "3 combo" instead of "CP3", "5 shards" instead of "H80/S5" (player health stays in the tooltip), and your real stance or form name instead of "Form" or "Base". Nothing is shown when no form is active or the game doesn't report one.
+- Rogue poisons are tracked per weapon: "Missing / Off-hand poison", or the poison that expires first when both are coated. The tooltip lists each hand.
+- Warlock upkeep shows demon health ("Demon 80%") when armor and demon are both up.
+- Shaman imbue charges appear on the weapon cell, and an imbued off hand is listed in its tooltip. The off hand never warns, because it may hold a shield.
+- Shaman's "MW 3/5" is spelled out as "Maelstrom 3/5", and Hunter's bare "+12°" now reads "12° left" or "12° right".
+
+Use `/reload`. Automated checks use mocked APIs; in-game text fit still needs confirmation, especially long spell names in narrow slots.
+
 ## 0.37.2
 
 - The class crest now sits exactly half inside the full bar's left edge, like it breaks through the compact card's top edge.

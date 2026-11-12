@@ -257,7 +257,13 @@ local function CreateIndicator(host,db)
     weapon.button:SetScript('OnEnter',function(self)
         if not GameTooltip or not weapon.state then return end
         GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(NS.L(weapon.state.active and 'Main-hand weapon imbue active' or 'Main-hand weapon imbue missing'))
-        if weapon.state.left then GameTooltip:AddLine(NS.L('Remaining: '..(Context.FormatTime(weapon.state.left) or '')),1,1,1) end
+        if weapon.state.left then GameTooltip:AddLine(NS.L('Remaining: ')..(Context.FormatTime(weapon.state.left) or ''),1,1,1) end
+        if weapon.state.charges then GameTooltip:AddLine(NS.L('Charges: ')..weapon.state.charges,1,1,1) end
+        -- Off hand is detail only: the slot may hold a shield, so no warning.
+        local off=weapon.offState
+        if off and off.active then
+            GameTooltip:AddLine(NS.L('Off-hand imbue active')..(off.left and (' — '..(Context.FormatTime(off.left) or '')) or ''),0.75,0.9,1)
+        end
         GameTooltip:Show()
     end)
     weapon.button:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
@@ -321,12 +327,14 @@ local function CreateIndicator(host,db)
             end
         end
         local imbue=db.showWeaponImbue~=false and Context.WeaponImbue() or nil;weapon.state=imbue
+        weapon.offState=db.showWeaponImbue~=false and Context.WeaponImbue(true) or nil
         local imbueWarn=false
         weapon.button:SetShown(db.showWeaponImbue~=false and imbue~=nil and imbue.equipped)
         if imbue and imbue.equipped then
             weapon.icon:SetTexture(imbue.icon or 'Interface\\Icons\\INV_Mace_02')
             weapon.icon:SetVertexColor(imbue.active and 1 or 0.45,imbue.active and 1 or 0.45,imbue.active and 1 or 0.45,1)
             weapon.timer:SetText(imbue.active and NS.L(Context.FormatTime(imbue.left) or '') or '')
+            weapon.badge:SetText(imbue.active and imbue.charges and imbue.charges>0 and tostring(imbue.charges) or '')
             local warn=next(imbueNames)~=nil and not imbue.active
             imbueWarn=warn
             weapon.stripe:SetColorTexture(warn and 1 or 0.25,warn and 0.15 or 0.75,warn and 0.1 or 1,1)
@@ -401,7 +409,6 @@ local function CreateIndicator(host,db)
             local compact=helper:match('^Recall (%d+) totems?$')
             if compactStatus then helperText:SetText(compactStatus)
             elseif compact then helperText:SetText(NS.L('Recall '..compact))
-            elseif helper:match('^Maelstrom ') then helperText:SetText(NS.L(helper:gsub('^Maelstrom ', 'MW ')))
             elseif helper=='Riptide ready' then helperText:SetText(NS.L('Riptide')) end
         end
         helperText:SetTextColor(unpack(color));helperText:SetShown(helper~='')

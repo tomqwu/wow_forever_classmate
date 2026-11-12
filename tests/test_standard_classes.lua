@@ -229,11 +229,12 @@ C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
     if unit=='player' and filter=='HELPFUL' and index==1 then return {name='Slice and Dice',icon=61,expirationTime=130,sourceUnit='player'} end
 end
 rogueIndicator.Update()
-check(rogueIndicator.cells.upkeep.top.text=='1/1','Rogue finisher buff is checked alongside weapon coatings')
+check(rogueIndicator.cells.upkeep.top.text=='30s' and rogueIndicator.cells.upkeep.bottom.text=='Slice and Dice',
+    'a single active upkeep shows its own name and time instead of 1/1')
 check(rogueIndicator.cells.upkeep.tooltipLines[2] and rogueIndicator.cells.upkeep.tooltipLines[2]:find('Slice and Dice',1,true),'Rogue upkeep details name the active finisher buff')
 C_UnitAuras.GetAuraDataByIndex=function() return nil end
 rogueIndicator.Update()
-check(rogueIndicator.cells.upkeep.bottom.text=='!1' and rogueIndicator.alpha==0.6,
+check(rogueIndicator.cells.upkeep.top.text=='Missing' and rogueIndicator.cells.upkeep.bottom.text=='Slice and Dice' and rogueIndicator.alpha==0.6,
     'a missing temporary Rogue finisher does not keep the bar bright between fights')
 
 local druidIndicator=named.ForeverClassmateDruidIndicator
@@ -254,9 +255,10 @@ C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
 end
 local savedPowerType=UnitPowerType;UnitPowerType=nil
 local ok=pcall(druidIndicator.Update)
-check(ok and druidIndicator.cells.resource.top.text=='' and druidIndicator.cells.resource.bottom.text=='Base',
-    'Druid keeps a readable form cue without inventing unavailable power')
-check(druidIndicator.cells.upkeep.top.text=='1/2' and druidIndicator.cells.upkeep.bottom.text=='!1'
+check(ok and druidIndicator.cells.resource.top.text=='' and druidIndicator.cells.resource.bottom.text==''
+    and not druidIndicator.cells.resource.shown,
+    'with no readable power and no form, the Druid resource slot shows nothing rather than a vague Base label')
+check(druidIndicator.cells.upkeep.top.text=='Missing' and druidIndicator.cells.upkeep.bottom.text=='Mark of the Wild'
     and druidIndicator.alpha==1,'a confirmed missing Druid buff keeps the full bar visible outside combat')
 UnitAffectingCombat=function() return true end
 C_UnitAuras.GetAuraDataByIndex=function() error('restricted combat aura') end
@@ -286,9 +288,9 @@ local function Fixture(module,names,activeAuras)
     return frame
 end
 local paladin=Fixture(NS.Paladin,{'Seal of Justice'},{'Seal of Justice'})
-check(paladin.cells.upkeep.top.text=='1/1' and paladin.cells.upkeep.bottom.text=='OK','Seal of Justice satisfies Paladin seal upkeep')
+check(paladin.cells.upkeep.top.text=='Active' and paladin.cells.upkeep.bottom.text=='Seal of Justice','Seal of Justice satisfies Paladin seal upkeep and is named on the bar')
 paladin=Fixture(NS.Paladin,{'Seal of Fury'},{'Seal of Fury'})
-check(paladin.cells.upkeep.bottom.text=='OK','Forever Seal of Fury satisfies tank seal upkeep')
+check(paladin.cells.upkeep.bottom.text=='Seal of Fury','Forever Seal of Fury satisfies tank seal upkeep')
 paladin=Fixture(NS.Paladin,{'Seal of Wisdom'},{'Seal of Wisdom'})
 C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
     if unit=='target' and filter=='HARMFUL' and index==1 then return {name='Judgement of Wisdom',sourceUnit='player',expirationTime=110} end
@@ -297,11 +299,11 @@ paladin.Update()
 check(paladin.cells.target.top.text=='10s','Paladin recognizes a judgment effect derived from its learned seal without a separate spellbook entry')
 
 local warrior=Fixture(NS.Warrior,{'Battle Shout','Rend'},{'Battle Shout'})
-check(warrior.cells.upkeep.bottom.text=='OK' and warrior.cells.target.top.text=='None','absent optional Warrior target effects are neutral rather than mandatory warnings')
+check(warrior.cells.upkeep.bottom.text=='Battle Shout' and warrior.cells.target.top.text=='None' and warrior.cells.target.bottom.text=='Rend','absent optional Warrior target effects are neutral rather than mandatory warnings')
 local druid=Fixture(NS.Druid,{'Mark of the Wild','Thorns'},{'Gift of the Wild','Thorns'})
-check(druid.cells.upkeep.top.text=='2/2','Druid accepts Gift of the Wild as Mark upkeep')
+check(druid.cells.upkeep.top.text=='2/2' and druid.cells.upkeep.bottom.text=='All active','Druid accepts Gift of the Wild as Mark upkeep')
 local mage=Fixture(NS.Mage,{'Frost Armor','Pyroblast'},{'Frost Armor'})
-check(mage.cells.upkeep.bottom.text=='OK' and mage.cells.target.top.text=='None','Mage armor is tracked without demanding a Pyroblast on every target')
+check(mage.cells.upkeep.bottom.text=='Frost Armor' and mage.cells.target.top.text=='None','Mage armor is tracked without demanding a Pyroblast on every target')
 local oldExists,oldCombat=UnitExists,UnitAffectingCombat
 UnitExists=function() return false end;UnitAffectingCombat=function() return false end
 mage.Update()
@@ -357,7 +359,7 @@ check(mage.cells.upkeep.top.formattedValue==secret and mage.cells.upkeep.meter.v
     and mage.cells.upkeep.bottom.text=='Shield',
     'restricted absorb amount is handed only to native renderers')
 NS.Mage.db.showMageShield=false;mage.Update()
-check(mage.cells.upkeep.bottom.text=='OK' and not mage.cells.upkeep.meter.shown,
+check(mage.cells.upkeep.bottom.text=='Frost Armor' and not mage.cells.upkeep.meter.shown,
     'Mage shield toggle leaves armor upkeep intact')
 NS.Mage.db.showUpkeep=false;NS.Mage.db.showMageShield=true;mage.Update()
 check(mage.cells.upkeep.shown and mage.cells.upkeep.top.formattedValue==secret,
@@ -366,8 +368,50 @@ NS.Mage.db.showUpkeep=true
 NS.Mage.db.showMageShield=true;UnitGetTotalAbsorbs=function() return 0 end
 local priest=Fixture(NS.Priest,{'Power Word: Fortitude','Divine Spirit','Inner Fire'},{'Prayer of Fortitude','Prayer of Spirit','Inner Fire'})
 check(priest.cells.upkeep.top.text=='3/3','Priest group prayers satisfy individual buff upkeep')
+-- Names and readable resource lines replace slot labels and abbreviations.
+check(paladin.cells.target.bottom.text=='Judgement of Wisdom','the target slot names the effect instead of "Effect"')
+local namedWarrior=Fixture(NS.Warrior,{'Battle Shout','Overpower','Battle Stance'},{'Battle Shout'})
+check(namedWarrior.cells.ability.top.text=='Ready' and namedWarrior.cells.ability.bottom.text=='Overpower'
+    and namedWarrior.cells.ability.tooltipTitle=='Overpower','the ability slot names the spell, and its tooltip is titled with it')
+GetShapeshiftForm=function() return 1 end
+GetShapeshiftFormInfo=function() return 132349,true,nil,4003 end
+namedWarrior.Update()
+check(namedWarrior.cells.resource.bottom.text=='Battle Stance','the stance line shows the client stance name instead of Form/Base')
+GetShapeshiftForm=function() return 0 end;namedWarrior.Update()
+check(namedWarrior.cells.resource.bottom.text=='','no stance name is invented when none is active or readable')
+local comboRogue=Fixture(NS.Rogue,{},{})
+GetComboPoints=function() return 3 end;comboRogue.Update()
+check(comboRogue.cells.resource.bottom.text=='3 combo','combo points read as "3 combo" instead of CP3')
+GetComboPoints=function() return 0 end
+local savedItemID,savedEnchant=GetInventoryItemID,C_Item.GetWeaponEnchantInfo
+GetInventoryItemID=function(_,slot) return 100+slot end
+C_Item.GetWeaponEnchantInfo=function(slot)
+    if slot==Enum.WeaponSlot.MainHand then return {{hasEnchant=true,timeLeft=600000}} end
+    return {{hasEnchant=false}}
+end
+comboRogue.Update()
+local poisonLines=table.concat(comboRogue.cells.upkeep.tooltipLines,'\n')
+check(comboRogue.cells.upkeep.top.text=='Missing' and comboRogue.cells.upkeep.bottom.text=='Off-hand poison'
+    and poisonLines:find('Main hand: 10m',1,true) and poisonLines:find('Off hand: no poison',1,true),
+    'Rogue poisons are tracked per weapon, naming the hand that needs a coating')
+C_Item.GetWeaponEnchantInfo=function(slot) return {{hasEnchant=true,timeLeft=slot==Enum.WeaponSlot.MainHand and 600000 or 120000}} end
+comboRogue.Update()
+check(comboRogue.cells.upkeep.top.text=='2m' and comboRogue.cells.upkeep.bottom.text=='Poison',
+    'with both weapons coated, the bar shows the poison that expires first')
+GetInventoryItemID,C_Item.GetWeaponEnchantInfo=savedItemID,savedEnchant
+local savedCount,savedExists,savedHealth=C_Item.GetItemCount,UnitExists,UnitHealth
+C_Item.GetItemCount=function(name) return name=='Soul Shard' and 5 or 0 end
+UnitExists=function(unit) return unit=='target' or unit=='pet' end
+UnitHealth=function(unit) return unit=='pet' and 80 or 90 end
+local petLock=Fixture(NS.Warlock,{'Demon Skin','Summon Imp','Will to Survive'},{'Demon Skin'})
+check(petLock.cells.resource.bottom.text=='5 shards' and table.concat(petLock.cells.resource.tooltipLines,'\n'):find('Health: 90%',1,true),
+    'Warlock shards read "5 shards"; player health moves to the tooltip')
+check(petLock.cells.upkeep.top.text=='2/2' and petLock.cells.upkeep.bottom.text=='Demon 80%',
+    'with armor and demon both up, the upkeep line shows the demon health')
+check(petLock.cells.racial.bottom.text=='Will to Survive','the racial slot names the racial instead of "Racial"')
+C_Item.GetItemCount,UnitExists,UnitHealth=savedCount,savedExists,savedHealth
 local warlock=Fixture(NS.Warlock,{'Demon Armor','Demon Skin'},{'Demon Skin'})
-check(warlock.cells.upkeep.top.text=='1/1' and warlock.alpha==0.6,
+check(warlock.cells.upkeep.top.text=='Active' and warlock.cells.upkeep.bottom.text=='Demon Skin' and warlock.alpha==0.6,
     'confirmed Warlock armor uses the normal out-of-combat target fade')
 local observedArmorRead=C_UnitAuras.GetAuraDataByIndex
 C_UnitAuras.GetAuraDataByIndex=function() error('restricted aura') end
@@ -386,7 +430,7 @@ check(armorReads==0 and warlock.cells.upkeep.top.text=='' and warlock.cells.upke
     and warlock.cells.upkeep.tooltipLines[1]:find('Demon Skin last seen',1,true),
     'Warlock keeps the confirmed Demon Skin icon but makes no combat aura read or 0/1 claim')
 UnitAffectingCombat=function() return false end;warlock.Update()
-check(warlock.cells.upkeep.top.text=='Armor' and warlock.cells.upkeep.bottom.text=='Missing'
+check(warlock.cells.upkeep.top.text=='Missing' and warlock.cells.upkeep.bottom.text=='Demon Armor'
     and warlock.cells.upkeep.armorWarning.shown and warlock.alpha==1,
     'a readable out-of-combat absence shows an explicit armor warning at full visibility')
 local upkeepCell=warlock.cells.upkeep
@@ -409,7 +453,7 @@ check(warlock.cells.upkeep.top.text=='' and not warlock.cells.upkeep.shown,
     'combat without a prior confirmed armor hides the unsupported upkeep slot')
 UnitAffectingCombat=function() return false end
 warlock=Fixture(NS.Warlock,{'Demon Skin','Summon Imp'},{'Demon Skin'})
-check(warlock.cells.upkeep.bottom.text=='!1' and warlock.alpha==0.6,
+check(warlock.cells.upkeep.top.text=='Missing' and warlock.cells.upkeep.bottom.text=='Demon' and warlock.alpha==0.6,
     'missing demon warns without treating it as a missing buff for the fade override')
 warlock=Fixture(NS.Warlock,{'Demon Skin','Corruption','Will to Survive'},{'Demon Skin'})
 local readableCooldown=C_Spell.GetSpellCooldown
@@ -453,7 +497,7 @@ local updatedPaladin=Fixture(NS.Paladin,{'Twist of Light','Unsealed Wrath'},{'Un
 check(not NS.Paladin.spells.twistLight and updatedPaladin.cells.ability.top.text=='Proc',
     'Paladin surfaces the readable replacement aura and drops the retired talent')
 local updatedRogue=Fixture(NS.Rogue,{'Slice and Dice','Venom','Shank','Death Mark','Thousand Cuts','Cutthroat'},{'Slice and Dice'})
-check(updatedRogue.cells.upkeep.top.text=='1/1' and NS.Rogue.spells.deathMark
+check(updatedRogue.cells.upkeep.bottom.text=='Slice and Dice' and NS.Rogue.spells.deathMark
     and not NS.Rogue.spells.thousandCuts and not NS.Rogue.spells.cutthroat,
     'absent Venom is not missing upkeep and retired Rogue talents are ignored')
 local updatedDruid=Fixture(NS.Druid,{"Tiger's Fury",'Berserk','Primal Bite','Lacerate','Shifting Power'},{})
@@ -481,7 +525,7 @@ UnitExists=function(unit) return unit=='target' end
 for _,armorName in ipairs({'Demon Skin','Demon Armor','Fel Armor','恶魔皮肤','魔甲术','邪甲术'}) do
     local checked=Fixture(NS.Warlock,{armorName},{})
     local cell=checked.cells.upkeep
-    check(cell.shown and cell.top.text=='Armor' and cell.bottom.text=='Missing'
+    check(cell.shown and cell.top.text=='Missing' and cell.bottom.text==armorName
         and cell.armorWarning.shown and checked.alpha==1,
         'learned armor warns out of combat with localized-only lookup: '..armorName)
     local pulse=cell.armorWarning.warningPulseGroup
@@ -491,21 +535,21 @@ for _,armorName in ipairs({'Demon Skin','Demon Armor','Fel Armor','恶魔皮肤'
         'turning off flashing keeps the static warning and full readability')
     NS.Warlock.db.flashMissingBuffs=true;checked.Update()
     UnitAffectingCombat=function() return true end;checked.Update()
-    check(not cell.armorWarning.shown and not pulse.playing and cell.bottom.text~='Missing',
+    check(not cell.armorWarning.shown and not pulse.playing and cell.top.text~='Missing',
         'unknown combat armor state never carries a stale missing warning')
     UnitAffectingCombat=function() return false end
     checked=Fixture(NS.Warlock,{armorName},{armorName})
-    check(not cell.armorWarning.shown and not pulse.playing and cell.top.text=='1/1' and cell.bottom.text=='OK',
+    check(not cell.armorWarning.shown and not pulse.playing and cell.top.text=='Active' and cell.bottom.text==armorName,
         'applying any recognized armor clears its warning')
     C_UnitAuras.GetAuraDataByIndex=function() return {name=secret} end
     checked.Update()
-    check(not cell.armorWarning.shown and not pulse.playing and cell.bottom.text~='Missing' and checked.alpha==0.6,
+    check(not cell.armorWarning.shown and not pulse.playing and cell.top.text~='Missing' and checked.alpha==0.6,
         'restricted aura names do not create a false missing-armor warning')
 end
 local checked=Fixture(NS.Warlock,{'恶魔皮肤','Summon Imp'},{})
 UnitExists=function(unit) if unit=='pet' then return secret end;return unit=='target' end
 checked.Update()
-check(checked.cells.upkeep.top.text=='Armor' and checked.cells.upkeep.bottom.text=='Missing'
+check(checked.cells.upkeep.top.text=='Missing' and checked.cells.upkeep.bottom.text=='恶魔皮肤'
     and checked.cells.upkeep.armorWarning.shown and checked.alpha==1,
     'confirmed missing armor remains explicit when demon existence is unavailable')
 NS.Warlock.db.showUpkeep=false;checked.Update()

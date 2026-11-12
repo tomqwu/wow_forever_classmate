@@ -236,7 +236,7 @@ SetPortraitTexture=function(texture,unit) portraits=portraits+1;texture.unit=uni
 target=true;dead=false;f.Refresh()
 local portrait=f.portrait
 check(portrait.unit=='targettarget' and portrait.shown,'right icon uses targettarget portrait')
-check(f.labels[2].text=='+90°','angle has no wording')
+check(f.labels[2].text=='90° left','facing angle reads as degrees plus a direction instead of a bare signed number')
 local before=portraits;f.scripts.OnEvent(f,'UNIT_TARGET','target')
 check(portraits>before,'targettarget change refreshes portrait')
 before=portraits;f.scripts.OnEvent(f,'UNIT_PORTRAIT_UPDATE','targettarget')

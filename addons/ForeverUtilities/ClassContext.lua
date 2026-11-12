@@ -164,12 +164,17 @@ function Context.WeaponCoatings()
         local ok,itemID=pcall(GetInventoryItemID,'player',entry.slot)
         if not ok or not Core.IsReadable(itemID) then return nil end
         if Core.IsNumber(itemID) and itemID>0 then
-            result.equipped=result.equipped+1
+            result.equipped=result.equipped+1;result[entry.key..'Equipped']=true
             local enchants=Call(C_Item.GetWeaponEnchantInfo,entry.enum)
             if type(enchants)~='table' then return nil end
             for _,enchant in pairs(enchants) do
                 if type(enchant)~='table' or not Core.IsReadable(enchant.hasEnchant) or type(enchant.hasEnchant)~='boolean' then return nil end
-                if enchant.hasEnchant==true then result.active=result.active+1;result[entry.key]=true;break end
+                if enchant.hasEnchant==true then
+                    result.active=result.active+1;result[entry.key]=true
+                    -- Per-weapon time left, only when the client gives a readable number.
+                    if Core.IsNumber(enchant.timeLeft) then result[entry.key..'Left']=math.max(0,enchant.timeLeft/1000) end
+                    break
+                end
             end
         elseif itemID~=nil then return nil end
     end
