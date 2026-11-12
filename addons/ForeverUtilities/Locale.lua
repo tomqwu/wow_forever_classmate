@@ -7,7 +7,7 @@ if locale~='zhCN' then return end
 -- from the client's localized APIs; command names and saved keys stay stable.
 local zh={
     ['Player resources']='角色资源',
-    ['Collapsed warning icon']='折叠为警告图标',['Show collapse button']='显示折叠按钮',['Group addon minimap buttons']='收纳其他插件的小地图按钮',['Addon buttons']='插件按钮',['No other addon buttons']='没有其他插件按钮',['Classmate settings']='永恒战友设置',['Left-click: addon buttons and settings | Drag: move around minimap']='左键：插件按钮与设置 | 拖动：沿小地图移动',['Fold outside combat, expand in combat']='脱战折叠，进战展开',
+    ['Collapsed warning icon']='折叠为警告图标',['Show collapse button']='显示折叠按钮',['Group addon minimap buttons']='收纳其他插件的小地图按钮',['Addon buttons']='插件按钮',['No other addon buttons']='没有其他插件按钮',['Classmate settings']='永恒战友设置',['Click the Classmate button: settings | Right-click: inspect target']='点击永恒战友按钮：设置 | 右键：观察目标',['Fold outside combat, expand in combat']='脱战折叠，进战展开',
     ['Click to expand']='点击展开',['Collapse to warning icons']='折叠为警告图标',['Armor missing']='缺少护甲增益',['Class upkeep missing']='缺少职业增益',
     ['No confirmed missing buffs']='未确认有缺失的增益',
     ['Weapon imbue missing']='缺少武器强化',['Elemental shield missing']='缺少元素护盾',['Aspect missing']='缺少守护',
@@ -23,7 +23,7 @@ local zh={
     ['Shooting']='射击范围内',['Too far']='太远',['Distance']='距离',
     ['Out of range']='超出射程',['Target']='目标',['Enemy']='敌人',
     ['Ready']='就绪',['None']='无',['Effect']='效果',['Ability']='技能',
-    ['Racial']='种族技能',['Active']='生效中',['All active']='全部生效',['combo']='连击',['shard']='碎片',['shards']='碎片',['Poison']='毒药',['Main-hand poison']='主手毒药',['Off-hand poison']='副手毒药',['left']='左',['right']='右',['Remaining: ']='剩余：',['Charges: ']='次数：',['Off-hand imbue active']='副手武器附魔生效',['Ctx']='条件不符',['Context']='条件不符',
+    ['Racial']='种族技能',['Show class stat in compact card']='折叠卡片显示职业数据',['Ammo']='弹药',['Ankhs']='十字章',['Conjured water']='魔法水',['Poison time left']='毒药剩余时间',['Active']='生效中',['All active']='全部生效',['combo']='连击',['shard']='碎片',['shards']='碎片',['Poison']='毒药',['Main-hand poison']='主手毒药',['Off-hand poison']='副手毒药',['left']='左',['right']='右',['Remaining: ']='剩余：',['Charges: ']='次数：',['Off-hand imbue active']='副手武器附魔生效',['Ctx']='条件不符',['Context']='条件不符',
     ['active']='生效中',['inactive']='未生效',['missing']='缺失',['unavailable']='不可用',
     ['ready']='就绪',['cooldown']='冷却中',['context']='条件不符',
     ['hidden']='已隐藏',['found']='已找到',['not found']='未找到',

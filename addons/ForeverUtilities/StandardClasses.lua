@@ -94,6 +94,49 @@ local configs={
         },upkeepLabel='Armor / demon',upkeepGroups={{label='Armor',keys={'demonArmor','demonSkin','felArmor'},observeOutOfCombat=true}},targetLabel='DoT / Bane',powerType=0,powerLabel='Mana',showPet=true,showHealth=true,showShards=true,dotKeys={'corruption','immolate','wrack','baneAgony','curseAgony'}},
 }
 
+-- One compact-card stat per class: the supply or reading you are most likely
+-- to run out of. Item counts use stable item IDs, so they work in any locale.
+local compactStats={paladin='mana',priest='mana',druid='mana',warrior='health',rogue='poison',mage='water',warlock='shards'}
+local waterIDs={5350,2288,2136,3772,8077,8078,8079}
+local function ItemIcon(id,fallback)
+    return Core.Icon(Core.Call(C_Item and C_Item.GetItemIconByID,id)) or fallback
+end
+local function CompactStat(config)
+    local kind=compactStats[config.key]
+    if kind=='mana' then
+        local mana=Context.Power(0,'Mana')
+        return mana and {text=mana.percent..'%',label='Mana',icon='Interface\\Icons\\INV_Potion_76'} or nil
+    elseif kind=='health' then
+        local hp=Context.HealthPercent('player')
+        return hp and {text=hp..'%',label='Health',icon='Interface\\Icons\\INV_Potion_54'} or nil
+    elseif kind=='poison' then
+        -- Shortest time left across coated weapons; an uncoated weapon is
+        -- already a warning cell, so no stat claims anything about it.
+        local coatings=Context.WeaponCoatings()
+        local soonest
+        for _,left in ipairs({coatings and coatings.mainLeft or false,coatings and coatings.offLeft or false}) do
+            if left and (not soonest or left<soonest) then soonest=left end
+        end
+        local text=soonest and Context.FormatTime(soonest)
+        return text and {text=text,label='Poison time left',icon='Interface\\Icons\\Ability_Poisons'} or nil
+    elseif kind=='water' then
+        local total,icon,readable=0,nil,false
+        for _,id in ipairs(waterIDs) do
+            local count=Context.ItemCount(id)
+            if count then
+                readable=true;total=total+count
+                if count>0 and not icon then icon=ItemIcon(id) end
+            end
+        end
+        return readable and {text=tostring(total),label='Conjured water',icon=icon or 'Interface\\Icons\\INV_Drink_18',
+            color=total==0 and {1,0.25,0.2} or nil} or nil
+    elseif kind=='shards' then
+        local shards=Context.ItemCount(6265)
+        return shards and {text=tostring(shards),label='Soul Shards',icon=ItemIcon(6265,'Interface\\Icons\\INV_Misc_Gem_Amethyst_02'),
+            color=shards==0 and {1,0.25,0.2} or nil} or nil
+    end
+end
+
 local function MakeCell(frame,x,width)
     local cell=CreateFrame('Button',nil,frame);cell:SetSize(width,48);cell:SetPoint('TOPLEFT',frame,'TOPLEFT',x,-4)
     local icon=cell:CreateTexture(nil,'ARTWORK');icon:SetSize(24,24);icon:SetPoint('LEFT',cell,'LEFT',3,0)
@@ -231,7 +274,8 @@ local function CreateIndicator(module,config,host,db)
             if hp then resourceLines[#resourceLines+1]='Health: '..hp..'%' end
         end
         if db.showResource~=false and config.showShards then
-            local shards=Context.ItemCount('Soul Shard')
+            -- By item ID: the English item name would miss on localized clients.
+            local shards=Context.ItemCount(6265)
             if shards then
                 resourceBottom=(resourceBottom~='' and (resourceBottom..' · ') or '')..shards..' '..NS.L(shards==1 and 'shard' or 'shards')
                 resourceLines[#resourceLines+1]='Soul Shards: '..shards
@@ -461,6 +505,7 @@ local function CreateIndicator(module,config,host,db)
         end
         racial:SetShown(db.showRacial~=false and racialState~=nil)
 
+        NS.ClassHost.SetStat(host,db.compactStat~=false and CompactStat(config) or nil)
         NS.ClassHost.SetFade(host,frame,(db.fadeOutOfCombat==false or inCombat or missingBuff) and 1
             or (hasTarget and (config.targetAlpha or 0.6) or (config.idleAlpha or 0.2)))
         lastStatus=string.format('%s; upkeep %s; target %s; ability %s; racial %s',resourceTop~='' and resourceTop or 'hidden',
@@ -514,6 +559,7 @@ local defaultOptions={
     {key='collapsed',label='Collapsed warning icon',kind='toggle'},
     {key='showFoldButton',label='Show collapse button',kind='toggle'},
     {key='autoFold',label='Fold outside combat, expand in combat',kind='toggle'},
+    {key='compactStat',label='Show class stat in compact card',kind='toggle'},
     {key='showMinimap',label='Show minimap settings button',kind='toggle'},
     {key='groupMinimapButtons',label='Group addon minimap buttons',kind='toggle'},
     {key='minimapInspect',label='Right-click minimap to inspect players',kind='toggle'},
@@ -541,7 +587,7 @@ for token,config in pairs(configs) do
         panelName='ForeverClassmate'..config.label..'Options',minimapName='ForeverClassmate'..config.label..'Minimap',
         indicatorName='ForeverClassmate'..config.label..'Indicator',normalize=Normalize,options=OptionsFor(config),
         defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showMinimap=true,groupMinimapButtons=true,minimapInspect=true,showLockButton=true,showResource=true,
-            showUpkeep=true,showTarget=true,showAbilities=true,showRacial=true,showMageShield=true,flashMissingBuffs=true,sleepingBagReminder=true,foodXPReminder=true,mailRecipients=true,collapsed=false,showFoldButton=true,autoFold=false,fadeOutOfCombat=true,minimapAngle=35}}
+            showUpkeep=true,showTarget=true,showAbilities=true,showRacial=true,showMageShield=true,flashMissingBuffs=true,sleepingBagReminder=true,foodXPReminder=true,mailRecipients=true,collapsed=false,showFoldButton=true,autoFold=false,compactStat=true,fadeOutOfCombat=true,minimapAngle=35}}
     if config.dotKeys then module.defaults.showMultiDots=true end
     NS[config.label]=module
     function module.create(db)

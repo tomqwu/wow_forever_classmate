@@ -16,6 +16,16 @@ function Host.ContentAlpha(host,content)
     return type(alpha)=='number' and alpha or 1
 end
 
+-- Class modules feed one compact stat ({icon,text,label,color}) or nil.
+function Host.SetStat(host,stat)
+    local old=host.foldStat
+    local same=(old==nil and stat==nil) or (type(old)=='table' and type(stat)=='table' and old.text==stat.text
+        and old.icon==stat.icon and old.label==stat.label and (old.color and old.color[1])==(stat.color and stat.color[1]))
+    host.foldStat=stat
+    -- Modules update several times a second; redraw only on a real change.
+    if not same and host.foldRefresh then host.foldRefresh() end
+end
+
 function Host.SetFade(host,content,alpha)
     content.baseAlpha=alpha
     content:SetAlpha(Host.ContentAlpha(host,content))

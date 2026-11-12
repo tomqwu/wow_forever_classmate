@@ -29,7 +29,7 @@ end
 Shaman.normalize=Normalize
 Shaman.defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showMinimap=true,groupMinimapButtons=true,minimapInspect=true,showLockButton=true,
     showTotems=true,showWeaponImbue=true,showShield=true,showSpecHelper=true,showMana=true,
-    totemRecallHint=true,flashMissingBuffs=true,sleepingBagReminder=true,foodXPReminder=true,mailRecipients=true,collapsed=false,showFoldButton=true,autoFold=false,fadeOutOfCombat=true,minimapAngle=35}
+    totemRecallHint=true,flashMissingBuffs=true,sleepingBagReminder=true,foodXPReminder=true,mailRecipients=true,collapsed=false,showFoldButton=true,autoFold=false,compactStat=true,fadeOutOfCombat=true,minimapAngle=35}
 Shaman.options={
     {key='flashMissingBuffs',label='Flash missing buffs',kind='toggle'},
     {key='sleepingBagReminder',label='Sleeping bag buff reminder (below level 60)',kind='toggle'},
@@ -38,6 +38,7 @@ Shaman.options={
     {key='collapsed',label='Collapsed warning icon',kind='toggle'},
     {key='showFoldButton',label='Show collapse button',kind='toggle'},
     {key='autoFold',label='Fold outside combat, expand in combat',kind='toggle'},
+    {key='compactStat',label='Show class stat in compact card',kind='toggle'},
     {key='showMinimap',label='Show minimap settings button',kind='toggle'},
     {key='groupMinimapButtons',label='Group addon minimap buttons',kind='toggle'},
     {key='minimapInspect',label='Right-click minimap to inspect players',kind='toggle'},
@@ -126,7 +127,7 @@ local function CreateIndicator(host,db)
         lightningMastery={'Lightning Mastery','cue'},stormstrike={'Stormstrike','cue'},
         totemicCall={'Totemic Call','cue'},
         riptide={'Riptide','riptide'},fireNova={'Fire Nova','fireNova'},
-        recall={'Totemic Recall','recall'},
+        recall={'Totemic Recall','recall'},reincarnation={'Reincarnation','reagent'},
         rockbiter={'Rockbiter Weapon','imbue'},flametongue={'Flametongue Weapon','imbue'},
         frostbrand={'Frostbrand Weapon','imbue'},windfury={'Windfury Weapon','imbue'},
     }
@@ -164,7 +165,8 @@ local function CreateIndicator(host,db)
                             totemBySpellID[id]={slot=totemNames[data.name],name=data.name,icon=Core.Icon(data.iconID)}
                         end
                         local match=type(data)=='table' and Core.IsReadable(data.name) and wanted[data.name]
-                        if match and (not item.isPassive or match.kind=='maelstrom') then
+                        -- Reincarnation can be listed as a passive; it still gates the Ankh count.
+                        if match and (not item.isPassive or match.kind=='maelstrom' or match.kind=='reagent') then
                             local spell={id=id,name=data.name,icon=Core.Icon(data.iconID),slot=slot}
                             Shaman.spells[match.key]=spell
                             if match.kind=='shield' then shieldNames[data.name]=true end
@@ -412,6 +414,13 @@ local function CreateIndicator(host,db)
             elseif helper=='Riptide ready' then helperText:SetText(NS.L('Riptide')) end
         end
         helperText:SetTextColor(unpack(color));helperText:SetShown(helper~='')
+        -- Compact card stat: Ankhs for Reincarnation, once it is learned.
+        if db.compactStat~=false and Shaman.spells.reincarnation then
+            local ankhs=NS.ClassContext.ItemCount(17030)
+            NS.ClassHost.SetStat(host,ankhs and {text=tostring(ankhs),label='Ankhs',
+                icon=Core.Icon(Core.Call(C_Item and C_Item.GetItemIconByID,17030)) or 'Interface\\Icons\\INV_Jewelry_Talisman_06',
+                color=ankhs==0 and {1,0.25,0.2} or nil} or nil)
+        else NS.ClassHost.SetStat(host,nil) end
         local mana=db.showMana~=false and Context.ManaPercent() or nil
         manaText:SetText(mana and NS.L('Mana '..mana..'%') or '');manaText:SetShown(mana~=nil)
         NS.ClassHost.SetFade(host,frame,(db.fadeOutOfCombat==false or inCombat or activeTotems>0 or imbueWarn or missingShield==true) and 1 or (hasTarget and 0.6 or 0.2))

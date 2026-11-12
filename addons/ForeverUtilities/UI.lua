@@ -103,7 +103,11 @@ local function RefreshMinimap()
             if dragged then return end
             if button=='RightButton' then
                 if self.module.db.minimapInspect~=false then NS.Core.InspectTarget() end
-            elseif not (NS.MinimapTray and NS.MinimapTray.Toggle()) then OpenPanel() end
+            else
+                -- Hover already shows the addon tray; a click goes to settings.
+                if NS.MinimapTray then NS.MinimapTray.Close() end
+                OpenPanel()
+            end
         end)
         minimapButton:SetFrameStrata('MEDIUM');minimapButton:SetFrameLevel(8)
         local function Circle(size,layer)
@@ -116,11 +120,11 @@ local function RefreshMinimap()
         local icon=Circle(19,'OVERLAY');icon:SetTexture('Interface\\AddOns\\ForeverUtilities\\Textures\\ForeverClassmate');icon:SetTexCoord(0,1,0,1)
         Circle(24,'HIGHLIGHT'):SetColorTexture(1,0.85,0.4,0.22)
         minimapButton:SetScript('OnEnter',function(self)
+            -- With grouping on, hovering opens the addon tray instead of a tooltip.
+            if NS.MinimapTray and NS.MinimapTray.Active() and NS.MinimapTray.Open() then return end
             if GameTooltip then GameTooltip:SetOwner(self,'ANCHOR_LEFT');GameTooltip:SetText(L('Forever Classmate'))
                 GameTooltip:AddLine(L(self.module.name:gsub('Forever Classmate — ','')),1,0.85,0.4)
-                if NS.MinimapTray and NS.MinimapTray.Active() then
-                    GameTooltip:AddLine(L('Left-click: addon buttons and settings | Drag: move around minimap'),1,1,1)
-                else GameTooltip:AddLine(L('Left-click: settings | Drag: move around minimap'),1,1,1) end
+                GameTooltip:AddLine(L('Left-click: settings | Drag: move around minimap'),1,1,1)
                 if self.module.db.minimapInspect~=false then
                     GameTooltip:AddLine(L('Right-click: inspect an eligible player target'),1,1,1)
                 end

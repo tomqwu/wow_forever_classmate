@@ -178,10 +178,22 @@ function Range.Create(host, db)
         inspect:SetShown(db.showInspect==true and not db.rangeIconOnly and Core.CanInspectTarget())
     end
     local warnedLowAmmo=false
+    -- Compact card stat: carried ammo, with the equipped ammo's own icon.
+    local function UpdateStat(count)
+        if db.compactStat==false then NS.ClassHost.SetStat(host,nil);return end
+        if count==nil then count=NS.TargetContext.AmmoCount() end
+        if not count then NS.ClassHost.SetStat(host,nil);return end
+        local slot=Core.Call(GetInventorySlotInfo,'AmmoSlot')
+        local icon=Core.IsNumber(slot) and Core.Icon(Core.Call(GetInventoryItemTexture,'player',slot)) or nil
+        local low=db.lowAmmoWarning~=false and count<=200
+        NS.ClassHost.SetStat(host,{icon=icon or 'Interface\\Icons\\INV_Ammo_Arrow_02',text=tostring(count),label='Ammo',
+            color=low and {1,0.25,0.2} or nil})
+    end
     local function UpdateAmmo()
         ammoLabel:SetShown(db.showAmmo~=false)
-        if db.showAmmo==false and db.lowAmmoWarning==false then ammoLabel:SetText('');return end
+        if db.showAmmo==false and db.lowAmmoWarning==false then ammoLabel:SetText('');UpdateStat();return end
         local count=NS.TargetContext.AmmoCount()
+        UpdateStat(count)
         ammoLabel:SetText(count and NS.L('Ammo: '..count) or '')
         local low=db.lowAmmoWarning~=false and count~=nil and count<=200
         if low then ammoLabel:SetTextColor(1,0.25,0.2)
@@ -434,7 +446,7 @@ function Range.Create(host, db)
             active=true;Discover()
         end
         if suspended or Core.PlayerDead() then pulseAspect(false);frame:Hide();return end
-        if not db.rangeIconOnly then UpdateAmmo();UpdateAspect();UpdateHappiness() end
+        if not db.rangeIconOnly then UpdateAmmo();UpdateAspect();UpdateHappiness() else UpdateStat() end
         local hasTarget=Call(UnitExists,'target')==true
         local inCombat=Call(UnitAffectingCombat,'player')==true
         NS.ClassHost.SetFade(host,frame,db.rangeIconOnly and (hasTarget and 1 or 0.2)
@@ -475,7 +487,7 @@ function Range.Create(host, db)
         if event=='UNIT_PET' and (not Core.IsReadable(unit) or unit~='player') then return end
         if event=='UNIT_INVENTORY_CHANGED' and (not Core.IsReadable(unit) or unit~='player') then return end
         if event=='BAG_UPDATE_DELAYED' or event=='UNIT_INVENTORY_CHANGED' then
-            if not db.rangeIconOnly then UpdateAmmo() end
+            if not db.rangeIconOnly then UpdateAmmo() else UpdateStat() end
             return
         end
         if event=='UNIT_TARGET' and (not Core.IsReadable(unit) or unit~='target') then return end

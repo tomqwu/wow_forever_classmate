@@ -1,3 +1,12 @@
+## 0.39.0
+
+- The compact card has a class stat slot: the one number each class watches most. Hunter shows ammo, Warlock soul shards, Shaman Ankhs (once Reincarnation is learned), Mage conjured water (every rank added up), and Rogue the shortest poison time left. Paladin, Priest and Druid show mana %, and Warrior shows health %.
+- The stat sits first in the card's row in a neutral frame, ahead of any warnings, and never flashes. Zero shards, water or Ankhs and low ammo show in red. With a stat showing, up to three warnings fit, and the last one counts the rest. The card now also appears for the stat alone. Turn it off with **Show class stat in compact card**.
+- Hovering the Classmate minimap button now opens the addon tray. Left-click goes straight to Classmate settings again, and right-click still inspects your target.
+- Soul shards are now counted by item ID, so the count also works on Chinese and other non-English clients.
+
+Use `/reload`. Automated checks use mocked APIs; item icons and counts still need in-game confirmation.
+
 ## 0.38.0
 
 - Slots now name what they show instead of repeating their own label. The bottom line is the target effect, the ready ability, or your racial (for example "Ready / Overpower", "12s / Rend", "Ready / Will to Survive"). Ability tooltips are titled with the spell name.

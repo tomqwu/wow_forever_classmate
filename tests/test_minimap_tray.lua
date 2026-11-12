@@ -110,7 +110,8 @@ check(questie.parent~=Minimap and questie.scripts.OnDragStart==nil and questie.s
     'borrowed buttons move into the tray and stop dragging')
 check(events.events.PLAYER_ENTERING_WORLD and events.events.PLAYER_REGEN_ENABLED,'tray listens for login and combat end')
 
-check(Tray.Toggle() and tray.shown,'left-click opens the tray')
+check(Tray.Open() and tray.shown,'hovering the Classmate button opens the tray')
+check(Tray.Open() and tray.shown,'hovering again keeps it open instead of toggling it closed')
 check(#tray.cells==4 and tray.cells[2]==forever and tray.cells[4]==questie,'settings cell first, then visible buttons')
 local first=tray.cells[1].points[1]
 check(first[1]=='CENTER' and first[4]==17 and first[5]==-17 and questie.points[1][4]==119 and questie.points[1][5]==-17,

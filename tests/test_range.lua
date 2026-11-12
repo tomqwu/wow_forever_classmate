@@ -225,7 +225,7 @@ check(not f.label.shown and not f.rangeIcon.shown,'restricted friendliness hides
 UnitCanAttack=function() return true end
 UnitDistanceSquared=nil
 class='HUNTER';C_Spell=nil;C_SpellBook=nil
-f=NS.Range.Create({hint=moveHint},db)
+local rangeHost={hint=moveHint};f=NS.Range.Create(rangeHost,db)
 check(not f.label.shown and not f.rangeIcon.shown,'missing range APIs leave no placeholder readout')
 -- Portrait and numeric angle share the module lifecycle.
 UnitExists=function() return target end
@@ -267,17 +267,21 @@ local ammo=500
 C_Item={GetItemCount=function() return ammo end}
 f.Refresh()
 check(f.labels[3].text=='Ammo: 500' and not f.scripts.OnUpdate,'ammo visible without target or polling')
+check(rangeHost.foldStat and rangeHost.foldStat.text=='500' and rangeHost.foldStat.label=='Ammo' and rangeHost.foldStat.color==nil,
+    'Hunter compact stat is the carried ammo count')
 ammo=499;f.scripts.OnEvent(f,'BAG_UPDATE_DELAYED')
 check(f.labels[3].text=='Ammo: 499','bag event refreshes ammo')
 UnitUsesAmmo=function() return false end
 ammo=0;f.scripts.OnEvent(f,'PLAYER_EQUIPMENT_CHANGED',18)
 check(f.labels[3].text=='' and #warnings==0,'switching to a no-ammo weapon clears count without a false empty warning')
+check(rangeHost.foldStat==nil,'a weapon that uses no ammo shows no ammo stat')
 UnitUsesAmmo=function() return secret end
 f.scripts.OnEvent(f,'UNIT_INVENTORY_CHANGED','player')
 check(f.labels[3].text=='' and #warnings==0,'restricted ammo eligibility stays quiet')
 UnitUsesAmmo=function() return true end
 ammo=200;f.scripts.OnEvent(f,'UNIT_INVENTORY_CHANGED','player')
 check(f.labels[3].text=='Ammo: 200','equipped ammo change refreshes count')
+check(rangeHost.foldStat.text=='200' and rangeHost.foldStat.color[1]==1,'low ammo shows the stat in red')
 check(#warnings==1 and warnings[1]:find('200 remaining',1,true),'warning at exactly 200')
 UnitUsesAmmo=nil
 ammo=199;f.scripts.OnEvent(f,'BAG_UPDATE_DELAYED');f.Refresh()

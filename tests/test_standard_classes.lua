@@ -296,6 +296,8 @@ C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
     if unit=='target' and filter=='HARMFUL' and index==1 then return {name='Judgement of Wisdom',sourceUnit='player',expirationTime=110} end
 end
 paladin.Update()
+check(named.ForeverClassmatePaladinFrame.foldStat.text=='70%' and named.ForeverClassmatePaladinFrame.foldStat.label=='Mana',
+    'Paladin compact stat is mana')
 check(paladin.cells.target.top.text=='10s','Paladin recognizes a judgment effect derived from its learned seal without a separate spellbook entry')
 
 local warrior=Fixture(NS.Warrior,{'Battle Shout','Rend'},{'Battle Shout'})
@@ -303,6 +305,11 @@ check(warrior.cells.upkeep.bottom.text=='Battle Shout' and warrior.cells.target.
 local druid=Fixture(NS.Druid,{'Mark of the Wild','Thorns'},{'Gift of the Wild','Thorns'})
 check(druid.cells.upkeep.top.text=='2/2' and druid.cells.upkeep.bottom.text=='All active','Druid accepts Gift of the Wild as Mark upkeep')
 local mage=Fixture(NS.Mage,{'Frost Armor','Pyroblast'},{'Frost Armor'})
+local waterCount=C_Item.GetItemCount
+C_Item.GetItemCount=function(id) return id==8079 and 12 or id==8078 and 3 or 0 end;mage.Update()
+check(named.ForeverClassmateMageFrame.foldStat.text=='15' and named.ForeverClassmateMageFrame.foldStat.label=='Conjured water',
+    'Mage compact stat totals every rank of conjured water')
+C_Item.GetItemCount=waterCount;mage.Update()
 check(mage.cells.upkeep.bottom.text=='Frost Armor' and mage.cells.target.top.text=='None','Mage armor is tracked without demanding a Pyroblast on every target')
 local oldExists,oldCombat=UnitExists,UnitAffectingCombat
 UnitExists=function() return false end;UnitAffectingCombat=function() return false end
@@ -377,6 +384,8 @@ GetShapeshiftForm=function() return 1 end
 GetShapeshiftFormInfo=function() return 132349,true,nil,4003 end
 namedWarrior.Update()
 check(namedWarrior.cells.resource.bottom.text=='Battle Stance','the stance line shows the client stance name instead of Form/Base')
+check(named.ForeverClassmateWarriorFrame.foldStat.text=='90%' and named.ForeverClassmateWarriorFrame.foldStat.label=='Health',
+    'Warrior compact stat is health')
 GetShapeshiftForm=function() return 0 end;namedWarrior.Update()
 check(namedWarrior.cells.resource.bottom.text=='','no stance name is invented when none is active or readable')
 local comboRogue=Fixture(NS.Rogue,{},{})
@@ -398,9 +407,11 @@ C_Item.GetWeaponEnchantInfo=function(slot) return {{hasEnchant=true,timeLeft=slo
 comboRogue.Update()
 check(comboRogue.cells.upkeep.top.text=='2m' and comboRogue.cells.upkeep.bottom.text=='Poison',
     'with both weapons coated, the bar shows the poison that expires first')
+check(named.ForeverClassmateRogueFrame.foldStat.text=='2m' and named.ForeverClassmateRogueFrame.foldStat.label=='Poison time left',
+    'Rogue compact stat is the shortest poison time left')
 GetInventoryItemID,C_Item.GetWeaponEnchantInfo=savedItemID,savedEnchant
 local savedCount,savedExists,savedHealth=C_Item.GetItemCount,UnitExists,UnitHealth
-C_Item.GetItemCount=function(name) return name=='Soul Shard' and 5 or 0 end
+C_Item.GetItemCount=function(id) return id==6265 and 5 or 0 end
 UnitExists=function(unit) return unit=='target' or unit=='pet' end
 UnitHealth=function(unit) return unit=='pet' and 80 or 90 end
 local petLock=Fixture(NS.Warlock,{'Demon Skin','Summon Imp','Will to Survive'},{'Demon Skin'})
@@ -409,6 +420,14 @@ check(petLock.cells.resource.bottom.text=='5 shards' and table.concat(petLock.ce
 check(petLock.cells.upkeep.top.text=='2/2' and petLock.cells.upkeep.bottom.text=='Demon 80%',
     'with armor and demon both up, the upkeep line shows the demon health')
 check(petLock.cells.racial.bottom.text=='Will to Survive','the racial slot names the racial instead of "Racial"')
+local lockStat=named.ForeverClassmateWarlockFrame.foldStat
+check(lockStat and lockStat.text=='5' and lockStat.label=='Soul Shards' and lockStat.color==nil,'Warlock compact stat counts soul shards')
+NS.Warlock.db.compactStat=false;petLock.Update()
+check(rawget(named.ForeverClassmateWarlockFrame,'foldStat')==nil,'turning the stat off clears it')
+NS.Warlock.db.compactStat=true
+C_Item.GetItemCount=function() return 0 end;petLock.Update()
+check(named.ForeverClassmateWarlockFrame.foldStat.text=='0' and named.ForeverClassmateWarlockFrame.foldStat.color[1]==1,
+    'zero soul shards shows in red')
 C_Item.GetItemCount,UnitExists,UnitHealth=savedCount,savedExists,savedHealth
 local warlock=Fixture(NS.Warlock,{'Demon Armor','Demon Skin'},{'Demon Skin'})
 check(warlock.cells.upkeep.top.text=='Active' and warlock.cells.upkeep.bottom.text=='Demon Skin' and warlock.alpha==0.6,

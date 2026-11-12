@@ -84,6 +84,18 @@ function NS.Folded.Create(host,content,db,module)
         well:Hide();badge:Hide();frame:Hide()
         badges[index],wells[index],frames[index]=badge,well,frame
     end
+    -- The class stat cell (shards, ammo, Ankhs...): same template in a neutral
+    -- frame. It is information, not a warning, so it never glows or pulses.
+    local statEdge=CreateFrame('Frame',nil,main);statEdge:SetAllPoints(main);Level(statEdge,base,4)
+    local statWell=row:CreateTexture(nil,'BACKGROUND');statWell:SetSize(L.CELL-4,L.CELL-4);statWell:SetColorTexture(0.03,0.03,0.035,0.92)
+    local statIcon=row:CreateTexture(nil,'ARTWORK');statIcon:SetSize(L.CELL-L.INSET*2,L.CELL-L.INSET*2)
+    statIcon:SetTexCoord(0.08,0.92,0.08,0.92)
+    local statFrame=statEdge:CreateTexture(nil,'OVERLAY');statFrame:SetSize(L.CELL,L.CELL);statFrame:SetTexture(media..'IconFrame')
+    statFrame:SetVertexColor(0.85,0.87,0.92)
+    local statText=statEdge:CreateFontString(nil,'OVERLAY','NumberFontNormal')
+    statText:SetPoint('BOTTOMRIGHT',statIcon,'BOTTOMRIGHT',1,-1)
+    statWell:Hide();statIcon:Hide();statFrame:Hide();statText:Hide()
+    local shownStat
     local visibleWarnings={}
     -- More than four warnings: the tooltip lists all, the last cell counts the rest.
     local overflow=edges:CreateFontString(nil,'OVERLAY','NumberFontNormal')
@@ -116,6 +128,7 @@ function NS.Folded.Create(host,content,db,module)
         if content.baseAlpha then NS.ClassHost.SetFade(host,content,content.baseAlpha) end
         if not GameTooltip then return end
         GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(NS.L('Click to expand'))
+        if shownStat then GameTooltip:AddLine(NS.L(shownStat.label)..': '..shownStat.text,0.85,0.9,1) end
         for _,warning in ipairs(visibleWarnings) do GameTooltip:AddLine(NS.L(warning.label),1,0.75,0.35,true) end
         if #visibleWarnings==0 then GameTooltip:AddLine(NS.L('No confirmed missing buffs'),0.75,0.75,0.75,true) end
         if not db.locked then GameTooltip:AddLine(NS.L('Drag to move'),0.75,0.75,0.75) end
@@ -157,8 +170,17 @@ function NS.Folded.Create(host,content,db,module)
                 if warning and warning.active==true and Core.Icon(warning.icon) then visibleWarnings[#visibleWarnings+1]=warning end
             end
         end
+        -- The stat comes from the class module through ClassHost.SetStat; this
+        -- view never reads game data itself.
+        shownStat=nil
+        if collapsed and db.enabled and db.compactStat~=false and not Core.PlayerDead() and content:IsShown() then
+            local stat=host.foldStat
+            if type(stat)=='table' and type(stat.text)=='string' and stat.text~='' and Core.Icon(stat.icon) then shownStat=stat end
+        end
         local total=collapsed and #visibleWarnings or 0
-        local count=math.min(4,total)
+        local offset=shownStat and 1 or 0
+        local shownWarnings=math.min(4-offset,total)
+        local count=offset+shownWarnings
         local width,height,rowWidth,cellY=NS.Folded.Size(count)
         if collapsed then
             host:SetSize(width,height);button:SetSize(width,height)
@@ -168,12 +190,20 @@ function NS.Folded.Create(host,content,db,module)
         card:SetShown(count>0);row:SetShown(count>0);halos:SetShown(count>0)
         if count>0 then LayoutCard(width,height) end
         local firstX=(width-rowWidth)/2
+        for _,region in ipairs({statWell,statIcon,statFrame,statText}) do region:SetShown(shownStat~=nil) end
+        if shownStat then
+            statIcon:SetTexture(Core.Icon(shownStat.icon));statText:SetText(shownStat.text)
+            local c=shownStat.color or {1,1,1};statText:SetTextColor(c[1],c[2],c[3])
+            statIcon:ClearAllPoints();statIcon:SetPoint('TOPLEFT',host,'TOPLEFT',firstX+L.INSET,-(cellY+L.INSET))
+            statWell:ClearAllPoints();statWell:SetPoint('TOPLEFT',host,'TOPLEFT',firstX+2,-(cellY+2))
+            statFrame:ClearAllPoints();statFrame:SetPoint('TOPLEFT',host,'TOPLEFT',firstX,-cellY)
+        end
         for index,badge in ipairs(badges) do
             local warning=visibleWarnings[index]
-            local shown=warning~=nil and index<=count
+            local shown=warning~=nil and index<=shownWarnings
             badge:SetShown(shown);wells[index]:SetShown(shown);frames[index]:SetShown(shown);glows[index]:SetShown(shown)
             if shown then
-                local x=firstX+(index-1)*(L.CELL+L.GAP)
+                local x=firstX+(index-1+offset)*(L.CELL+L.GAP)
                 badge:SetTexture(Core.Icon(warning.icon))
                 badge:ClearAllPoints();badge:SetPoint('TOPLEFT',host,'TOPLEFT',x+L.INSET,-(cellY+L.INSET))
                 wells[index]:ClearAllPoints();wells[index]:SetPoint('TOPLEFT',host,'TOPLEFT',x+2,-(cellY+2))
@@ -181,7 +211,9 @@ function NS.Folded.Create(host,content,db,module)
                 glows[index]:ClearAllPoints();glows[index]:SetPoint('TOPLEFT',host,'TOPLEFT',x-6,-(cellY-6))
             end
         end
-        overflow:SetShown(total>4);overflow:SetText(total>4 and ('+'..(total-4)) or '')
+        local hidden=total-shownWarnings
+        overflow:SetShown(hidden>0);overflow:SetText(hidden>0 and ('+'..hidden) or '')
+        if hidden>0 then overflow:ClearAllPoints();overflow:SetPoint('BOTTOMRIGHT',badges[shownWarnings],'BOTTOMRIGHT',-1,1) end
         local warning=#visibleWarnings>0
         -- Frame art follows the content's rendered alpha. The compact crest
         -- stays readable while idle; warnings stay fully visible.
@@ -199,5 +231,6 @@ function NS.Folded.Create(host,content,db,module)
     content:HookScript('OnHide',Refresh);content:HookScript('OnShow',Refresh)
     return {Refresh=Refresh,overflow=overflow,button=button,fold=fold,badges=badges,wells=wells,frames=frames,glows=glows,halos=halos,
         edges=edges,card=card,slices=slices,divider=divider,glow=glow,fill=fill,border=border,
-        primary=crest,crest=crest,main=main,row=row}
+        primary=crest,crest=crest,main=main,row=row,
+        stat={well=statWell,icon=statIcon,frame=statFrame,text=statText}}
 end

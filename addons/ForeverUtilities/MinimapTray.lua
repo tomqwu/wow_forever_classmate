@@ -145,11 +145,19 @@ local function Place()
     tray:SetPoint(vertical..(right and 'RIGHT' or 'LEFT'),anchor,vertical..(right and 'LEFT' or 'RIGHT'),right and -4 or 4,0)
 end
 
+-- Hovering the Classmate minimap button opens the tray; it closes two
+-- seconds after the pointer leaves both, on Escape, or on any click.
+function Tray.Open()
+    if not wanted or not tray then return false end
+    closeElapsed=0
+    if not tray:IsShown() then Tray.Scan();Place();tray:Show() end
+    return true
+end
+
 function Tray.Toggle()
     if not wanted or not tray then return false end
     if tray:IsShown() then tray:Hide();return true end
-    Tray.Scan();Place();closeElapsed=0;tray:Show()
-    return true
+    return Tray.Open()
 end
 
 function Tray.Active() return wanted end
@@ -184,7 +192,10 @@ local function Create()
     settingsCell:SetScript('OnClick',function() Tray.Close();if openSettings then openSettings() end end)
     settingsCell:SetScript('OnEnter',function(self)
         if not GameTooltip then return end
-        GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(NS.L('Classmate settings'));GameTooltip:Show()
+        GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(NS.L('Classmate settings'))
+        -- The minimap button's own tooltip is replaced by the tray, so its hints live here.
+        GameTooltip:AddLine(NS.L('Click the Classmate button: settings | Right-click: inspect target'),1,1,1,true)
+        GameTooltip:Show()
     end)
     settingsCell:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
     -- Close after the pointer has been away from the tray and its button for

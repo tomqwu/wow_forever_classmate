@@ -511,6 +511,37 @@ check(not foldHost.events.PLAYER_REGEN_DISABLED and not foldHost.events.PLAYER_R
     'turning auto-fold off removes its combat listeners')
 foldHost.scripts.OnEvent(foldHost,'PLAYER_REGEN_DISABLED')
 check(foldedDB.collapsed,'queued combat events are ignored once auto-fold is off')
+-- Class stat cell: first in the row, neutral frame, never glows or pulses.
+foldedDB.autoFold=false;foldedDB.collapsed=true;combat=false
+auras={{spellId=429959,name='Well-Rested'},{spellId=1248420,name='Well Fed'}};foldInstance.Apply()
+NS.ClassHost.SetStat(foldHost,{icon=901,text='5',label='Soul Shards'})
+local stat=summary.stat
+check(summary.card.shown and foldHost.width==64 and stat.frame.shown and stat.icon.texture==901 and stat.text.text=='5'
+    and stat.frame.x==17 and stat.frame.y==-60,'with no warnings the card shows just the class stat cell')
+NS.ClassHost.SetWarning(foldHost,'upkeep',true,777,'Armor missing')
+check(stat.frame.x==7 and summary.frames[1].x==41 and summary.badges[1].texture==777 and summary.glows[1].shown
+    and foldHost.width==78,'the stat comes first and warnings follow it in the same row')
+check(summary.halos.warningPulseGroup.playing and rawget(stat.frame,'warningPulseGroup')==nil,
+    'warnings pulse while the stat cell stays steady')
+local lines={}
+GameTooltip={SetOwner=function() end,SetText=function(_,t) lines[#lines+1]=t end,AddLine=function(_,t) lines[#lines+1]=t end,Show=function() end,Hide=function() end}
+summary.button.scripts.OnEnter(summary.button);GameTooltip=nil
+check(lines[2]=='Soul Shards: 5','the card tooltip lists the stat first')
+foldHost.scripts.OnLeave(foldHost);summary.button.scripts.OnLeave(summary.button)
+NS.ClassHost.SetWarning(foldHost,'imbue',true,778,'Weapon imbue missing')
+NS.ClassHost.SetWarning(foldHost,'shield',true,779,'Elemental shield missing')
+NS.ClassHost.SetWarning(foldHost,'aspect',true,780,'Aspect missing')
+check(foldHost.width==146 and summary.badges[3].shown and not summary.badges[4].shown and summary.overflow.shown
+    and summary.overflow.text=='+1','with the stat, three warnings fit and the third counts the rest')
+for _,key in ipairs({'upkeep','imbue','shield','aspect'}) do NS.ClassHost.SetWarning(foldHost,key,false,nil,'x') end
+foldedDB.compactStat=false;foldInstance.Apply()
+check(not stat.frame.shown and not summary.card.shown and foldHost.width==48,'the stat cell can be turned off')
+foldedDB.compactStat=true;foldInstance.Apply()
+foldContent:Hide()
+check(not stat.frame.shown,'suspended or hidden class content never shows a stale stat')
+foldContent:Show();NS.ClassHost.SetStat(foldHost,{icon=901,text='',label='Soul Shards'})
+check(not stat.frame.shown,'an empty reading shows no stat cell')
+NS.ClassHost.SetStat(foldHost,nil)
 transition.Play(true,48,48)
 foldedDB.enabled=false;foldInstance.Apply()
 check(not transition.bloom.playing and not transition.intro.playing and not transition.flare.shown,'disable stops the transition effect')

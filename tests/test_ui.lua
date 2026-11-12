@@ -61,9 +61,10 @@ NS.MailRecipients={Apply=function() mailApplies=mailApplies+1 end,Initialize=fun
  mailInitializations=mailInitializations+1
 end}
 -- Tray double: grouping off by default here, so left-click keeps opening settings.
-local trayActive,trayToggles,trayArgs=false,0,nil
+local trayActive,trayOpens,trayCloses,trayArgs=false,0,0,nil
 NS.MinimapTray={Apply=function(m,b,open) trayArgs={m,b,open} end,
-    Toggle=function() if trayActive then trayToggles=trayToggles+1 end;return trayActive end,
+    Open=function() if trayActive then trayOpens=trayOpens+1 end;return trayActive end,
+    Close=function() trayCloses=trayCloses+1 end,
     Active=function() return trayActive end}
 assert(loadfile(root..'UI.lua'))('ForeverUtilities',NS)
 local events=frames[1]
@@ -134,10 +135,17 @@ check(mini.clicks[1]=='LeftButtonUp' and mini.clicks[2]=='RightButtonUp','minima
 mini.scripts.OnClick(mini,'LeftButton');check(panel.shown,'minimap left-click opens settings')
 check(trayArgs and trayArgs[1]==NS.Hunter and trayArgs[2]==mini and type(trayArgs[3])=='function',
     'the minimap button hands its module, itself and the settings opener to the tray')
-panel:Hide();trayActive=true;mini.scripts.OnClick(mini,'LeftButton')
-check(trayToggles==1 and not panel.shown,'with grouping on, left-click opens the addon tray instead')
-trayArgs[3]();check(panel.shown,'the tray settings cell opens the same settings panel')
-trayActive=false
+panel:Hide();trayActive=true
+local shownTooltip=false
+GameTooltip={SetOwner=function() shownTooltip=true end,SetText=function() end,AddLine=function() end,Show=function() end,Hide=function() end}
+mini.scripts.OnEnter(mini)
+check(trayOpens==1 and not shownTooltip,'with grouping on, hovering the minimap button opens the addon tray instead of a tooltip')
+local closesBefore=trayCloses;mini.scripts.OnClick(mini,'LeftButton')
+check(panel.shown and trayCloses==closesBefore+1,'left-click still opens settings and closes the hover tray')
+panel:Hide();trayArgs[3]();check(panel.shown,'the tray settings cell opens the same settings panel')
+trayActive=false;mini.scripts.OnEnter(mini)
+check(shownTooltip and trayOpens==1,'with grouping off, hovering shows the usual tooltip')
+GameTooltip=nil
 local inspected=0
 UnitIsPlayer=function() return true end;CanInspect=function() return true end
 InspectUnit=function(unit) if unit=='target' then inspected=inspected+1 end end

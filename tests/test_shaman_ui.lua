@@ -63,13 +63,14 @@ GetTotemInfo=function() return false,'',0,0,0 end
 GetTotemTimeLeft=function() return 0 end
 GetInventoryItemID=function() return nil end
 Enum={WeaponSlot={MainHand=0,OffHand=1},SpellBookSpellBank={Player=0}}
-C_Item={GetWeaponEnchantInfo=function() return {} end}
+C_Item={GetWeaponEnchantInfo=function() return {} end,GetItemCount=function(id) return id==17030 and 2 or 0 end}
 local book={
     [1]={spellID=1001,name='Maelstrom Weapon',iconID=501,isPassive=true},
     [2]={spellID=1002,name='Windfury Weapon',iconID=502},
     [3]={spellID=1003,name='Lightning Shield',iconID=503},
     [4]={spellID=1004,name='Stoneclaw Totem',iconID=504},
     [5]={spellID=1005,name='Totemic Recall',iconID=505},
+    [6]={spellID=1006,name='Reincarnation',iconID=506,isPassive=true},
 }
 C_Spell={GetSpellInfo=function(value)
     if value==2004 then return {name='Stoneclaw Totem',iconID=604} end
@@ -103,6 +104,10 @@ local db=NS.Shaman.db
 check(db.x==72 and db.y==-101 and db.scale==1.2 and not db.locked,'saved shaman layout retained')
 check(NS.Shaman.instance~=nil,'shaman creates active helper')
 check(NS.Shaman.spells.maelstrom and NS.Shaman.spells.windfury and NS.Shaman.spells.lightningShield,'learned Shaman abilities discovered from spellbook')
+local shamanHost=named.ForeverClassmateShamanFrame
+named.ForeverClassmateShamanIndicator.Refresh()
+check(NS.Shaman.spells.reincarnation and shamanHost.foldStat and shamanHost.foldStat.text=='2' and shamanHost.foldStat.label=='Ankhs',
+    'Shaman compact stat counts Ankhs once Reincarnation is learned, even though it is passive')
 local host=named.ForeverClassmateShamanFrame
 local indicator=named.ForeverClassmateShamanIndicator
 check(host and host.width==426 and host.height==56 and host.shown,'rendered native-width shaman bar created')
