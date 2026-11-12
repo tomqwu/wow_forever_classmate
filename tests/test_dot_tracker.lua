@@ -79,6 +79,21 @@ reads={}
 tracker.scripts.OnEvent(tracker,'UNIT_AURA','nameplate2')
 check(reads.nameplate2 and not reads.target and not reads.nameplate1,
     'one nameplate aura event does not rescan every other target')
+-- A plate's record goes stale while it is the target; once targeting moves on
+-- it is read fresh, so a dispelled DoT never lingers.
+local firstTarget,firstAuras=units.target,units.nameplate1.auras
+local secondTarget={guid=units.nameplate2.guid,name='Second',auras=units.nameplate2.auras}
+units.target=secondTarget;tracker.scripts.OnEvent(tracker,'PLAYER_TARGET_CHANGED') -- First is observed as a plate
+units.target=firstTarget;tracker.scripts.OnEvent(tracker,'PLAYER_TARGET_CHANGED')  -- First becomes the target
+units.nameplate1.auras={};units.target={guid=firstTarget.guid,name='First',auras=units.nameplate1.auras}
+tracker.scripts.OnEvent(tracker,'UNIT_AURA','target');tracker.scripts.OnEvent(tracker,'UNIT_AURA','nameplate1')
+units.target=secondTarget;tracker.scripts.OnEvent(tracker,'PLAYER_TARGET_CHANGED')
+local stale=false
+for _,bar in ipairs(tracker.bars) do if bar.shown and bar.label.text:find('First',1,true) then stale=true end end
+check(not stale,'a DoT removed while that plate was targeted does not linger after switching target')
+units.target,units.nameplate1.auras=firstTarget,firstAuras
+tracker.scripts.OnEvent(tracker,'PLAYER_TARGET_CHANGED')
+check(tracker.bars[3].shown,'restored target and plates show their current DoTs again')
 units.target.auras={}
 tracker.scripts.OnEvent(tracker,'UNIT_AURA','target')
 check(tracker.bars[1].shown and tracker.bars[1].label.text:find('Second',1,true)

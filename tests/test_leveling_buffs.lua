@@ -126,6 +126,7 @@ end
 function methods:Show() self:SetShown(true) end
 function methods:Hide() self:SetShown(false) end
 setmetatable(methods,{__index=function() return function() end end})
+function methods:RegisterUnitEvent(event,unit) self.events[event]=unit end
 dofile('tests/mock_animation.lua')(methods)
 CreateFrame=function() return object() end
 UIParent=object()
@@ -150,6 +151,7 @@ check(bag.border.halo and bag.border.halo.shown and bag.icon.width==16,
     'the reminder uses the amber cell with an ember halo and a 16px icon')
 check(bag.border.warningPulseGroup.playing,'missing sleeping-bag buff uses the saved flash preference')
 check(not bag.button.scripts.OnUpdate and not content.scripts.OnUpdate,'sleeping-bag checks add no polling')
+check(service.controller.events.UNIT_AURA=='player','aura updates are registered for the player unit only')
 NS.ClassHost.SetFade(host,content,0.6)
 check(content.alpha==1,'class refresh cannot dim an active sleeping-bag warning')
 auras={{spellId=429959}}
@@ -546,6 +548,30 @@ dead=true;foldHost.scripts.OnEvent(foldHost,'PLAYER_DEAD')
 -- Logged out while dead: the saved flag restores the bar after login.
 dead=false;foldHost.scripts.OnEvent(foldHost,'PLAYER_ENTERING_WORLD')
 check(not foldedDB.collapsed and foldedDB.foldedByDeath==nil,'a death fold saved across logout is restored when alive')
+-- While dead the crest cannot expand an empty bar; revival does that.
+dead=true;foldHost.scripts.OnEvent(foldHost,'PLAYER_DEAD')
+summary.button.scripts.OnMouseDown();summary.button.scripts.OnClick()
+check(foldedDB.collapsed and foldedDB.foldedByDeath,'clicking the crest while dead keeps the death fold')
+dead=false;foldHost.scripts.OnEvent(foldHost,'PLAYER_UNGHOST')
+-- A fold the player makes is theirs, even if an older death flag is set.
+foldedDB.foldedByDeath=true;summary.fold.scripts.OnClick()
+check(foldedDB.collapsed and foldedDB.foldedByDeath==nil,'a manual fold clears the death flag')
+foldHost.scripts.OnEvent(foldHost,'PLAYER_ALIVE')
+check(foldedDB.collapsed,'revival never undoes a fold the player chose')
+-- A drag on a locked crest is not a click.
+foldedDB.locked=true
+summary.button.scripts.OnMouseDown();summary.button.scripts.OnDragStart();summary.button.scripts.OnClick()
+check(foldedDB.collapsed,'dragging a locked crest does not expand the card')
+foldedDB.locked=false
+-- An expanded bar with hidden content shows no empty frame or hit target.
+function methods:EnableMouse(value) self.mouse=value end
+foldedDB.collapsed=false;foldInstance.Apply()
+check(foldHost.mouse==true and summary.border.shown,'an expanded bar with content takes the mouse')
+foldContent:Hide()
+check(foldHost.mouse==false and not summary.border.shown and not summary.fold.shown and foldHost.shellFill.alpha==0,
+    'hidden content leaves no empty frame, collapse glyph or hit target')
+foldContent:Show()
+check(foldHost.mouse==true and summary.border.shown,'the frame returns with its content')
 foldedDB.collapsed=true;foldInstance.Apply()
 -- Class stat cell: first in the row, neutral frame, never glows or pulses.
 foldedDB.autoFold=false;foldedDB.collapsed=true;combat=false

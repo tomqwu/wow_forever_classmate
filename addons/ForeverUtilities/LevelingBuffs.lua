@@ -93,7 +93,7 @@ function Buffs.Create(host,content,db)
         button:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
     end
     local events={'PLAYER_ENTERING_WORLD','PLAYER_LEAVING_WORLD','PLAYER_REGEN_ENABLED',
-        'PLAYER_REGEN_DISABLED','PLAYER_LEVEL_UP','PLAYER_DEAD','PLAYER_ALIVE','PLAYER_UNGHOST','UNIT_AURA'}
+        'PLAYER_REGEN_DISABLED','PLAYER_LEVEL_UP','PLAYER_DEAD','PLAYER_ALIVE','PLAYER_UNGHOST'}
     local active,suspended,retired=false,false,false
     local function Fade()
         if content.baseAlpha then NS.ClassHost.SetFade(host,content,content.baseAlpha) end
@@ -112,6 +112,10 @@ function Buffs.Create(host,content,db)
         for _,event in ipairs(events) do
             if wanted then controller:RegisterEvent(event) else controller:UnregisterEvent(event) end
         end
+        -- Only the player's own auras matter; other units never wake this.
+        if wanted then
+            if controller.RegisterUnitEvent then controller:RegisterUnitEvent('UNIT_AURA','player') else controller:RegisterEvent('UNIT_AURA') end
+        else controller:UnregisterEvent('UNIT_AURA') end
         active=wanted
     end
     local function Refresh(level)

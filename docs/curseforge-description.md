@@ -37,7 +37,7 @@ Warrior, Rogue, Druid, Priest and Warlock can show **slim multi-target DoT bars*
 
 ## The bar
 
-Engraved dividers separate the slots, and every icon sits in a matching frame. A confirmed missing buff (armor, seal, shout, Hunter's Mark, aspect, Shaman imbue or shield) switches to an amber frame with an ember glow, and the whole frame warms to amber. **Flash missing buffs** gently pulses those frames; turn it off for a steady warning. Unreadable states, missing pets and temporary Rogue finishers never trigger a warning.
+Engraved dividers separate the slots, and every icon sits in a matching frame. A confirmed missing buff (armor, seal, Hunter's Mark, aspect, Shaman imbue or shield) switches to an amber frame with an ember glow, and the whole frame warms to amber. **Flash missing buffs** gently pulses those frames; turn it off for a steady warning. Unreadable states, missing pets and temporary Rogue finishers never trigger a warning.
 
 Bars are fully visible in combat and fade between fights: 60% with a target and 20% when idle (Mage 90% and 75% so mana and armor stay readable). A confirmed missing buff, an active Shaman totem or hovering the bar brings it back to full opacity.
 

@@ -133,6 +133,9 @@ function Tracker.Create(parent,db,module,keys,color)
             if targetCount>=MAX_TARGETS then break end
             local sameTarget=unit~='target' and (Core.Call(UnitIsUnit,unit,'target')==true
                 or (targetGUID and Core.Call(UnitGUID,unit)==targetGUID))
+            -- While a plate is the target its own record goes stale; drop it so
+            -- it is read fresh when targeting moves on.
+            if sameTarget then observations[unit]=nil end
             if not sameTarget then
                 if changedUnit==nil or changedUnit==unit or observations[unit]==nil then
                     observations[unit]=Tracker.ReadUnit(unit,names,now) or false

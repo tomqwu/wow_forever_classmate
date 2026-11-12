@@ -69,6 +69,16 @@ local racial=C.Racial(spells,'WARRIOR')
 check(racial and racial.spell.name=='Will to Survive' and not racial.ready and racial.left==20,'racial state uses cooldown')
 C_Spell.GetSpellCooldown=function() return {startTime=secret,duration=30,isEnabled=true} end
 check(C.Cooldown(spells.willToSurvive)==nil,'secret cooldown hidden')
+-- The documented isOnGCD flag marks the global cooldown, not the spell's own.
+C_Spell.GetSpellCooldown=function() return {startTime=99,duration=1.5,isEnabled=true,isOnGCD=true} end
+C_Spell.IsSpellUsable=function() return true,false end
+check(C.Cooldown(spells.willToSurvive).left==0 and C.SpellState(spells.willToSurvive).status=='ready',
+    'a global cooldown keeps a ready ability ready')
+C_Spell.GetSpellCooldown=function() return {startTime=99,duration=1.5,isEnabled=true,isOnGCD=false} end
+check(C.SpellState(spells.willToSurvive).status=='cooldown','a real short cooldown is never reclassified as ready')
+C_Spell.GetSpellCooldown=function() return {startTime=99,duration=1.5,isEnabled=true} end
+check(C.SpellState(spells.willToSurvive).status=='cooldown','without the flag no duration threshold is applied')
+C_Spell.IsSpellUsable=nil
 C_Spell.GetSpellCooldown=function() return {startTime=0,duration=0,isEnabled=true} end
 C_Spell.IsSpellUsable=function() return false,false end
 racial=C.Racial(spells,'WARRIOR');check(not racial.ready and racial.left==0,'context restriction retained')

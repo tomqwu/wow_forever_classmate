@@ -7,8 +7,8 @@ if locale~='zhCN' then return end
 -- from the client's localized APIs; command names and saved keys stay stable.
 local zh={
     ['Player resources']='角色资源',
-    ['Collapsed warning icon']='折叠为警告图标',['Show collapse button']='显示折叠按钮',['Group addon minimap buttons']='收纳其他插件的小地图按钮',['Addon buttons']='插件按钮',['No other addon buttons']='没有其他插件按钮',['Classmate settings']='永恒战友设置',['Click the Classmate button: settings | Right-click: inspect target']='点击永恒战友按钮：设置 | 右键：观察目标',['Fold outside combat, expand in combat']='脱战折叠，进战展开',
-    ['Click to expand']='点击展开',['Collapse to warning icons']='折叠为警告图标',['Armor missing']='缺少护甲增益',['Class upkeep missing']='缺少职业增益',
+    ['Collapsed warning icon']='折叠为警告图标',['Show collapse button']='显示折叠按钮',['Group addon minimap buttons']='收纳其他插件的小地图按钮',['Addon buttons']='插件按钮',['No other addon buttons']='没有其他插件按钮',['Classmate settings']='永恒战友设置',['Click the Classmate button: settings | Right-click: inspect target']='点击永恒战友按钮：设置 | 右键：观察目标',['Click the Classmate button: settings']='点击永恒战友按钮：设置',['Fold outside combat, expand in combat']='脱战折叠，进战展开',
+    ['Click to expand']='点击展开',['Expands when you are alive']='复活后展开',['Collapse to warning icons']='折叠为警告图标',['Armor missing']='缺少护甲增益',['Class upkeep missing']='缺少职业增益',
     ['No confirmed missing buffs']='未确认有缺失的增益',
     ['Weapon imbue missing']='缺少武器强化',['Elemental shield missing']='缺少元素护盾',['Aspect missing']='缺少守护',
     ['Forever Classmate']='永恒战友',

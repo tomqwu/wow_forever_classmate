@@ -251,9 +251,11 @@ C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
     if unit=='player' and filter=='HELPFUL' and index==1 then return {name='Mark of the Wild',icon=62,sourceUnit='player'} end
 end
 druidIndicator.Update()
-check(named.ForeverClassmateDruidFrame.foldWarnings.upkeep.active
-    and named.ForeverClassmateDruidFrame.foldWarnings.upkeep.icon==63,
-    'folded upkeep uses missing Thorns artwork even when Mark of the Wild is active')
+check(druidIndicator.cells.upkeep.bottom.text=='Thorns' and druidIndicator.cells.upkeep.icon.texture==63,
+    'the upkeep icon belongs to the missing Thorns, not to the active Mark of the Wild')
+-- Thorns is cast situationally: missing between fights never wakes the bar.
+check(not named.ForeverClassmateDruidFrame.foldWarnings.upkeep.active,
+    'missing Thorns raises no maintained-buff warning')
 C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
     if unit=='player' and filter=='HELPFUL' and index==1 then return {name='Thorns',icon=63,expirationTime=130,sourceUnit='player'} end
 end
@@ -304,6 +306,10 @@ check(named.ForeverClassmatePaladinFrame.foldStat.text=='70%' and named.ForeverC
     'Paladin compact stat is mana')
 check(paladin.cells.target.top.text=='10s','Paladin recognizes a judgment effect derived from its learned seal without a separate spellbook entry')
 
+-- A shout is cast in combat; missing between fights it names itself but never wakes the bar.
+local quietWarrior=Fixture(NS.Warrior,{'Battle Shout','Rend'},{})
+check(quietWarrior.cells.upkeep.top.text=='Missing' and quietWarrior.cells.upkeep.bottom.text=='Battle Shout'
+    and not named.ForeverClassmateWarriorFrame.foldWarnings.upkeep.active,'a missing shout raises no maintained-buff warning')
 local warrior=Fixture(NS.Warrior,{'Battle Shout','Rend'},{'Battle Shout'})
 check(warrior.cells.upkeep.bottom.text=='Battle Shout' and warrior.cells.target.top.text=='None' and warrior.cells.target.bottom.text=='Rend','absent optional Warrior target effects are neutral rather than mandatory warnings')
 local druid=Fixture(NS.Druid,{'Mark of the Wild','Thorns'},{'Gift of the Wild','Thorns'})

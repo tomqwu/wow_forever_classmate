@@ -75,6 +75,8 @@ function Context.Aura(unit,filter,names,requirePlayer)
 end
 
 function Context.MissingShield(names)
+    -- No learned shield (low level, or names not found) is unknown, not missing.
+    if type(names)~='table' or not next(names) then return nil end
     local aura=Context.Aura('player','HELPFUL',names,false)
     if type(aura)=='table' then return false,aura end
     if aura==nil then return nil end
@@ -84,9 +86,9 @@ function Context.MissingShield(names)
     return false
 end
 
+-- Exact mana first; when that is restricted, the documented UnitPowerPercent
+-- reading through the shared reader. A secret percentage stays unavailable.
 function Context.ManaPercent()
-    local current=Call(UnitPower,'player',0)
-    local maximum=Call(UnitPowerMax,'player',0)
-    if not Core.IsNumber(current) or not Core.IsNumber(maximum) or maximum<=0 then return nil end
-    return math.max(0,math.min(100,math.floor(current*100/maximum+0.5)))
+    local power=NS.ClassContext.Power(0,'Mana')
+    return power and power.percent or nil
 end

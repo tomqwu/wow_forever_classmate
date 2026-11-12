@@ -1,3 +1,24 @@
+## 0.41.1
+
+Fixes from a full design and class review:
+
+- **Shaman:** a Shaman who hasn't learned an elemental shield yet no longer gets a "shield missing" warning in every fight. When exact mana is restricted, the mana display now falls back to the game's readable percentage instead of disappearing.
+- **All standard classes:** abilities and racials no longer flash a 1-second cooldown after every cast. The game's own global-cooldown flag now keeps a ready ability showing "Ready".
+- **Warrior and Druid:** a missing Battle Shout, Commanding Shout or Thorns between fights is still named on the bar, but no longer keeps the bar bright, pulsing and amber.
+- **Upkeep icon:** the upkeep icon now always matches the first missing buff it names. Previously another, active buff's icon could appear next to "Missing / Fortitude".
+- **DoT side bars:** these no longer keep showing a DoT that was removed while that enemy was your target.
+- **Death fold:**
+  - A fold you choose yourself is never undone when you revive.
+  - Clicking the crest while dead no longer opens an empty bar; it expands when you are alive.
+  - Dragging a locked crest no longer expands it.
+- **Bar frame:** when the bar has nothing to show (the Hunter icon-only view without a target, for example), its frame, collapse glyph and mouse area are hidden too.
+- **Compact card:** the `+N` count of extra warnings no longer fades with the warning pulse.
+- **Hunter range:** a confirmed Shooting or Melee reading is kept when two range checks disagree (only the yards are dropped). A single failed short check, such as melee, now gives a lower bound like "Distance | >5 yd" instead of claiming "Out of range".
+- **Minimap tray:** with no other addon buttons to group, hovering the Classmate button shows its normal tooltip again. The tray's hint offers right-click inspect only while that option is on.
+- **Leveling reminders:** these now listen to your own aura changes only, not every unit's.
+
+Use `/reload`. Automated checks use mocked APIs; these fixes still need in-game confirmation.
+
 ## 0.41.0
 
 - The resource slot on standard class bars is now visual instead of text. A slim vertical meter shows your power in its own color: blue mana, red rage, yellow energy (the Druid meter follows the current form). Beside it, Warlocks see the Soul Shard icon with a count (red at zero), Rogues see five combo pips, and Warriors, Druids and Priests see their stance or form icon. "100%", "3 combo" and the stance name are gone from the bar; exact values and names are in the tooltip.

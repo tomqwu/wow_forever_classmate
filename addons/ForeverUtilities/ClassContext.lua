@@ -189,13 +189,16 @@ end
 
 function Context.Cooldown(spell)
     if type(spell)~='table' or not Core.IsNumber(spell.id) then return nil end
-    local start,duration,enabled
+    local start,duration,enabled,onGCD
     local info=Call(C_Spell and C_Spell.GetSpellCooldown,spell.id)
-    if type(info)=='table' then start,duration,enabled=info.startTime,info.duration,info.isEnabled
+    if type(info)=='table' then start,duration,enabled,onGCD=info.startTime,info.duration,info.isEnabled,info.isOnGCD
     elseif type(GetSpellCooldown)=='function' then start,duration,enabled=Call(GetSpellCooldown,spell.id) end
     if not Core.IsReadable(enabled) or (type(enabled)~='boolean' and enabled~=0 and enabled~=1) then return nil end
     if enabled==false or enabled==0 then return {left=nil,enabled=false} end
     if not Core.IsNumber(start) or not Core.IsNumber(duration) or start<0 or duration<0 then return nil end
+    -- The documented isOnGCD flag (never secret) marks a global cooldown, which
+    -- is not the spell's own cooldown. No duration threshold is used.
+    if onGCD==true then return {left=0,enabled=true,gcd=true} end
     local left=0
     if duration>0 then
         local now=Call(GetTime)

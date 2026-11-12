@@ -36,6 +36,11 @@ fallback({{min=0,max=5,inside=false},{min=0,max=35,inside=true}},
 fallback({{min=0,max=100,inside=false}},nil,'beyond','Out of range | >100 yd')
 fallback({{min=0,max=35,inside=true}},nil,'distance','<=35 yd')
 fallback({}, {min=8,max=35,inside=secret},'unknown','Range unavailable')
+-- One failed short check is only a lower bound, never "Out of range".
+fallback({{min=0,max=5,inside=false}},{min=8,max=35,inside=secret},'distance','>5 yd')
+-- Contradicting brackets drop the yards but keep a confirmed attack state.
+measure({{min=0,max=5,inside=true},{min=8,max=35,inside=true}},false,true,'shoot','Shooting')
+measure({{min=0,max=5,inside=true},{min=8,max=35,inside=true}},true,nil,'melee','Melee')
 -- Never display invalid, restricted, or unchecked distances as real numbers.
 for _,value in ipairs({-1,math.huge,0/0,secret}) do
     UnitDistanceSquared=function() return value,true end

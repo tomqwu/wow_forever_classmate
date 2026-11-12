@@ -150,7 +150,12 @@ end
 function Tray.Open()
     if not wanted or not tray then return false end
     closeElapsed=0
-    if not tray:IsShown() then Tray.Scan();Place();tray:Show() end
+    if not tray:IsShown() then
+        Tray.Scan()
+        -- Nothing to group: keep the minimap button's own tooltip.
+        if #order==0 then return false end
+        Place();tray:Show()
+    end
     return true
 end
 
@@ -194,7 +199,10 @@ local function Create()
         if not GameTooltip then return end
         GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(NS.L('Classmate settings'))
         -- The minimap button's own tooltip is replaced by the tray, so its hints live here.
-        GameTooltip:AddLine(NS.L('Click the Classmate button: settings | Right-click: inspect target'),1,1,1,true)
+        -- Offer inspect only while that option is on.
+        local inspect=not (module and module.db and module.db.minimapInspect==false)
+        GameTooltip:AddLine(NS.L(inspect and 'Click the Classmate button: settings | Right-click: inspect target'
+            or 'Click the Classmate button: settings'),1,1,1,true)
         GameTooltip:Show()
     end)
     settingsCell:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)

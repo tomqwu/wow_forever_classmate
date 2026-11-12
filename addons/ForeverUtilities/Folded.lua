@@ -121,7 +121,9 @@ function NS.Folded.Create(host,content,db,module)
     local shownStat
     local visibleWarnings={}
     -- More than four warnings: the tooltip lists all, the last cell counts the rest.
-    local overflow=edges:CreateFontString(nil,'OVERLAY','NumberFontNormal')
+    -- On its own frame: the pulse fades the cell edges, never this text.
+    local counter=CreateFrame('Frame',nil,main);counter:SetAllPoints(main);Level(counter,base,5)
+    local overflow=counter:CreateFontString(nil,'OVERLAY','NumberFontNormal')
     overflow:SetPoint('BOTTOMRIGHT',badges[4],'BOTTOMRIGHT',-1,1);overflow:Hide()
     local border=host.outline
     -- A plain glyph on the expanded shell's outline; no second button border.
@@ -130,7 +132,8 @@ function NS.Folded.Create(host,content,db,module)
     local glyph=fold:CreateFontString(nil,'OVERLAY','GameFontHighlight');glyph:SetPoint('CENTER',fold,'CENTER',0,0);glyph:SetText('<')
     glyph:SetTextColor(0.8,0.85,0.9)
     fold.glyph=glyph
-    fold:SetScript('OnClick',function() db.collapsed=true;module.Apply() end)
+    -- A view the player picks is theirs: revival must not undo it.
+    fold:SetScript('OnClick',function() db.collapsed=true;db.foldedByDeath=nil;module.Apply() end)
     fold:SetScript('OnEnter',function(self)
         glyph:SetTextColor(1,1,1)
         if GameTooltip then
@@ -143,14 +146,20 @@ function NS.Folded.Create(host,content,db,module)
     end)
     local dragged=false
     button:SetScript('OnMouseDown',function() dragged=false end)
-    button:SetScript('OnDragStart',function() if not db.locked then dragged=true;host.shell:StartMoving() end end)
+    -- A drag on a locked crest is still a drag, never a click to expand.
+    button:SetScript('OnDragStart',function() dragged=true;if not db.locked then host.shell:StartMoving() end end)
     button:SetScript('OnDragStop',function() local fn=host:GetScript('OnDragStop');if fn then fn(host) end end)
-    button:SetScript('OnClick',function() if not dragged then db.collapsed=false;module.Apply() end end)
+    -- While dead the bar has no live content to show; revival expands it.
+    button:SetScript('OnClick',function()
+        if dragged or Core.PlayerDead()==true then return end
+        db.collapsed=false;db.foldedByDeath=nil;module.Apply()
+    end)
     button:SetScript('OnEnter',function(self)
         host.hovered=true
         if content.baseAlpha then NS.ClassHost.SetFade(host,content,content.baseAlpha) end
         if not GameTooltip then return end
-        GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(NS.L('Click to expand'))
+        GameTooltip:SetOwner(self,'ANCHOR_TOP')
+        GameTooltip:SetText(NS.L(Core.PlayerDead()==true and 'Expands when you are alive' or 'Click to expand'))
         if shownStat then GameTooltip:AddLine(NS.L(shownStat.label)..': '..shownStat.text,0.85,0.9,1) end
         for _,warning in ipairs(visibleWarnings) do GameTooltip:AddLine(NS.L(warning.label),1,0.75,0.35,true) end
         if #visibleWarnings==0 then GameTooltip:AddLine(NS.L('No confirmed missing buffs'),0.75,0.75,0.75,true) end
@@ -177,7 +186,11 @@ function NS.Folded.Create(host,content,db,module)
     local function Refresh()
         local collapsed=db.collapsed==true
         button:SetShown(db.enabled and collapsed)
-        fold:SetShown(db.enabled and not collapsed and db.showFoldButton~=false)
+        -- An expanded bar whose content is hidden (dead, icon-only without a
+        -- target) shows no empty frame and exposes no hit target.
+        local empty=not collapsed and not content:IsShown()
+        fold:SetShown(db.enabled and not collapsed and not empty and db.showFoldButton~=false)
+        host:EnableMouse(db.enabled==true and not empty)
         visibleWarnings={}
         -- Collected in both views: collapsed shows the icons, expanded only
         -- warms the outline (its slots already carry the detail and pulse).
@@ -245,8 +258,8 @@ function NS.Folded.Create(host,content,db,module)
         Spirit(collapsed and db.enabled==true and Core.PlayerDead())
         button:SetAlpha(alpha);fold:SetAlpha(alpha)
         -- The compact card brings its own frame; the expanded shell panel is hidden.
-        if host.shellFill then host.shellFill:SetAlpha(collapsed and 0 or alpha) end
-        border:SetShown(not collapsed)
+        if host.shellFill then host.shellFill:SetAlpha((collapsed or empty) and 0 or alpha) end
+        border:SetShown(not collapsed and not empty)
         if border.SetWarm then border.SetWarm(warning) end
         pulse(collapsed and db.enabled and warning and db.flashMissingBuffs~=false)
         border:SetAlpha(alpha)

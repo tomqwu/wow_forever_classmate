@@ -43,7 +43,7 @@ local configs={
             Spell('battleShout','Battle Shout','upkeep'),Spell('commandingShout','Commanding Shout','upkeep'),
             Spell('rend','Rend','target'),Spell('deepWounds','Deep Wounds','target',true),Spell('bloodthrill','Bloodthrill','proc',true),
             Spell('overpower','Overpower','cue'),Spell('execute','Execute','cue'),Spell('victoryRush','Victory Rush','cue'),Spell('bloodthirst','Bloodthirst','cue'),Spell('recklessSwings','Reckless Swings','cue'),Spell('slam','Slam','cue'),
-        },upkeepLabel='Shout',upkeepGroups={{label='Shout',keys={'battleShout','commandingShout'}}},targetLabel='Target effect',powerType=1,powerLabel='Rage',showForm=true,dotKeys={'rend','deepWounds'}},
+        },upkeepLabel='Shout',upkeepGroups={{label='Shout',keys={'battleShout','commandingShout'},wakeOnMissing=false}},targetLabel='Target effect',powerType=1,powerLabel='Rage',showForm=true,dotKeys={'rend','deepWounds'}},
     ROGUE={key='rogue',label='Rogue',command='/frogue',color={1,0.96,0.41},icon='Interface\\Icons\\Ability_Rogue_SliceDice',
         description='Energy, combo points, weapon coatings, finishers, target effects, and racial cooldowns.',
         catalog={
@@ -59,7 +59,7 @@ local configs={
             Spell('moonfire','Moonfire','target'),Spell('insectSwarm','Insect Swarm','target'),Spell('faerieFire','Faerie Fire','target'),Spell('rip','Rip','target'),Spell('rake','Rake','target'),Spell('lacerate','Lacerate','target'),
             Spell('eclipse','Eclipse','proc',true),Spell('naturesGrace',"Nature's Grace",'proc',true),Spell('omenClarity',{'Omen of Clarity','Clearcasting'},'proc',true),
             Spell('primalBite','Primal Bite','cue'),Spell('shiftingPower','Shifting Power','cue'),Spell('poised','Poised','proc',true),Spell('innervate','Innervate','cue'),Spell('swiftmend','Swiftmend','cue'),
-        },upkeepLabel='Nature buffs',upkeepGroups={{label='Mark of the Wild',keys={'markWild'}},{label='Thorns',keys={'thorns'}}},targetLabel='Target effect',currentPower=true,showForm=true,dotKeys={'moonfire','insectSwarm','rip','rake','lacerate'}},
+        },upkeepLabel='Nature buffs',upkeepGroups={{label='Mark of the Wild',keys={'markWild'}},{label='Thorns',keys={'thorns'},wakeOnMissing=false}},targetLabel='Target effect',currentPower=true,showForm=true,dotKeys={'moonfire','insectSwarm','rip','rake','lacerate'}},
     MAGE={key='mage',label='Mage',command='/fmage',color={0.25,0.78,0.92},icon='Interface\\Icons\\Spell_Frost_FrostArmor02',
         description='Live mana meter, armor and absorption shield upkeep, personal damage effects, spec procs, and racial cooldowns.',
         catalog={
@@ -321,7 +321,7 @@ local function CreateIndicator(module,config,host,db)
 
         local upkeepTotal,upkeepActive,upkeepMissing,upkeepUnknown=0,0,0,0
         local missingBuff=false;local missingArmor=false
-        local upkeepLines={};local upkeepIcon;local missingIcon;local upkeepDim=false
+        local upkeepLines={};local upkeepIcon;local missingIcon;local firstMissingIcon;local upkeepDim=false
         -- Names for the bar itself: what is missing, or what is keeping it green.
         local missingNames,activeList={},{}
         local petHealth
@@ -342,6 +342,7 @@ local function CreateIndicator(module,config,host,db)
                         missingIcon='Interface\\Icons\\Ability_Poisons'
                         if coatings.mainEquipped and not coatings.main then missingNames[#missingNames+1]=NS.L('Main-hand poison') end
                         if coatings.offEquipped and not coatings.off then missingNames[#missingNames+1]=NS.L('Off-hand poison') end
+                        if #missingNames>0 then firstMissingIcon=firstMissingIcon or 'Interface\\Icons\\Ability_Poisons' end
                     end
                     upkeepLines[#upkeepLines+1]='Weapon coatings: '..coatings.active..' / '..coatings.equipped..' active'
                     for _,hand in ipairs({{'main','Main hand'},{'off','Off hand'}}) do
@@ -371,6 +372,7 @@ local function CreateIndicator(module,config,host,db)
                     confirmedUpkeep[group.label]=nil
                     upkeepMissing=upkeepMissing+1;upkeepIcon=upkeepIcon or learned.icon;upkeepDim=true
                     missingNames[#missingNames+1]=learned.name
+                    firstMissingIcon=firstMissingIcon or Core.Icon(learned.icon)
                     if group.wakeOnMissing~=false then missingBuff=true;missingIcon=missingIcon or Core.Icon(learned.icon) end
                     if config.key=='warlock' and group.label=='Armor' then missingArmor=true end
                     upkeepLines[#upkeepLines+1]=group.label..': missing'
@@ -394,6 +396,7 @@ local function CreateIndicator(module,config,host,db)
             elseif petExists==false or petDead==true then
                 upkeepMissing=upkeepMissing+1;upkeepDim=true;upkeepLines[#upkeepLines+1]='Demon: missing'
                 missingNames[#missingNames+1]=NS.L('Demon')
+                firstMissingIcon=firstMissingIcon or Core.Icon(module.spells.summon.icon)
             else upkeepUnknown=upkeepUnknown+1;upkeepLines[#upkeepLines+1]='Demon: unavailable' end
         end
         -- Name what is missing first; otherwise name what keeps upkeep green.
@@ -402,6 +405,8 @@ local function CreateIndicator(module,config,host,db)
         if upkeepMissing>0 and #missingNames>0 then
             upkeepTop='Missing'
             upkeepBottom=missingNames[1]..(#missingNames>1 and (' +'..(#missingNames-1)) or '')
+            -- The icon belongs to the first missing name, never to another group.
+            upkeepIcon=firstMissingIcon or upkeepIcon
         elseif upkeepUnknown==0 and upkeepTotal==1 and #activeList==1 then
             upkeepTop=Context.FormatTime(activeList[1].left) or 'Active';upkeepBottom=activeList[1].name
         elseif upkeepUnknown==0 and upkeepTotal>1 and upkeepActive==upkeepTotal then

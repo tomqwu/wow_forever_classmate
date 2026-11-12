@@ -27,10 +27,11 @@ function Range.WithDistance(state,text,yards)
 end
 -- Spell checks supply effective range brackets, not exact center-to-center yards.
 function Range.Measure(probes, melee, ranged, shot)
-    local low, high, measured = 0, math.huge, false
+    local low, high, measured, longest = 0, math.huge, false, 0
     for _, p in ipairs(probes) do
         if Core.IsNumber(p.min) and Core.IsNumber(p.max) and p.max > 0
             and Core.IsReadable(p.inside) then
+            longest = math.max(longest, p.max)
             if p.inside == true then
                 low, high, measured = math.max(low,p.min), math.min(high,p.max), true
             elseif p.inside == false and p.min == 0 then
@@ -54,12 +55,20 @@ function Range.Measure(probes, melee, ranged, shot)
             state, low = 'far', math.max(low,shot.max)
         end
     end
-    if low >= high then return 'unknown', 'Range unavailable' end
+    -- Contradicting brackets drop only the yards; a confirmed attack state stays.
+    if low >= high then
+        if state=='shoot' or state=='melee' then return state, state=='shoot' and 'Shooting' or 'Melee' end
+        return 'unknown', 'Range unavailable'
+    end
     -- A negative attack check is out of range even without Auto Shot metadata
     -- or enough information to distinguish too close from too far.
     if state=='unknown' and Core.IsReadable(ranged) and ranged==false then state='out' end
+    -- "Out of range" needs a failed check at least as long as Auto Shot's
+    -- reach; one short failed check (e.g. melee) only gives a lower bound.
     if state=='unknown' and measured then
-        state=high==math.huge and 'beyond' or 'distance'
+        local reach=shot and Core.IsNumber(shot.max) and shot.max or longest
+        local beyond=high==math.huge and low>=reach
+        state=beyond and 'beyond' or 'distance'
     end
     local labels = {melee='Melee',close='Too close',shoot='Shooting',far='Too far',distance='Distance',beyond='Out of range',out='Out of range',unknown='Range unavailable'}
     if state=='unknown' then return state, labels[state] end

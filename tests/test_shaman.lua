@@ -80,6 +80,7 @@ check(C.Aura('player','HELPFUL',names,true)==false,'other caster aura rejected')
 auras={{name=secret}};check(C.Aura('player','HELPFUL',names,false)==nil,'secret aura prevents missing claim')
 auras={};UnitAffectingCombat=function() return true end;UnitIsDead=function() return false end
 local missing=C.MissingShield(names);check(missing==true,'missing shield warns in combat')
+check(C.MissingShield({})==nil and C.MissingShield(nil)==nil,'no learned shield is unknown, never a missing-shield warning')
 UnitAffectingCombat=function() return false end;missing=C.MissingShield(names);check(missing==false,'missing shield quiet outside combat')
 auras={{name='Lightning Shield',applications=2,expirationTime=0}};UnitAffectingCombat=function() return true end
 local shieldMissing,shieldAura=C.MissingShield(names)
@@ -89,4 +90,11 @@ check(C.ManaPercent()==51,'mana percentage')
 UnitPower=function() return secret end;check(C.ManaPercent()==nil,'secret mana hidden')
 UnitPower=function() return 10 end;UnitPowerMax=function() return 0 end
 check(C.ManaPercent()==nil,'zero maximum hidden')
+-- Restricted exact mana falls back to the documented percentage API.
+UnitPower=function() return secret end;UnitPowerMax=function() return secret end
+UnitPowerPercent=function() return 0.42 end
+check(C.ManaPercent()==42,'restricted mana uses the readable UnitPowerPercent fraction')
+UnitPowerPercent=function() return secret end
+check(C.ManaPercent()==nil,'secret percentage stays hidden')
+UnitPowerPercent=nil
 print('PASS: '..count..' shaman context checks')

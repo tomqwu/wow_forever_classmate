@@ -178,6 +178,20 @@ db.showMinimap=true;Tray.Apply(module,anchor,Settings);Tray.Toggle()
 local before=questie.Clicks();questie.scripts.OnClick(questie)
 check(questie.Clicks()==before+1 and not tray.shown,'hooks are installed once per button')
 
+-- The settings cell offers inspect only while that option is on.
+local lines={}
+GameTooltip.AddLine=function(_,text) lines[#lines+1]=text end
+db.minimapInspect=false;tray.cells[1].scripts.OnEnter(tray.cells[1])
+check(lines[1]=='Click the Classmate button: settings','no inspect hint while minimap inspect is off')
+lines={};db.minimapInspect=nil;tray.cells[1].scripts.OnEnter(tray.cells[1])
+check(lines[1]:find('inspect',1,true)~=nil,'the inspect hint returns with the option')
+-- Nothing to group: hovering keeps the minimap button's own tooltip.
+db.groupMinimapButtons=false;Tray.Apply(module,anchor,Settings)
+local savedChildren=children;children={}
+db.groupMinimapButtons=true;Tray.Apply(module,anchor,Settings)
+check(Tray.Active() and Tray.Open()==false and not tray.shown,'an empty tray never replaces the tooltip')
+children=savedChildren
+
 GetLocale=function() return 'zhCN' end
 local zh={}
 assert(loadfile(root..'Core.lua'))('ForeverUtilities',zh)

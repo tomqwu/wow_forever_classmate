@@ -52,7 +52,11 @@ local function OpenPanel()
         for index,option in ipairs(module.options) do
             local key=option.key;local x=index<=rows and 20 or 390;local y=-120-((index-1)%rows)*42
             if option.kind=='toggle' then
-                panel.controls[key]=Check(panel,option.label,x,y,function(value) module.db[key]=value;module.Apply() end)
+                panel.controls[key]=Check(panel,option.label,x,y,function(value)
+                    module.db[key]=value
+                    if key=='collapsed' then module.db.foldedByDeath=nil end
+                    module.Apply()
+                end)
             else
                 Text(panel,option.label,x,y-6);panel.controls[key]=Text(panel,'',x+210,y-6)
                 local function Adjust(delta)
