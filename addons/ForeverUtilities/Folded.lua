@@ -34,13 +34,14 @@ function NS.Folded.Create(host,content,db,module)
     local token=module and module.classToken
     local color=classColors[token] or {0.8,0.8,0.8}
     local light={0.55+0.45*color[1],0.55+0.45*color[2],0.55+0.45*color[3]}
-    -- Draw order, back to front: card, cells, cell frames, crest.
+    -- Draw order, back to front: card, warning halos, cells, cell frames, crest.
     local card=CreateFrame('Frame',nil,main)
+    local halos=CreateFrame('Frame',nil,main);halos:SetAllPoints(main)
     local row=CreateFrame('Frame',nil,main);row:SetAllPoints(main)
     local edges=CreateFrame('Frame',nil,main);edges:SetAllPoints(main)
     local top=CreateFrame('Frame',nil,main);top:SetAllPoints(main)
     local base=main.GetFrameLevel and main:GetFrameLevel()
-    Level(card,base,1);Level(row,base,2);Level(edges,base,3);Level(top,base,4)
+    Level(card,base,1);Level(halos,base,2);Level(row,base,3);Level(edges,base,4);Level(top,base,5)
     local fill=card:CreateTexture(nil,'BACKGROUND')
     fill:SetPoint('TOPLEFT',card,'TOPLEFT',3,-3);fill:SetPoint('BOTTOMRIGHT',card,'BOTTOMRIGHT',-3,3)
     fill:SetColorTexture(0.025,0.025,0.03,0.88)
@@ -63,16 +64,23 @@ function NS.Folded.Create(host,content,db,module)
     local crest=top:CreateTexture(nil,'ARTWORK');crest:SetSize(L.CREST,L.CREST)
     crest:SetTexture(token and (media..'Classes\\'..token) or (media..'ForeverClassmate'))
     glow:SetPoint('CENTER',crest,'CENTER',0,0)
-    -- Cell frames sit on their own frame so the warning pulse fades only the
-    -- engraved edges; wells and icons stay fully readable.
-    local pulse=Core.CreateWarningPulse(button,edges)
-    local badges,wells,frames={},{},{}
+    -- Cell frames and halos sit on their own frames so the warning pulse fades
+    -- only those decorations; wells and icons stay fully readable.
+    local pulseEdges=Core.CreateWarningPulse(button,edges)
+    local pulseHalos=Core.CreateWarningPulse(button,halos)
+    local function pulse(on) pulseEdges(on);pulseHalos(on) end
+    local badges,wells,frames,glows={},{},{},{}
     for index=1,4 do
+        -- A warm ember rim around each warning cell; the dark well hides its center.
+        local halo=halos:CreateTexture(nil,'ARTWORK');halo:SetSize(L.CELL+12,L.CELL+12);halo:SetTexture(media..'CellGlow')
+        halo:SetVertexColor(1,0.5,0.12,0.6)
+        if halo.SetBlendMode then halo:SetBlendMode('ADD') end
+        halo:Hide();glows[index]=halo
         local well=row:CreateTexture(nil,'BACKGROUND');well:SetSize(L.CELL-4,L.CELL-4);well:SetColorTexture(0.03,0.03,0.035,0.92)
         local badge=row:CreateTexture(nil,'ARTWORK');badge:SetSize(L.CELL-L.INSET*2,L.CELL-L.INSET*2)
         badge:SetTexCoord(0.08,0.92,0.08,0.92)
         local frame=edges:CreateTexture(nil,'OVERLAY');frame:SetSize(L.CELL,L.CELL);frame:SetTexture(media..'IconFrame')
-        frame:SetVertexColor(1,0.72,0.35)
+        frame:SetVertexColor(1,0.85,0.45)
         well:Hide();badge:Hide();frame:Hide()
         badges[index],wells[index],frames[index]=badge,well,frame
     end
@@ -157,19 +165,20 @@ function NS.Folded.Create(host,content,db,module)
             host.shell:SetSize(width+8,height+8)
         end
         crest:ClearAllPoints();crest:SetPoint('TOPLEFT',host,'TOPLEFT',(width-L.CREST)/2,0)
-        card:SetShown(count>0);row:SetShown(count>0)
+        card:SetShown(count>0);row:SetShown(count>0);halos:SetShown(count>0)
         if count>0 then LayoutCard(width,height) end
         local firstX=(width-rowWidth)/2
         for index,badge in ipairs(badges) do
             local warning=visibleWarnings[index]
             local shown=warning~=nil and index<=count
-            badge:SetShown(shown);wells[index]:SetShown(shown);frames[index]:SetShown(shown)
+            badge:SetShown(shown);wells[index]:SetShown(shown);frames[index]:SetShown(shown);glows[index]:SetShown(shown)
             if shown then
                 local x=firstX+(index-1)*(L.CELL+L.GAP)
                 badge:SetTexture(Core.Icon(warning.icon))
                 badge:ClearAllPoints();badge:SetPoint('TOPLEFT',host,'TOPLEFT',x+L.INSET,-(cellY+L.INSET))
                 wells[index]:ClearAllPoints();wells[index]:SetPoint('TOPLEFT',host,'TOPLEFT',x+2,-(cellY+2))
                 frames[index]:ClearAllPoints();frames[index]:SetPoint('TOPLEFT',host,'TOPLEFT',x,-cellY)
+                glows[index]:ClearAllPoints();glows[index]:SetPoint('TOPLEFT',host,'TOPLEFT',x-6,-(cellY-6))
             end
         end
         overflow:SetShown(total>4);overflow:SetText(total>4 and ('+'..(total-4)) or '')
@@ -188,7 +197,7 @@ function NS.Folded.Create(host,content,db,module)
     end
     host.foldRefresh=Refresh
     content:HookScript('OnHide',Refresh);content:HookScript('OnShow',Refresh)
-    return {Refresh=Refresh,overflow=overflow,button=button,fold=fold,badges=badges,wells=wells,frames=frames,
+    return {Refresh=Refresh,overflow=overflow,button=button,fold=fold,badges=badges,wells=wells,frames=frames,glows=glows,halos=halos,
         edges=edges,card=card,slices=slices,divider=divider,glow=glow,fill=fill,border=border,
         primary=crest,crest=crest,main=main,row=row}
 end

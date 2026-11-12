@@ -7,7 +7,7 @@ scripts/media.py). This only box-filters the exported 32-bit TGAs down to
 64 x 64 so the 32 x 32 compact cells stay sharp without shipping 256 KB files.
 It does not redraw the art. The frame and divider are also converted to
 greyscale so the addon can tint them per class at runtime; the glow is a plain
-generated radial falloff.
+generated radial falloff, and the warning halo is a generated rounded-square falloff.
 
     python3 scripts/import_class_art.py [path/to/ForeverHUD/Media]
 """
@@ -90,6 +90,22 @@ def write_glow(destination, size=64):
     write_tga(destination, size, 0x28, bytes(out))
 
 
+def write_cell_glow(destination, size=64, inner=0.625, corner=0.12):
+    """White halo around a rounded square; drawn behind warning cells."""
+    out = bytearray()
+    reach = 1 - inner
+    for y in range(size):
+        for x in range(size):
+            px = abs((x + 0.5) / (size / 2) - 1)
+            py = abs((y + 0.5) / (size / 2) - 1)
+            # Distance outside a rounded square of half-size `inner`.
+            qx, qy = max(0.0, px - inner + corner), max(0.0, py - inner + corner)
+            d = max(0.0, (qx * qx + qy * qy) ** 0.5 - corner)
+            a = max(0.0, 1 - d / reach) ** 1.6
+            out += bytes((255, 255, 255, round(a * 255)))
+    write_tga(destination, size, 0x28, bytes(out))
+
+
 def main(argv):
     source = Path(argv[0]) if argv else DEFAULT_SOURCE
     for token in TOKENS:
@@ -97,6 +113,7 @@ def main(argv):
     convert(source / 'icon-frame.tga', TEXTURES / 'IconFrame.tga', grey=True)
     convert(source / 'divider.tga', TEXTURES / 'Divider.tga', 256, 16, grey=True)
     write_glow(TEXTURES / 'Glow.tga')
+    write_cell_glow(TEXTURES / 'CellGlow.tga')
     print(f'imported {len(TOKENS)} crests, the frame and divider from {source}')
 
 

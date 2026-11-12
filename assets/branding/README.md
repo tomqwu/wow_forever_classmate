@@ -21,5 +21,5 @@ AI-painted masters and prompts are in its `assets/ai`, exported by its
 crests and the 128 × 128 frame to 64 × 64 and the divider to 256 × 16. The frame
 and divider are converted to greyscale so the addon can tint them per class; the
 crests keep their original colors. `Textures/Glow.tga` is a plain generated
-radial falloff. Nothing is redrawn. Game spell and item icons are still read
+radial falloff, and `Textures/CellGlow.tga` a generated rounded-square halo for warning cells. Nothing is redrawn. Game spell and item icons are still read
 from the client at runtime and are not bundled.

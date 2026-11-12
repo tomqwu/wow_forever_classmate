@@ -289,6 +289,11 @@ check(summary.frames[1].x==7 and summary.frames[1].y==-60 and summary.frames[2].
     and summary.badges[1].x==10 and summary.badges[1].y==-63 and summary.badges[2].x==44
     and summary.badges[1].relative==foldHost,
     'every warning uses one cell template: frame, dark well, and icon at the same inset')
+check(summary.glows[1].shown and summary.glows[2].shown and not summary.glows[3].shown
+    and summary.glows[1].texture=='Interface\\AddOns\\ForeverUtilities\\Textures\\CellGlow'
+    and summary.glows[1].width==42 and summary.glows[1].x==1 and summary.glows[1].y==-54
+    and summary.halos.warningPulseGroup and summary.halos.warningPulseGroup.playing,
+    'each warning cell gets a warm halo that breathes with the frame pulse')
 check(summary.border==foldHost.outline and not summary.border.shown and foldInstance.shell.backdropColor[4]==0
     and foldInstance.shell.width==86 and foldInstance.shell.height==105,
     'the card replaces the expanded panel and outline')
@@ -358,7 +363,7 @@ local function CheckBounds(expectedCount,expectedWidth,expectedHeight)
             and summary.card.shown and summary.divider.width==expectedWidth-14,
             'cells are centered in one row below the divider')
     else
-        check(not summary.card.shown and summary.crest.x==0,'with no warnings only the crest remains')
+        check(not summary.card.shown and not summary.halos.shown and summary.crest.x==0,'with no warnings only the crest remains')
     end
 end
 CheckBounds(2,78,97)
@@ -405,7 +410,8 @@ check(ticks==1,'host forwards the existing updater while visuals are folded')
 foldContent:Hide();foldHost.scripts.OnUpdate(foldHost,0.3)
 check(ticks==1,'suspended hidden content does not get revived by collapsed forwarding')
 foldContent:Show();foldedDB.flashMissingBuffs=false;foldInstance.Apply()
-check(not summary.edges.warningPulseGroup.playing and summary.button.alpha==1,'static collapsed warnings respect flash toggle')
+check(not summary.edges.warningPulseGroup.playing and not summary.halos.warningPulseGroup.playing
+    and summary.glows[1].shown and summary.button.alpha==1,'static collapsed warnings keep a steady halo when flashing is off')
 summary.button.scripts.OnClick()
 check(summary.fold.relative==foldInstance.shell and summary.fold.x==-5,'collapse control belongs to the internal container rail')
 check(foldInstance.shell.width==450 and foldInstance.shell.height==64,'expanded container reserves padding and an internal control rail')
@@ -466,7 +472,7 @@ check(foldedDB.x==140 and foldedDB.y==50 and foldInstance.shell.point=='TOP' and
     'compact drag saves the crest center, not the center of a temporary card')
 foldedDB.locked=true
 foldedDB.enabled=false;foldInstance.Apply()
-check(not summary.button.shown and not summary.edges.warningPulseGroup.playing,'disable clears collapsed presentation and animation')
+check(not summary.button.shown and not summary.edges.warningPulseGroup.playing and not summary.halos.warningPulseGroup.playing,'disable clears collapsed presentation and animation')
 check(not next(foldHost.events),'disabled host unregisters native-layout lifecycle listeners')
 foldHost:SetPoint('LEFT',UIParent,'LEFT',69,-261)
 foldHost.scripts.OnEvent(foldHost,'PLAYER_ENTERING_WORLD')
@@ -479,7 +485,7 @@ local function CheckTGA(path)
         and header:byte(17)==32,path..' is an uncompressed 64 x 64 RGBA texture')
 end
 for _,token in ipairs({'WARRIOR','PALADIN','HUNTER','ROGUE','PRIEST','SHAMAN','MAGE','WARLOCK','DRUID'}) do CheckTGA('Classes/'..token) end
-CheckTGA('IconFrame');CheckTGA('Glow')
+CheckTGA('IconFrame');CheckTGA('Glow');CheckTGA('CellGlow')
 local divider=assert(io.open(root..'Textures/Divider.tga','rb'));local dh=divider:read(18);divider:close()
 check(dh:byte(13)+dh:byte(14)*256==256 and dh:byte(15)+dh:byte(16)*256==16 and dh:byte(17)==32,'divider ships as a 256 x 16 RGBA texture')
 print('PASS: folded layout, warning, lifecycle and update regressions')

@@ -1,3 +1,11 @@
+## 0.33.1
+
+- Warnings are easier to spot in the compact card. Each warning cell now has a warm ember halo and a brighter amber frame.
+- With Flash missing buffs on, the halo breathes together with the cell frame; with it off, the halo stays steady. Icons, wells, the card and the crest never flash.
+- The halo appears only for confirmed warnings and disappears with the card when there are none.
+
+Use a full game restart: this release adds a new texture file. Automated checks use mocked frames; in-game rendering still needs confirmation.
+
 ## 0.33.0
 
 - The compact view is now a single framed card. A larger 48 × 48 class crest sits on top, breaking through the card's upper edge with a soft class-colored glow. An engraved divider separates it from the warning cells below.
