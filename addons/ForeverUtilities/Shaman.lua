@@ -271,7 +271,8 @@ local function CreateIndicator(host,db)
     shield.button:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
 
     local function Layout()
-        local x=10
+        -- Start past the half-inside class crest on the frame's left edge.
+        local x=20
         for i,cell in ipairs(totemCells) do
             cell.button:ClearAllPoints();cell.button:SetPoint('TOPLEFT',frame,'TOPLEFT',x+(i-1)*40,-9)
             cell.button:SetShown(db.showTotems~=false)

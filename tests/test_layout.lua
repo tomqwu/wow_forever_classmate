@@ -33,4 +33,7 @@ check(-rows.intel.y+rows.intel.height<=-rows.ammo.y,'intel ends before ammo')
 check(-rows.ammo.y+rows.ammo.height<=56,'all text rows fit in original height')
 local normal=NS.Layout.Rows(false)
 check(normal.range.height==26 and normal.ammo.y==-33,'nonmatch preserves original layout')
+local default=NS.Layout.Compute({})
+check(default.text.x==76 and NS.Layout.Compute({showRange=false}).text.x==24,
+    'range text starts past the 20px-inset range icon and the half-inside class crest')
 print('PASS: '..count..' block layout checks')

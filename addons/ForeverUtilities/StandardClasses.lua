@@ -136,9 +136,9 @@ local function CreateIndicator(module,config,host,db)
     local ability=MakeCell(frame,242,80);local racial=MakeCell(frame,322,76)
     -- The class crest clasps the frame's left edge (ClassHost frame art), so
     -- the resource slot is text only and starts just past the crest.
-    resource.textInset=8
+    resource.textInset=15
     if config.key=='mage' then
-        resource.meter=MakeMeter(resource,4,9,{0.2,0.65,1})
+        resource.meter=MakeMeter(resource,15,9,{0.2,0.65,1})
         upkeep.meter=MakeMeter(upkeep,72,4,{0.4,0.85,1})
     end
     frame.cells={resource=resource,upkeep=upkeep,target=target,ability=ability,racial=racial}
@@ -239,7 +239,7 @@ local function CreateIndicator(module,config,host,db)
         Paint(resource,resourceIcon,resourceTop,resourceBottom,config.color,power==nil and not hasProtectedPercent)
         local meterOK=false
         if config.key=='mage' then
-            resource.top:ClearAllPoints();resource.top:SetPoint('TOPLEFT',resource,'TOPLEFT',18,-17);resource.top:SetWidth(53)
+            resource.top:ClearAllPoints();resource.top:SetPoint('TOPLEFT',resource,'TOPLEFT',29,-17);resource.top:SetWidth(43)
             resource.bottom:SetText('')
             local meterValue=power and power.percent or protectedPercent
             if power or hasProtectedPercent then

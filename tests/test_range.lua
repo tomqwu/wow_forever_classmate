@@ -163,6 +163,7 @@ check(not f.shown and not f.scripts.OnUpdate,'compact icon disappears without a 
 db.locked=false;f.Refresh()
 check(f.shown and f.alpha==0.2 and not f.scripts.OnUpdate,'unlocked compact icon remains dim for dragging without polling')
 db.locked=true;db.rangeIconOnly=false;target=true;distance=20;UnitDistanceSquared=nil;f.Refresh()
+check(f.rangeBorder.x==20 and f.rangeBorder.width==44,'full-bar range icon starts 20px in, clear of the half-inside class crest')
 check(f.width==426 and f.height==56 and f.label.shown,'full bar returns after compact mode')
 f.scripts.OnEvent(f,'PLAYER_LEAVING_WORLD')
 check(not f.scripts.OnUpdate,'loading screen stops polling')

@@ -1,3 +1,10 @@
+## 0.37.2
+
+- The class crest now sits exactly half inside the full bar's left edge, like it breaks through the compact card's top edge.
+- Each class's first content moved 10px right to make room: Hunter's range icon and text, Shaman's first totem, and the standard resource text (and Mage's mana meter). Range text still shrinks its font to fit when needed. Slot boundaries are otherwise unchanged.
+
+Use `/reload`. Automated checks use mocked frames; in-game rendering still needs confirmation.
+
 ## 0.37.1
 
 - The class crest sticks out from the full bar's left edge again, now for every class and a little larger (44px), matching how the crest breaks out of the compact card. It stops just short of the first slot.

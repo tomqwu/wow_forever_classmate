@@ -19,7 +19,8 @@ function Layout.Compute(db)
     Reserve('pet',48,db.showTargetTarget~=false or db.petHappinessWarning~=false or db.petGuide~=false)
     Reserve('combat',56,db.markWarning~=false or db.aspectWarning~=false or db.showAngle~=false)
     result.range={x=6,width=right-6}
-    result.text={x=db.showRange~=false and 66 or 14,width=0}
+    -- The range icon starts 20px in, past the half-inside class crest.
+    result.text={x=db.showRange~=false and 76 or 24,width=0}
     result.text.width=right-8-result.text.x
     return result
 end

@@ -141,9 +141,9 @@ function Host.CreateFrameArt(shell,classToken)
     -- The crest identifies the class only; it never represents buff state.
     local crest=art:CreateTexture(nil,'ARTWORK');crest:SetSize(44,44)
     crest:SetTexture(classToken and (media..'Classes\\'..classToken) or (media..'ForeverClassmate'))
-    -- Straddles the left edge: 30px outside, ending just before the first
-    -- icon inside (Hunter and Shaman content starts 10px into the bar).
-    crest:SetPoint('CENTER',art,'LEFT',-8,0);glow:SetPoint('CENTER',crest,'CENTER',0,0)
+    -- Centered on the left edge: half outside, half inside. Every class
+    -- starts its first content 20px into the bar, clear of the crest.
+    crest:SetPoint('CENTER',art,'LEFT',0,0);glow:SetPoint('CENTER',crest,'CENTER',0,0)
     art.crest,art.crestGlow=crest,glow
     function art.SetWarm(warm)
         local c=warm and NS.Core.Amber or tint

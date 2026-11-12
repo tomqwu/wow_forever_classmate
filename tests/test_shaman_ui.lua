@@ -116,6 +116,7 @@ check(indicator.totemCells[1].background.layer=='BACKGROUND' and indicator.totem
     'all Shaman cell backgrounds draw below their icons regardless of texture batching')
 check(not indicator.events.COMBAT_LOG_EVENT_UNFILTERED,'Shaman avoids Blizzard-only combat-log event registration')
 check(indicator.totemCells[1].button.width==38 and indicator.totemCells[1].button.y==-9,'totem cells use the shared square size and top edge')
+check(indicator.totemCells[1].button.x==20 and indicator.totemCells[2].button.x==60,'totems start 20px in, clear of the half-inside class crest')
 check(indicator.weaponCell.button.width==38 and indicator.weaponCell.button.y==-9 and indicator.shieldCell.button.y==-9,'totem and upkeep cells share one top edge')
 check(indicator.weaponCell.badge.text=='' and indicator.shieldCell.badge.text=='3','upkeep icons omit letter labels while shield charges remain visible')
 check(indicator.helperIcon.y==-14 and indicator.helperIcon.y-indicator.helperIcon.height/2==-28,'helper icon shares the cell centerline')

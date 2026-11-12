@@ -151,13 +151,13 @@ host.scripts.OnDragStart(host);check(rawget(host,'moving')==nil,'locked bar rema
 host.scripts.OnLeave(host);NS.Paladin.db.locked=false;NS.Paladin.Apply()
 check(rawget(indicator,'dotTracker')==nil and not NS.Paladin.db.showMultiDots,'Paladin has no DoT side strip')
 check(indicator.events.LEARNED_SPELL_IN_SKILL_LINE and not indicator.events.LEARNED_SPELL_IN_TAB,'class discovery uses the Forever learned-spell event')
-check(indicator.cells.resource.top.width==64 and not indicator.cells.resource.icon.shown and rawget(indicator,'crest')==nil,
+check(indicator.cells.resource.top.width==57 and not indicator.cells.resource.icon.shown and rawget(indicator,'crest')==nil,
     'the resource slot is text only: no duplicate class spell icon inside the bar')
 check(indicator.cells.upkeep.x==82 and indicator.cells.target.x==162 and indicator.cells.ability.x==242
     and indicator.cells.racial.x==322,'slots keep their original even widths')
-check(host.outline.crest.shown and host.outline.crest.width==44 and host.outline.crest.x==-8
+check(host.outline.crest.shown and host.outline.crest.width==44 and host.outline.crest.x==0
     and host.outline.crest.texture=='Interface\\AddOns\\ForeverUtilities\\Textures\\Classes\\PALADIN',
-    'the class crest straddles the left edge of the frame, ending before the first slot text')
+    'the class crest is centered on the frame edge, half inside, ending before the resource text')
 check(indicator.cells.racial.x+indicator.cells.racial.width==398,'all five class slots end before the lock control')
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')
@@ -307,7 +307,7 @@ UnitExists=function() return false end;UnitAffectingCombat=function() return fal
 mage.Update()
 check(mage.alpha==0.75,'Mage bar remains readable with no target outside combat')
 check(not mage.cells.resource.icon.shown and mage.cells.resource.top.text=='70%' and mage.cells.resource.bottom.text==''
-    and mage.cells.resource.meter.value==70 and mage.cells.resource.top.width==53,
+    and mage.cells.resource.meter.value==70 and mage.cells.resource.top.width==43,
     'Mage mana uses a compact vertical meter and percentage without a redundant label')
 check(mage.cells.upkeep.icon.shown and mage.cells.upkeep.icon.texture==500,'active Mage armor keeps its own icon')
 check(not mage.cells.target.shown and not mage.cells.ability.shown,
