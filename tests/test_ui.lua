@@ -60,6 +60,11 @@ NS.MailRecipients={Apply=function() mailApplies=mailApplies+1 end,Initialize=fun
  check(saved==ForeverUtilitiesDB,'mail initializes with account-wide saved variables')
  mailInitializations=mailInitializations+1
 end}
+-- Tray double: grouping off by default here, so left-click keeps opening settings.
+local trayActive,trayToggles,trayArgs=false,0,nil
+NS.MinimapTray={Apply=function(m,b,open) trayArgs={m,b,open} end,
+    Toggle=function() if trayActive then trayToggles=trayToggles+1 end;return trayActive end,
+    Active=function() return trayActive end}
 assert(loadfile(root..'UI.lua'))('ForeverUtilities',NS)
 local events=frames[1]
 events.scripts.OnEvent(events,'ADDON_LOADED','Unrelated')
@@ -127,6 +132,12 @@ check(math.abs(mini.x)<0.01 and math.abs(mini.y-83)<0.01,'reskinned minimap resi
 db.minimapAngle=35;Minimap:SetSize(200,200);Minimap.scripts.OnSizeChanged(Minimap)
 check(mini.clicks[1]=='LeftButtonUp' and mini.clicks[2]=='RightButtonUp','minimap registers both click buttons')
 mini.scripts.OnClick(mini,'LeftButton');check(panel.shown,'minimap left-click opens settings')
+check(trayArgs and trayArgs[1]==NS.Hunter and trayArgs[2]==mini and type(trayArgs[3])=='function',
+    'the minimap button hands its module, itself and the settings opener to the tray')
+panel:Hide();trayActive=true;mini.scripts.OnClick(mini,'LeftButton')
+check(trayToggles==1 and not panel.shown,'with grouping on, left-click opens the addon tray instead')
+trayArgs[3]();check(panel.shown,'the tray settings cell opens the same settings panel')
+trayActive=false
 local inspected=0
 UnitIsPlayer=function() return true end;CanInspect=function() return true end
 InspectUnit=function(unit) if unit=='target' then inspected=inspected+1 end end

@@ -1,3 +1,12 @@
+## 0.35.0
+
+- New: **Group addon minimap buttons** (on by default, per class). Other addons' minimap buttons move into a framed tray behind the Classmate button, so it is the only icon around the map.
+- Left-click Classmate to open the tray. The first cell opens Classmate settings; the rest are your addon buttons in name order, with their own clicks and tooltips. The tray opens toward the screen center and closes on a click, Escape, or two seconds away.
+- Only named, unprotected addon launchers are collected (LibDBIcon, ForeverCore and similar). Blizzard minimap controls, map pins and protected frames are never touched, and buttons only move outside combat. Buttons an addon shows, hides or re-places later are kept in the tray.
+- Turn the option off, or hide the Classmate minimap button, to return every button to its original position with its own dragging restored. Right-click Inspect is unchanged.
+
+Use `/reload`. Automated checks use mocked LibDBIcon, ForeverCore and hand-made buttons; the tray still needs confirmation with your installed addons in game.
+
 ## 0.34.0
 
 - New option for every class: **Fold outside combat, expand in combat** (off by default). Entering combat expands the full bar; leaving combat folds it back into the compact card.

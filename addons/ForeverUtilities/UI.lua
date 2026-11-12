@@ -70,7 +70,11 @@ local function OpenPanel()
 end
 local function RefreshMinimap()
     local module=Active()
-    if not module or not module.db or not Minimap then if minimapButton then minimapButton:Hide() end;return end
+    if not module or not module.db or not Minimap then
+        if minimapButton then minimapButton:Hide() end
+        if NS.MinimapTray then NS.MinimapTray.Apply(nil,nil,nil) end
+        return
+    end
     if not minimapButton then
         minimapButton=CreateFrame('Button',module.minimapName,Minimap);minimapButton.module=module;minimapButton:SetSize(28,28)
         local function Position()
@@ -99,7 +103,7 @@ local function RefreshMinimap()
             if dragged then return end
             if button=='RightButton' then
                 if self.module.db.minimapInspect~=false then NS.Core.InspectTarget() end
-            else OpenPanel() end
+            elseif not (NS.MinimapTray and NS.MinimapTray.Toggle()) then OpenPanel() end
         end)
         minimapButton:SetFrameStrata('MEDIUM');minimapButton:SetFrameLevel(8)
         local function Circle(size,layer)
@@ -114,7 +118,9 @@ local function RefreshMinimap()
         minimapButton:SetScript('OnEnter',function(self)
             if GameTooltip then GameTooltip:SetOwner(self,'ANCHOR_LEFT');GameTooltip:SetText(L('Forever Classmate'))
                 GameTooltip:AddLine(L(self.module.name:gsub('Forever Classmate — ','')),1,0.85,0.4)
-                GameTooltip:AddLine(L('Left-click: settings | Drag: move around minimap'),1,1,1)
+                if NS.MinimapTray and NS.MinimapTray.Active() then
+                    GameTooltip:AddLine(L('Left-click: addon buttons and settings | Drag: move around minimap'),1,1,1)
+                else GameTooltip:AddLine(L('Left-click: settings | Drag: move around minimap'),1,1,1) end
                 if self.module.db.minimapInspect~=false then
                     GameTooltip:AddLine(L('Right-click: inspect an eligible player target'),1,1,1)
                 end
@@ -123,6 +129,7 @@ local function RefreshMinimap()
         minimapButton:SetScript('OnLeave',function() if GameTooltip then GameTooltip:Hide() end end)
     end
     minimapButton.module=module;positionMinimap();minimapButton:SetShown(module.db.showMinimap~=false)
+    if NS.MinimapTray then NS.MinimapTray.Apply(module,minimapButton,OpenPanel) end
 end
 local function BindChanges()
     for _,module in pairs(NS.Classes) do

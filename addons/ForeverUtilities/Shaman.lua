@@ -27,7 +27,7 @@ local function Normalize(db)
     db.scale=math.max(0.5,math.min(2,db.scale))
 end
 Shaman.normalize=Normalize
-Shaman.defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showMinimap=true,minimapInspect=true,showLockButton=true,
+Shaman.defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showMinimap=true,groupMinimapButtons=true,minimapInspect=true,showLockButton=true,
     showTotems=true,showWeaponImbue=true,showShield=true,showSpecHelper=true,showMana=true,
     totemRecallHint=true,flashMissingBuffs=true,sleepingBagReminder=true,foodXPReminder=true,mailRecipients=true,collapsed=false,showFoldButton=true,autoFold=false,fadeOutOfCombat=true,minimapAngle=35}
 Shaman.options={
@@ -39,6 +39,7 @@ Shaman.options={
     {key='showFoldButton',label='Show collapse button',kind='toggle'},
     {key='autoFold',label='Fold outside combat, expand in combat',kind='toggle'},
     {key='showMinimap',label='Show minimap settings button',kind='toggle'},
+    {key='groupMinimapButtons',label='Group addon minimap buttons',kind='toggle'},
     {key='minimapInspect',label='Right-click minimap to inspect players',kind='toggle'},
     {key='showLockButton',label='Show lock button on bar',kind='toggle'},
     {key='locked',label='Lock indicator position',kind='toggle'},

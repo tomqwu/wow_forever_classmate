@@ -7,7 +7,7 @@ if locale~='zhCN' then return end
 -- from the client's localized APIs; command names and saved keys stay stable.
 local zh={
     ['Player resources']='角色资源',
-    ['Collapsed warning icon']='折叠为警告图标',['Show collapse button']='显示折叠按钮',['Fold outside combat, expand in combat']='脱战折叠，进战展开',
+    ['Collapsed warning icon']='折叠为警告图标',['Show collapse button']='显示折叠按钮',['Group addon minimap buttons']='收纳其他插件的小地图按钮',['Addon buttons']='插件按钮',['No other addon buttons']='没有其他插件按钮',['Classmate settings']='永恒战友设置',['Left-click: addon buttons and settings | Drag: move around minimap']='左键：插件按钮与设置 | 拖动：沿小地图移动',['Fold outside combat, expand in combat']='脱战折叠，进战展开',
     ['Click to expand']='点击展开',['Collapse to warning icons']='折叠为警告图标',['Armor missing']='缺少护甲增益',['Class upkeep missing']='缺少职业增益',
     ['No confirmed missing buffs']='未确认有缺失的增益',
     ['Weapon imbue missing']='缺少武器强化',['Elemental shield missing']='缺少元素护盾',['Aspect missing']='缺少守护',

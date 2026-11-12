@@ -96,6 +96,10 @@ read mail contents or call sending/transfer APIs. Native frames load lazily;
 disable removes listeners and leaves existing hooks inert. See the pinned Forever
 70862 source and lifecycle/secret handling in `docs/mail-recipients.md`.
 
+## Minimap button tray
+
+`MinimapTray.lua` (0.35.0) is a shared utility controlled by the active class's `groupMinimapButtons` preference (default true) and `showMinimap`. It borrows only children of `Minimap` that are named, unprotected `Button`s and look like addon launchers: `LibDBIcon10_*`, ForeverCore buttons (`minimapButtonSpec`), or names containing "minimap". Never borrow names starting with `Minimap`/`MiniMap`, listed Blizzard controls, unnamed map pins, protected frames, or Classmate's own buttons. Record each button's parent, every anchor and its drag scripts; clear drag scripts while borrowed and restore all of them on release. Borrow and release only out of combat; defer through `PLAYER_REGEN_ENABLED`. Owner `SetPoint` calls are answered by re-laying out the tray (secure post-hook, guarded while placing); hooks are installed once and inert after release. Left-click toggles the tray when active, otherwise opens settings; its first cell opens settings. The tray polls only while open (two-second away close) and closes on Escape or any borrowed click. Turning the option off or hiding the Classmate button returns everything.
+
 ## Bar layout
 
 Layout.lua owns Hunter visual block allocation inside its fixed 426 × 56 bar. Shaman.lua owns the Shaman grouped allocation, and StandardClasses.lua owns the five fixed standard slots in the same outer footprint. The 426-pixel width is the rendered result of Forever's default desktop swing-timer preset: stored width offset 213 plus slider minimum 213. Keep range/ammo, combat reminders, pet portrait, and control separate. Blocks do not shift with transient warning state; only feature preferences redistribute width. See docs/bar-layout.md before adding information.

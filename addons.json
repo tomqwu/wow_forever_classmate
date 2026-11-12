@@ -9,6 +9,7 @@
       "tests/test_leveling_buffs.lua",
       "tests/test_mail_recipients.lua",
       "tests/test_ui.lua",
+      "tests/test_minimap_tray.lua",
       "tests/test_targetcontext.lua",
       "tests/test_layout.lua",
       "tests/test_petguide.lua",
