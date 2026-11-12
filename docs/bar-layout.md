@@ -57,14 +57,14 @@ before the lock control:
 
 | Slot | Bounds | Visible status |
 | --- | --- | --- |
-| Resource | 7–96 | Class crest (8–44), then percentage plus form, combo, health, or shard state |
-| Upkeep | 96–170 | Confirmed active/required count or missing state |
-| Target | 170–244 | Own confirmed target-effect timer, stacks, or absence |
-| Ability | 244–320 | Proc stacks/timer or learned ability readiness |
-| Racial | 320–398 | Best learned active-racial state |
+| Resource | 7–82 | Percentage plus form, combo, health, or shard state (text only) |
+| Upkeep | 82–162 | Confirmed active/required count or missing state |
+| Target | 162–242 | Own confirmed target-effect timer, stacks, or absence |
+| Ability | 242–322 | Proc stacks/timer or learned ability readiness |
+| Racial | 322–398 | Best learned active-racial state |
 | Control | 400–420 | Shared lock button |
 
-The 36 × 36 class crest leads every standard bar in place of the old fixed class spell icon; it identifies the class only and stays visible when the resource value is unreadable. Mage uses a 9px vertical mana meter beside the crest. An active Mana Shield or Ice Barrier uses a 4px coverage meter in upkeep, showing total absorbs against maximum health when the client exposes those values. Armor details remain on hover. This coverage is not a percentage of the shield’s original capacity.
+Every full bar's 44 × 44 class crest straddles the frame's left edge (centered 8px outside it), ending just before the first slot. Standard resource slots are text only; the old fixed class spell icon is gone. Mage uses a 9px vertical mana meter in the resource slot. An active Mana Shield or Ice Barrier uses a 4px coverage meter in upkeep, showing total absorbs against maximum health when the client exposes those values. Armor details remain on hover. This coverage is not a percentage of the shield’s original capacity.
 
 Warrior, Rogue, Druid, Priest, and Warlock may show a 212px-wide DoT strip immediately to the right of the standard bar. It grows vertically only for active, readable player-owned effects on the target or live nameplates, up to twelve effect rows across five enemies. The strip follows the bar when it moves or scales and uses the same combat fade. A separate setting hides it without changing the five fixed slots or the 426px main-bar width. Empty, expired, and unavailable observations do not create placeholder rows.
 

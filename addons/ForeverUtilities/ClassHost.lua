@@ -135,13 +135,15 @@ function Host.CreateFrameArt(shell,classToken)
             art.slices[#art.slices+1]=slice
         end
     end
-    local glow=art:CreateTexture(nil,'ARTWORK',nil,-1);glow:SetTexture(media..'Glow');glow:SetSize(60,60)
+    local glow=art:CreateTexture(nil,'ARTWORK',nil,-1);glow:SetTexture(media..'Glow');glow:SetSize(66,66)
     glow:SetVertexColor(color[1],color[2],color[3],0.5)
     if glow.SetBlendMode then glow:SetBlendMode('ADD') end
     -- The crest identifies the class only; it never represents buff state.
-    local crest=art:CreateTexture(nil,'ARTWORK');crest:SetSize(40,40)
+    local crest=art:CreateTexture(nil,'ARTWORK');crest:SetSize(44,44)
     crest:SetTexture(classToken and (media..'Classes\\'..classToken) or (media..'ForeverClassmate'))
-    crest:SetPoint('CENTER',art,'LEFT',-10,0);glow:SetPoint('CENTER',crest,'CENTER',0,0)
+    -- Straddles the left edge: 30px outside, ending just before the first
+    -- icon inside (Hunter and Shaman content starts 10px into the bar).
+    crest:SetPoint('CENTER',art,'LEFT',-8,0);glow:SetPoint('CENTER',crest,'CENTER',0,0)
     art.crest,art.crestGlow=crest,glow
     function art.SetWarm(warm)
         local c=warm and NS.Core.Amber or tint
@@ -265,9 +267,8 @@ function Host.Create(module,db,contentFactory)
         -- The right rail exists only to hold the collapse button.
         local rail=not db.collapsed and NS.Folded~=nil and db.showFoldButton~=false
         shell:SetSize(width+8+(rail and 16 or 0),height+8)
-        -- Full Hunter and Shaman bars get the crest clasp; standard classes draw
-        -- the crest inside their first slot, and Hunter's 42px icon mode stays bare.
-        host.outline.Layout(width+8+(rail and 16 or 0),height+8,not db.collapsed and width>=300 and not module.innerCrest)
+        -- Every full bar gets the crest clasp; Hunter's 42px icon mode stays bare.
+        host.outline.Layout(width+8+(rail and 16 or 0),height+8,not db.collapsed and width>=300)
         visual:SetShown(not db.collapsed)
         shell:SetScale(db.scale);Host.Place(host,db)
         host:ClearAllPoints();host:SetPoint('TOPLEFT',shell,'TOPLEFT',4,-4)

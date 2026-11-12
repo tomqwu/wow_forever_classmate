@@ -427,9 +427,9 @@ GameTooltip={SetOwner=function() end,SetText=function(_,text) tooltip.text=text 
 summary.fold.scripts.OnEnter(summary.fold)
 check(tooltip.text=='Collapse to warning icons','collapse control explains itself like the lock button')
 summary.fold.scripts.OnLeave(summary.fold);GameTooltip=nil
-check(summary.border.warm==true and summary.border.crest.shown and summary.border.crest.width==40
+check(summary.border.warm==true and summary.border.crest.shown and summary.border.crest.width==44
     and summary.border.crest.texture=='Interface\\AddOns\\ForeverUtilities\\Textures\\Classes\\WARLOCK'
-    and summary.border.crest.point=='CENTER' and summary.border.crest.relativePoint=='LEFT' and summary.border.crest.x==-10
+    and summary.border.crest.point=='CENTER' and summary.border.crest.relativePoint=='LEFT' and summary.border.crest.x==-8
     and summary.border.slices[1].width==12 and summary.border.slices[2].width==426
     and summary.border.shown and not summary.edges.warningPulseGroup.playing
     and foldInstance.shell.point=='CENTER' and foldInstance.shell.x==0,

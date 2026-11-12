@@ -132,21 +132,14 @@ local function CreateIndicator(module,config,host,db)
     frame.foldShell=host.shell
     local background=frame:CreateTexture(nil,'BACKGROUND');background:SetAllPoints(frame);background:SetColorTexture(0.012,0.02,0.035,0.94)
     -- The class crest and tinted frame carry identity; no separate color stripe.
-    -- Resource 7-96 | Upkeep 96-170 | Target 170-244 | Ability 244-320 | Racial 320-398.
-    local resource=MakeCell(frame,7,89);local upkeep=MakeCell(frame,96,74);local target=MakeCell(frame,170,74)
-    local ability=MakeCell(frame,244,76);local racial=MakeCell(frame,320,78)
-    -- The class crest leads the bar. It identifies the class only (never a
-    -- buff state) and stays while the resource slot hides unreadable values.
-    local crestGlow=frame:CreateTexture(nil,'BORDER');crestGlow:SetTexture(Core.Media..'Glow');crestGlow:SetSize(56,56)
-    crestGlow:SetVertexColor(config.color[1],config.color[2],config.color[3],0.45)
-    if crestGlow.SetBlendMode then crestGlow:SetBlendMode('ADD') end
-    local crest=frame:CreateTexture(nil,'ARTWORK');crest:SetSize(36,36);crest:SetPoint('LEFT',frame,'LEFT',8,0)
-    crest:SetTexture(Core.Media..'Classes\\'..module.classToken);crestGlow:SetPoint('CENTER',crest,'CENTER',0,0)
-    frame.crest=crest
-    resource.textInset=41
+    local resource=MakeCell(frame,7,75);local upkeep=MakeCell(frame,82,80);local target=MakeCell(frame,162,80)
+    local ability=MakeCell(frame,242,80);local racial=MakeCell(frame,322,76)
+    -- The class crest clasps the frame's left edge (ClassHost frame art), so
+    -- the resource slot is text only and starts just past the crest.
+    resource.textInset=8
     if config.key=='mage' then
-        resource.meter=MakeMeter(resource,40,9,{0.2,0.65,1})
-        upkeep.meter=MakeMeter(upkeep,68,4,{0.4,0.85,1})
+        resource.meter=MakeMeter(resource,4,9,{0.2,0.65,1})
+        upkeep.meter=MakeMeter(upkeep,72,4,{0.4,0.85,1})
     end
     frame.cells={resource=resource,upkeep=upkeep,target=target,ability=ability,racial=racial}
     local armorWarning=upkeep:CreateTexture(nil,'BACKGROUND')
@@ -240,13 +233,13 @@ local function CreateIndicator(module,config,host,db)
             if shards then resourceBottom=(resourceBottom~='' and (resourceBottom..'/') or '')..'S'..shards;resourceLines[#resourceLines+1]='Soul Shards: '..shards end
         end
         resource.tooltipTitle='Player resources';resource.tooltipLines=resourceLines
-        -- The crest replaces the old fixed class spell icon in this slot.
+        -- The clasped crest replaces the old fixed class spell icon here.
         local resourceIcon=nil
         if config.resourceTextOnly then resourceBottom='' end
         Paint(resource,resourceIcon,resourceTop,resourceBottom,config.color,power==nil and not hasProtectedPercent)
         local meterOK=false
         if config.key=='mage' then
-            resource.top:ClearAllPoints();resource.top:SetPoint('TOPLEFT',resource,'TOPLEFT',52,-17);resource.top:SetWidth(35)
+            resource.top:ClearAllPoints();resource.top:SetPoint('TOPLEFT',resource,'TOPLEFT',18,-17);resource.top:SetWidth(53)
             resource.bottom:SetText('')
             local meterValue=power and power.percent or protectedPercent
             if power or hasProtectedPercent then
@@ -505,7 +498,7 @@ for token,config in pairs(configs) do
         enableLabel='Enable '..config.label:lower()..' bar',width=NS.ClassBarWidth,height=NS.ClassBarHeight,
         frameName='ForeverClassmate'..config.label..'Frame',lockName='ForeverClassmate'..config.label..'Lock',
         panelName='ForeverClassmate'..config.label..'Options',minimapName='ForeverClassmate'..config.label..'Minimap',
-        indicatorName='ForeverClassmate'..config.label..'Indicator',normalize=Normalize,options=OptionsFor(config),innerCrest=true,
+        indicatorName='ForeverClassmate'..config.label..'Indicator',normalize=Normalize,options=OptionsFor(config),
         defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showMinimap=true,groupMinimapButtons=true,minimapInspect=true,showLockButton=true,showResource=true,
             showUpkeep=true,showTarget=true,showAbilities=true,showRacial=true,showMageShield=true,flashMissingBuffs=true,sleepingBagReminder=true,foodXPReminder=true,mailRecipients=true,collapsed=false,showFoldButton=true,autoFold=false,fadeOutOfCombat=true,minimapAngle=35}}
     if config.dotKeys then module.defaults.showMultiDots=true end

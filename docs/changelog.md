@@ -1,3 +1,11 @@
+## 0.37.1
+
+- The class crest sticks out from the full bar's left edge again, now for every class and a little larger (44px), matching how the crest breaks out of the compact card. It stops just short of the first slot.
+- Standard class bars keep the 0.37.0 fix: no duplicate class spell icon inside the bar. The resource slot is text only.
+- Slots return to their original even widths: Resource 7–82, Upkeep 82–162, Target 162–242, Ability 242–322, Racial 322–398. "Context" stays spelled out.
+
+Use `/reload`. Automated checks use mocked frames; in-game rendering still needs confirmation.
+
 ## 0.37.0
 
 - Standard class bars (Paladin, Warrior, Rogue, Druid, Mage, Priest, Warlock) now lead with your class crest inside the bar. It replaces the old fixed class spell icon in the resource slot, which duplicated the crest and could be mistaken for an active buff. The crest no longer also hangs outside the frame for these classes. Hunter and Shaman keep the outside crest because their first slot shows live range or totem state.

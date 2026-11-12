@@ -151,13 +151,13 @@ host.scripts.OnDragStart(host);check(rawget(host,'moving')==nil,'locked bar rema
 host.scripts.OnLeave(host);NS.Paladin.db.locked=false;NS.Paladin.Apply()
 check(rawget(indicator,'dotTracker')==nil and not NS.Paladin.db.showMultiDots,'Paladin has no DoT side strip')
 check(indicator.events.LEARNED_SPELL_IN_SKILL_LINE and not indicator.events.LEARNED_SPELL_IN_TAB,'class discovery uses the Forever learned-spell event')
-check(indicator.cells.resource.top.width==45 and not indicator.cells.resource.icon.shown
-    and indicator.crest.shown and indicator.crest.width==36 and indicator.crest.x==8
-    and indicator.crest.texture=='Interface\\AddOns\\ForeverUtilities\\Textures\\Classes\\PALADIN',
-    'the class crest leads the bar in place of the old class spell icon, with resource text beside it')
-check(indicator.cells.upkeep.x==96 and indicator.cells.target.x==170 and indicator.cells.ability.x==244
-    and indicator.cells.racial.x==320,'slots are rebalanced so the crest and resource text share the first slot')
-check(not host.outline.crest.shown,'standard classes do not repeat the crest outside the frame')
+check(indicator.cells.resource.top.width==64 and not indicator.cells.resource.icon.shown and rawget(indicator,'crest')==nil,
+    'the resource slot is text only: no duplicate class spell icon inside the bar')
+check(indicator.cells.upkeep.x==82 and indicator.cells.target.x==162 and indicator.cells.ability.x==242
+    and indicator.cells.racial.x==322,'slots keep their original even widths')
+check(host.outline.crest.shown and host.outline.crest.width==44 and host.outline.crest.x==-8
+    and host.outline.crest.texture=='Interface\\AddOns\\ForeverUtilities\\Textures\\Classes\\PALADIN',
+    'the class crest straddles the left edge of the frame, ending before the first slot text')
 check(indicator.cells.racial.x+indicator.cells.racial.width==398,'all five class slots end before the lock control')
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')
@@ -307,8 +307,8 @@ UnitExists=function() return false end;UnitAffectingCombat=function() return fal
 mage.Update()
 check(mage.alpha==0.75,'Mage bar remains readable with no target outside combat')
 check(not mage.cells.resource.icon.shown and mage.cells.resource.top.text=='70%' and mage.cells.resource.bottom.text==''
-    and mage.cells.resource.meter.value==70 and mage.cells.resource.top.width==35 and mage.crest.shown,
-    'Mage mana uses the crest, a compact vertical meter and a percentage without a redundant label')
+    and mage.cells.resource.meter.value==70 and mage.cells.resource.top.width==53,
+    'Mage mana uses a compact vertical meter and percentage without a redundant label')
 check(mage.cells.upkeep.icon.shown and mage.cells.upkeep.icon.texture==500,'active Mage armor keeps its own icon')
 check(not mage.cells.target.shown and not mage.cells.ability.shown,
     'empty target and ability slots disappear instead of displaying placeholder status')
