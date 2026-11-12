@@ -1,3 +1,14 @@
+## 0.32.0
+
+- The compact view is now a single strip with a painted crest for your class at the left. The crest stays visible outside combat (idle opacity never drops below 80%), so the folded bar no longer looks empty or anonymous. It identifies the class only; it does not claim any buff is active or missing.
+- Warnings use one shared cell template: an engraved frame around a dark well with the icon inset. Food and sleeping bag art, with or without its own square background, now lines up with every other icon.
+- Warnings appear in one row to the right of the crest. The crest stays where you placed it as warnings come and go; it no longer jumps between a large logo and a grid.
+- Removed the dark background panel and outer outline behind the compact strip.
+- Flash missing buffs now pulses only the cell frames, never the icons themselves.
+- Crest and frame art come from the author's ForeverHUD project, downscaled to 64 × 64.
+
+Use `/reload`. Saved positions are kept: the crest appears centered where the compact frame was. Automated checks use mocked frames; in-game rendering still needs confirmation.
+
 ## 0.31.8
 
 - Fixed a Lua error on login in 0.31.7: `Frame:SetUserPlaced(): Frame is not movable or resizable`. The client rejects that call on a non-movable frame, which stopped the class bar from being created. The native placement flag is now cleared while the frame is movable, then the inset host is made non-movable again. Test mocks now enforce the client rule and reproduce the original error.

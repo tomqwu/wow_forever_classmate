@@ -246,7 +246,7 @@ assert(loadfile(root..'Folded.lua'))('ForeverUtilities',NS)
 level=59;dead=false;combat=false;auras={}
 local foldedDB={enabled=true,locked=true,x=0,y=0,scale=1,collapsed=true,flashMissingBuffs=true}
 local foldHost,foldContent
-local foldModule={command='/ftest'}
+local foldModule={command='/ftest',classToken='WARLOCK'}
 local foldInstance=NS.ClassHost.Create(foldModule,foldedDB,function(owner)
     foldHost=owner;foldContent=object()
     foldContent.Refresh=function() NS.ClassHost.SetFade(owner,foldContent,0.2) end
@@ -255,21 +255,30 @@ local foldInstance=NS.ClassHost.Create(foldModule,foldedDB,function(owner)
 end)
 foldModule.Apply=foldInstance.Apply;foldInstance.Apply()
 local summary=foldInstance.folded
-check(foldHost.width==66 and foldHost.height==32 and not foldInstance.visual.shown and summary.button.shown,'two warnings use one row with hidden full-bar controls')
+check(foldHost.width==102 and foldHost.height==32 and not foldInstance.visual.shown and summary.button.shown,'crest plus two warnings use one row with hidden full-bar controls')
 check(summary.main.allPoints==summary.button and summary.button.height==32 and summary.row.allPoints==summary.main,
     'the warning canvas follows actual content height instead of reserving an empty square')
 local badges=foldInstance.levelingBuffs.indicators
 check(not badges.food.button.shown and not badges.sleepingBag.button.shown,
     'folded mode suppresses the old floating corner controls')
-check(not summary.primary.shown and summary.badges[1].texture==foldHost.foldLevelWarnings.food.icon
+check(summary.crest.shown and summary.crest.width==32 and summary.crest.x==0 and summary.crest.relative==foldHost
+    and summary.crest.texture=='Interface\\AddOns\\ForeverUtilities\\Textures\\Classes\\WARLOCK',
+    'the class crest stays visible at the left of the compact strip')
+check(summary.badges[1].texture==foldHost.foldLevelWarnings.food.icon
     and summary.badges[2].texture==foldHost.foldLevelWarnings.sleepingBag.icon
-    and summary.badges[1].width==32 and summary.badges[2].width==32,
-    'food and sleeping bag are equally sized warnings rather than primary and secondary decoration')
-check(summary.badges[2].x-summary.badges[1].x==34 and summary.badges[1].y==0
+    and summary.badges[1].width==26 and summary.badges[2].width==26,
+    'food and sleeping bag use the same inset icon size')
+check(summary.frames[1].x==36 and summary.frames[1].y==0 and summary.frames[2].x==70 and summary.frames[1].width==32
+    and summary.frames[1].texture=='Interface\\AddOns\\ForeverUtilities\\Textures\\IconFrame'
+    and summary.wells[1].shown and summary.wells[1].x==38 and summary.wells[1].y==-2
+    and summary.badges[1].x==39 and summary.badges[1].y==-3 and summary.badges[2].x==73
     and summary.badges[1].relative==foldHost,
-    'two warnings start at the host top with a two-pixel gap and no empty area above')
-check(summary.border==foldHost.outline and foldInstance.shell.width==74 and foldInstance.shell.height==40,
-    'the image-based outer frame fits the single visible row plus padding')
+    'every warning uses one cell template: frame, dark well, and icon at the same inset')
+check(summary.border==foldHost.outline and not summary.border.shown and foldInstance.shell.backdropColor[4]==0
+    and foldInstance.shell.width==110 and foldInstance.shell.height==40,
+    'compact strip has no background panel or outer outline')
+check(foldInstance.shell.point=='LEFT' and foldInstance.shell.x==-20 and foldInstance.shell.y==0,
+    'compact strip keeps the crest centered on the saved point and grows right')
 check(foldInstance.shell.backdrop.bgFile and summary.border.backdrop.edgeFile and foldHost.relative==foldInstance.shell and foldHost.x==4,
     'one image-based shell owns frame artwork and contains the inset logical host')
 check(foldInstance.shell.clamped and not rawget(foldHost,'clamped'),
@@ -283,19 +292,20 @@ check(foldHost.events.PLAYER_LOGIN and foldHost.events.PLAYER_ENTERING_WORLD,
 foldHost:SetPoint('BOTTOMLEFT',UIParent,'BOTTOMLEFT',53,257);foldHost:SetSize(64,64)
 foldHost.scripts.OnEvent(foldHost,'PLAYER_LOGIN')
 check(foldHost.point=='TOPLEFT' and foldHost.relative==foldInstance.shell and foldHost.relativePoint=='TOPLEFT'
-    and foldHost.x==4 and foldHost.y==-4 and foldHost.width==66 and foldHost.height==32,
+    and foldHost.x==4 and foldHost.y==-4 and foldHost.width==102 and foldHost.height==32,
     'startup restores the inset and current compact dimensions after an old Warlock cache record')
 -- Mage had a separate stale full-bar record; world entry must repair it too.
 foldHost:SetPoint('LEFT',UIParent,'LEFT',69,-261);foldHost:SetSize(426,56)
 foldHost.scripts.OnEvent(foldHost,'PLAYER_ENTERING_WORLD')
 check(foldHost.point=='TOPLEFT' and foldHost.relative==foldInstance.shell and foldHost.x==4 and foldHost.y==-4
-    and foldHost.width==66 and foldHost.height==32 and foldedDB.x==0 and foldedDB.y==0,
+    and foldHost.width==102 and foldHost.height==32 and foldedDB.x==0 and foldedDB.y==0,
     'world entry repairs a stale Mage record without replacing the saved container position')
 check(foldHost.hint.text=='','collapsed drag instructions stay on hover')
 NS.ClassHost.SetWarning(foldHost,'upkeep',true,777,'Armor missing')
 check(summary.badges[1].texture==777 and summary.badges[3].shown and not summary.badges[4].shown
-    and summary.badges[1].width==summary.badges[3].width and summary.badges[3].x==17,
-    'armor, food and sleeping bag have equal weight with the last row centered')
+    and summary.badges[1].width==summary.badges[3].width and summary.badges[3].x==107 and summary.badges[3].y==-3
+    and foldInstance.shell.point=='LEFT' and foldInstance.shell.x==-20,
+    'a third warning appends to the right without moving the crest')
 NS.ClassHost.SetWarning(foldHost,'upkeep',false,nil,'Armor missing')
 check(summary.badges[1].texture==foldHost.foldLevelWarnings.food.icon and not summary.badges[3].shown,
     'cleared armor removes only its warning')
@@ -315,11 +325,11 @@ NS.ClassHost.SetWarning(foldHost,'shield',false,nil,'Elemental shield missing')
 -- accepting positions inside a generously sized canvas.
 local function CheckBounds(expectedCount,expectedWidth,expectedHeight)
     local shown,minX,maxX,minY,maxY=0,math.huge,-math.huge,math.huge,-math.huge
-    for _,badge in ipairs(summary.badges) do
-        if badge.shown then
-            shown=shown+1;minX=math.min(minX,badge.x);maxX=math.max(maxX,badge.x+badge.width)
-            minY=math.min(minY,badge.y-badge.height);maxY=math.max(maxY,badge.y)
-            check(badge.relative==foldHost,'each icon is anchored directly to the inset host')
+    for _,frame in ipairs(summary.frames) do
+        if frame.shown then
+            shown=shown+1;minX=math.min(minX,frame.x);maxX=math.max(maxX,frame.x+frame.width)
+            minY=math.min(minY,frame.y-frame.height);maxY=math.max(maxY,frame.y)
+            check(frame.relative==foldHost,'each cell is anchored directly to the inset host')
         end
     end
     check(shown==expectedCount and foldHost.width==expectedWidth and foldHost.height==expectedHeight,
@@ -328,15 +338,15 @@ local function CheckBounds(expectedCount,expectedWidth,expectedHeight)
         and foldInstance.shell.width==expectedWidth+8 and foldInstance.shell.height==expectedHeight+8,
         'hit target and shared shell fit the occupied rows plus four-pixel padding')
     if shown>0 then
-        check(minX==0 and maxX==expectedWidth and minY==-expectedHeight and maxY==0,
-            'visible artwork spans the logical canvas without empty top, bottom or side bands')
+        check(minX==36 and maxX==expectedWidth and minY==-expectedHeight and maxY==0,
+            'cells start after the crest and end at the strip edge, with no empty bands')
     end
 end
-CheckBounds(2,66,32)
-NS.ClassHost.SetWarning(foldHost,'upkeep',true,777,'Armor missing');CheckBounds(3,66,66)
+CheckBounds(2,102,32)
+NS.ClassHost.SetWarning(foldHost,'upkeep',true,777,'Armor missing');CheckBounds(3,136,32)
 NS.ClassHost.SetWarning(foldHost,'upkeep',false,nil,'Armor missing')
 NS.ClassHost.SetWarning(foldHost,'imbue',true,778,'Weapon imbue missing')
-NS.ClassHost.SetWarning(foldHost,'shield',true,779,'Elemental shield missing');CheckBounds(4,66,66)
+NS.ClassHost.SetWarning(foldHost,'shield',true,779,'Elemental shield missing');CheckBounds(4,170,32)
 NS.ClassHost.SetWarning(foldHost,'imbue',false,nil,'Weapon imbue missing')
 NS.ClassHost.SetWarning(foldHost,'shield',false,nil,'Elemental shield missing')
 NS.ClassHost.SetWarning(foldHost,'upkeep',true,nil,'Class upkeep missing')
@@ -346,28 +356,27 @@ NS.ClassHost.SetWarning(foldHost,'upkeep',false,nil,'Class upkeep missing')
 foldedDB.foodXPReminder=false;foldInstance.levelingBuffs.Refresh()
 check(summary.badges[1].texture==foldHost.foldLevelWarnings.sleepingBag.icon and not summary.badges[2].shown,
     'disabled food tracking removes its warning independently')
-CheckBounds(1,32,32)
+CheckBounds(1,68,32)
 foldedDB.foodXPReminder=true;combat=true
 foldInstance.levelingBuffs.controller.scripts.OnEvent(nil,'PLAYER_REGEN_DISABLED')
-check(not summary.row.shown and summary.primary.shown and summary.button.alpha==0.35,
+check(not summary.row.shown and summary.primary.shown and summary.button.alpha==0.8,
     'combat clears leveling warnings without retaining stale missing claims')
 combat=false;foldInstance.levelingBuffs.controller.scripts.OnEvent(nil,'PLAYER_REGEN_ENABLED')
 check(summary.badges[2].shown,'readable post-combat absence restores eligible reminders')
 auras={secret};foldInstance.levelingBuffs.Refresh()
-check(not summary.row.shown and summary.primary.shown and not summary.border.warningPulseGroup.playing,
+check(not summary.row.shown and summary.primary.shown and not summary.edges.warningPulseGroup.playing,
     'restricted aura reads cannot create warning artwork or a pulse')
-CheckBounds(0,64,64)
+CheckBounds(0,32,32)
 auras={{spellId=429959,name='Well-Rested'},{spellId=1248420,name='Well Fed'}}
 foldInstance.levelingBuffs.Refresh()
-check(not summary.row.shown and summary.primary.shown and foldHost.height==64
-    and summary.primary.texture=='Interface\\AddOns\\ForeverUtilities\\Textures\\ForeverClassmate',
-    'all buffs present restores neutral addon art without a blank warning footer or implied class-buff state')
+check(not summary.row.shown and summary.crest.shown and foldHost.width==32 and foldHost.height==32,
+    'all buffs present leaves only the class crest, with no blank cells or implied buff state')
 foldInstance.shell.IsMouseOver=function() return true end
 foldHost.scripts.OnUpdate(foldHost,0.2)
 check(foldHost.hovered and summary.button.alpha==1,'hovering the container padding reveals its components')
 foldInstance.shell.IsMouseOver=function() return false end
 foldHost.scripts.OnUpdate(foldHost,0.2)
-check(not foldHost.hovered and summary.button.alpha==0.35,'leaving the container restores idle icon fade')
+check(not foldHost.hovered and summary.button.alpha==0.8,'leaving keeps the idle crest readable outside combat')
 auras={};foldInstance.levelingBuffs.Refresh()
 check(summary.button:GetScript('OnClick')~=nil,'the complete compact frame remains the expand control')
 local ticks=0
@@ -377,7 +386,7 @@ check(ticks==1,'host forwards the existing updater while visuals are folded')
 foldContent:Hide();foldHost.scripts.OnUpdate(foldHost,0.3)
 check(ticks==1,'suspended hidden content does not get revived by collapsed forwarding')
 foldContent:Show();foldedDB.flashMissingBuffs=false;foldInstance.Apply()
-check(not summary.border.warningPulseGroup.playing and summary.button.alpha==1,'static collapsed warnings respect flash toggle')
+check(not summary.edges.warningPulseGroup.playing and summary.button.alpha==1,'static collapsed warnings respect flash toggle')
 summary.button.scripts.OnClick()
 check(summary.fold.relative==foldInstance.shell and summary.fold.x==-5,'collapse control belongs to the internal container rail')
 check(foldInstance.shell.width==450 and foldInstance.shell.height==64,'expanded container reserves padding and an internal control rail')
@@ -390,7 +399,8 @@ summary.fold.scripts.OnEnter(summary.fold)
 check(tooltip.text=='Collapse to warning icons','collapse control explains itself like the lock button')
 summary.fold.scripts.OnLeave(summary.fold);GameTooltip=nil
 check(summary.border.backdropBorderColor[1]==1 and summary.border.backdropBorderColor[2]==0.65
-    and not summary.border.warningPulseGroup.playing,
+    and summary.border.shown and not summary.edges.warningPulseGroup.playing
+    and foldInstance.shell.point=='CENTER' and foldInstance.shell.x==0,
     'expanded bar warms its outline for confirmed warnings without a second pulse')
 -- Leveling reminders show full-brightness content; the frame art must match it.
 foldedDB.flashMissingBuffs=true
@@ -414,20 +424,41 @@ foldedDB.showFoldButton=true;foldInstance.Apply()
 check(foldInstance.shell.width==450,'shown collapse button restores the control rail')
 auras={};foldInstance.levelingBuffs.Refresh()
 summary.fold.scripts.OnClick()
-check(foldedDB.collapsed and foldHost.width==66 and foldHost.height==32,'fold control collapses to the current reminder row')
+check(foldedDB.collapsed and foldHost.width==102 and foldHost.height==32,'fold control collapses to the current reminder row')
 -- Six confirmed warnings: four icons, the last one counts the hidden two.
 NS.ClassHost.SetWarning(foldHost,'imbue',true,778,'Weapon imbue missing')
 NS.ClassHost.SetWarning(foldHost,'shield',true,779,'Elemental shield missing')
 NS.ClassHost.SetWarning(foldHost,'upkeep',true,777,'Armor missing')
 NS.ClassHost.SetWarning(foldHost,'aspect',true,780,'Aspect missing')
-check(summary.badges[4].shown and summary.overflow.shown and summary.overflow.text=='+2' and foldHost.width==66 and foldHost.height==66,
+check(summary.badges[4].shown and summary.overflow.shown and summary.overflow.text=='+2' and foldHost.width==170 and foldHost.height==32,
     'overflow keeps the four-icon frame and counts hidden warnings')
 for _,key in ipairs({'imbue','shield','upkeep','aspect'}) do NS.ClassHost.SetWarning(foldHost,key,false,nil,'x') end
 check(not summary.overflow.shown,'overflow count clears with the extra warnings')
+check(summary.edges.warningPulseGroup.playing and rawget(summary.badges[1],'alpha')==nil and rawget(summary.wells[1],'alpha')==nil,
+    'the pulse animates only the cell edges; icons and wells stay fully readable')
+-- Dragging the compact strip stores the crest-only center, so expanding and
+-- warning changes keep the crest where it was dropped.
+function methods:GetEffectiveScale() return 1 end
+UIParent.GetCenter=function() return 500,400 end
+foldInstance.shell.GetCenter=function() return 640,450 end
+foldInstance.shell.GetLeft=function() return 580 end
+foldedDB.locked=false;foldHost.scripts.OnDragStop(foldHost)
+check(foldedDB.x==100 and foldedDB.y==50 and foldInstance.shell.point=='LEFT' and foldInstance.shell.x==80,
+    'compact drag saves the crest position, not the center of a temporary strip')
+foldedDB.locked=true
 foldedDB.enabled=false;foldInstance.Apply()
-check(not summary.button.shown and not summary.border.warningPulseGroup.playing,'disable clears collapsed presentation and animation')
+check(not summary.button.shown and not summary.edges.warningPulseGroup.playing,'disable clears collapsed presentation and animation')
 check(not next(foldHost.events),'disabled host unregisters native-layout lifecycle listeners')
 foldHost:SetPoint('LEFT',UIParent,'LEFT',69,-261)
 foldHost.scripts.OnEvent(foldHost,'PLAYER_ENTERING_WORLD')
 check(not foldInstance.shell.shown and foldHost.point=='LEFT','queued layout events cannot revive a disabled helper')
+-- Every class module's crest and the shared cell frame ship as 64 x 64 32-bit TGAs.
+local function CheckTGA(path)
+    local file=assert(io.open(root..'Textures/'..path..'.tga','rb'),path..' is packaged')
+    local header=file:read(18);file:close()
+    check(header:byte(3)==2 and header:byte(13)+header:byte(14)*256==64 and header:byte(15)+header:byte(16)*256==64
+        and header:byte(17)==32,path..' is an uncompressed 64 x 64 RGBA texture')
+end
+for _,token in ipairs({'WARRIOR','PALADIN','HUNTER','ROGUE','PRIEST','SHAMAN','MAGE','WARLOCK','DRUID'}) do CheckTGA('Classes/'..token) end
+CheckTGA('IconFrame')
 print('PASS: folded layout, warning, lifecycle and update regressions')

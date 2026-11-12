@@ -32,6 +32,21 @@ local function DetachNativePlacement(frame,movable)
     frame:SetMovable(movable)
 end
 
+-- Half of the crest-only compact shell (32 + 2 x 4 padding).
+Host.CompactHalfWidth=20
+
+-- Expanded bars center on the saved point. Compact strips keep the crest on
+-- that point and grow to the right, so warnings never move the crest.
+function Host.Place(host,db)
+    local shell=host.shell
+    shell:ClearAllPoints()
+    if db.collapsed and NS.Folded then
+        shell:SetPoint('LEFT',UIParent,'CENTER',db.x-Host.CompactHalfWidth,db.y)
+    else
+        shell:SetPoint('CENTER',UIParent,'CENTER',db.x,db.y)
+    end
+end
+
 function Host.Create(module,db,contentFactory)
     local height=type(module.height)=='function' and module.height(db) or (module.height or 56)
     local width=type(module.width)=='function' and module.width(db) or (module.width or NS.ClassBarWidth)
@@ -127,13 +142,13 @@ function Host.Create(module,db,contentFactory)
     Apply=function()
         height=type(module.height)=='function' and module.height(db) or (module.height or 56)
         width=type(module.width)=='function' and module.width(db) or (module.width or NS.ClassBarWidth)
-        if db.collapsed then width,height=64,64 end
+        if db.collapsed then width,height=NS.Folded and NS.Folded.CELL or 32,NS.Folded and NS.Folded.CELL or 32 end
         shell:SetShown(db.enabled);host:SetShown(db.enabled);host:SetSize(width,height)
         -- The right rail exists only to hold the collapse button.
         local rail=not db.collapsed and NS.Folded~=nil and db.showFoldButton~=false
         shell:SetSize(width+8+(rail and 16 or 0),height+8)
         visual:SetShown(not db.collapsed)
-        shell:SetScale(db.scale);shell:ClearAllPoints();shell:SetPoint('CENTER',UIParent,'CENTER',db.x,db.y)
+        shell:SetScale(db.scale);Host.Place(host,db)
         host:ClearAllPoints();host:SetPoint('TOPLEFT',shell,'TOPLEFT',4,-4)
         host:EnableMouse(db.enabled)
         for _,event in ipairs({'PLAYER_LOGIN','PLAYER_ENTERING_WORLD'}) do
@@ -162,6 +177,8 @@ function Host.Create(module,db,contentFactory)
         shell:StopMovingOrSizing()
         local x,y=shell:GetCenter();local cx,cy=UIParent:GetCenter()
         local ratio=shell:GetEffectiveScale()/UIParent:GetEffectiveScale()
+        -- Compact mode keeps the crest fixed: store the crest-only center.
+        if db.collapsed and type(shell.GetLeft)=='function' then x=shell:GetLeft()+Host.CompactHalfWidth end
         db.x,db.y=x-cx/ratio,y-cy/ratio
         Apply()
     end)
