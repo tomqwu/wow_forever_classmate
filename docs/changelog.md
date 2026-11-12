@@ -1,3 +1,33 @@
+## 0.42.0
+
+Everything left from the full design and class review:
+
+**Chinese clients**
+- Spell tracking now works on Simplified Chinese clients for every class. Each spell and aura the addon watches carries its Chinese name, taken from the Forever client's own spell table (no spell IDs are built in, so it still only tracks what you've learned).
+
+**Class coverage**
+- **Paladin:** your aura is tracked (a missing aura warns), and blessings and Righteous Fury are named when missing without waking the bar.
+- **Warrior:** Sunder Armor, Thunder Clap, Demoralizing Shout and Hamstring on the target; Enrage and Flurry procs; Bloodrage and Berserker Rage cues.
+- **Rogue:** your Deadly, Wound, Crippling and Mind-numbing Poison on the target, plus Expose Armor. A sharpening stone now reads as a weapon coating instead of a poison.
+- **Druid:** combo pips in Cat Form. Omen of Clarity is upkeep, and its Clearcasting proc shows in the ability slot.
+- **Mage:** Arcane Blast stacks, Arcane Concentration's Clearcasting, and Fire Vulnerability from Improved Scorch. An active Mana Shield or Ice Barrier no longer hides a missing-armor message.
+- **Priest:** Shadowform shows even when the game doesn't report it as a stance; Shadow Protection upkeep; Inner Focus cue.
+- **Warlock:** Nightfall's Shadow Trance proc, every curse, Siphon Life and Unstable Affliction on the target and the DoT bars, and a Demonic Sacrifice buff counts in place of your demon.
+- **Hunter:** Aspect of the Cheetah or Pack left on in combat is a warning. Hunter's Mark and an unhappy pet now also appear on the compact card.
+- **Shaman:** a dual-wielded off-hand weapon without an imbue warns (shields never do), and the shield's last charge shows in red.
+
+**Improvements**
+- New commands: `fold`, `expand`, `autofold on|off` and `tray on|off`.
+- **Reset settings** in the panel asks for a second click.
+- The settings panel fits the default screen height.
+- The Shaman bar updates only while a timer is counting; between fights it no longer runs four times a second.
+- The compact card redraws only when something on it changes.
+- Hover checks pause during loading screens.
+- Minimap buttons returned from the tray keep their original frame level.
+- A mail attempt that never got a result is dropped when you reopen the mailbox.
+
+Use `/reload`. Automated checks use mocked APIs and the Forever client's spell table; Chinese-client tracking and the new class cues still need in-game confirmation.
+
 ## 0.41.1
 
 Fixes from a full design and class review:

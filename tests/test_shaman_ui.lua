@@ -91,6 +91,7 @@ C_UnitAuras={GetAuraDataByIndex=function(unit,index,filter)
 end}
 ForeverUtilitiesDB={shaman={x=72,y=-101,scale=1.2,locked=false}}
 assert(loadfile(root..'Core.lua'))('ForeverUtilities',NS)
+assert(loadfile(root..'SpellAliases.lua'))('ForeverUtilities',NS)
 assert(loadfile(root..'ClassHost.lua'))('ForeverUtilities',NS)
 assert(loadfile('addons/ForeverUtilities/ClassContext.lua'))('ForeverUtilities',NS)
 assert(loadfile(root..'ShamanContext.lua'))('ForeverUtilities',NS)
@@ -330,6 +331,31 @@ C_Item.GetWeaponEnchantInfo=function(slot) if slot==Enum.WeaponSlot.OffHand then
 indicator.Refresh()
 check(indicator.weaponCell.badge.text=='' and indicator.weaponCell.edge.vertexColor[1]==0.78,
     'an un-imbued off hand (possibly a shield) never creates a warning')
+-- A confirmed off-hand weapon (dual wield) without an imbue does warn.
+Enum.ItemClass={Weapon=2,Armor=4}
+local offClass=2
+C_Item.GetItemInfoInstant=function() return 123,'','','','',offClass end
+indicator.Refresh()
+check(indicator.weaponCell.edge.vertexColor[1]==NS.Core.Amber[1] and indicator.weaponCell.edge.vertexColor[2]==NS.Core.Amber[2],
+    'an un-imbued off-hand weapon warns')
+offClass=4;indicator.Refresh()
+check(indicator.weaponCell.edge.vertexColor[1]==0.78,'an un-imbued shield never warns')
+C_Item.GetItemInfoInstant=nil;Enum.ItemClass=nil;indicator.Refresh()
+check(indicator.weaponCell.edge.vertexColor[1]==0.78,'an unreadable item class never warns')
+-- Polling only while something shown counts down.
+local savedTotem,savedLeft,savedEnchants,savedAuras=GetTotemInfo,GetTotemTimeLeft,C_Item.GetWeaponEnchantInfo,C_UnitAuras.GetAuraDataByIndex
+GetTotemInfo=function() return false,'',0,0,0 end;GetTotemTimeLeft=function() return 0 end
+C_Item.GetWeaponEnchantInfo=function() return {} end;C_UnitAuras.GetAuraDataByIndex=function() end
+indicator.Refresh()
+check(indicator.scripts.OnUpdate==nil,'with nothing counting down the Shaman bar waits for events')
+GetTotemInfo=function(slot) if slot==2 then return true,'Stoneclaw Totem',now,15,0 end return false,'',0,0,0 end
+GetTotemTimeLeft=function(slot) return slot==2 and 15 or 0 end
+indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
+check(indicator.scripts.OnUpdate~=nil,'an active totem timer starts polling')
+GetTotemInfo=function() return false,'',0,0,0 end;GetTotemTimeLeft=function() return 0 end
+indicator.scripts.OnEvent(indicator,'PLAYER_TOTEM_UPDATE',2)
+check(indicator.scripts.OnUpdate==nil,'polling stops once the last timer ends')
+GetTotemInfo,GetTotemTimeLeft,C_Item.GetWeaponEnchantInfo,C_UnitAuras.GetAuraDataByIndex=savedTotem,savedLeft,savedEnchants,savedAuras
 local savedSlots=Enum.WeaponSlot;Enum.WeaponSlot={MainHand=0}
 check(NS.ShamanContext.WeaponImbue(true)==nil and NS.ShamanContext.WeaponImbue().active,
     'a client without an off-hand slot enum reports nothing for the off hand, never the main hand')
@@ -349,4 +375,13 @@ indicator.scripts.OnEvent(indicator,'PLAYER_ALIVE')
 check(weaponPulse.playing and shieldPulse.playing,'resurrection refreshes current Shaman missing-buff warnings')
 db.enabled=false;indicator.Refresh()
 check(not weaponPulse.playing and not shieldPulse.playing,'disabling Shaman stops both pulses')
+-- A zhCN spellbook where English lookups return nil still finds shields,
+-- imbues and totems through the generated client aliases.
+book={[1]={spellID=1001,name='闪电之盾',iconID=503},[2]={spellID=1002,name='风怒武器',iconID=502},[3]={spellID=1003,name='大地之力图腾',iconID=504}}
+C_Spell.GetSpellInfo=function(value)
+    if type(value)=='number' then local item=book[value-1000];return item and {name=item.name,iconID=item.iconID} end
+end
+db.enabled=true;indicator.Refresh();indicator.scripts.OnEvent(indicator,'SPELLS_CHANGED')
+check(NS.Shaman.spells.lightningShield and NS.Shaman.spells.lightningShield.name=='闪电之盾' and NS.Shaman.spells.windfury,
+    'Chinese Shaman spells are discovered without English metadata')
 print('PASS: '..count..' shaman UI and lifecycle checks')

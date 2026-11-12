@@ -109,6 +109,19 @@ slash('off');check(not db.enabled and not named.ForeverUtilitiesDistanceFrame.sh
 slash('unlock');check(db.enabled and not db.locked,'unlock enables dragging')
 slash('lock');check(db.locked,'lock command')
 slash('reset');check(db.scale==1 and db.locked,'reset defaults')
+-- View, auto-fold and tray commands (0.42.0).
+db.foldedByDeath=true;slash('fold');check(db.collapsed==true and db.foldedByDeath==nil,'fold command folds and is the player\'s choice')
+slash('expand');check(db.collapsed==false,'expand command expands')
+slash('autofold on');check(db.autoFold==true,'autofold on');slash('autofold off');check(db.autoFold==false,'autofold off')
+slash('tray off');check(db.groupMinimapButtons==false,'tray off');slash('tray on');check(db.groupMinimapButtons==true,'tray on')
+-- The panel reset needs a second click.
+local resetButton=panel.reset
+db.scale=1.4;resetButton.scripts.OnClick(resetButton)
+check(db.scale==1.4 and resetButton.armed and resetButton.text=='Click again to reset','first reset click only arms')
+resetButton.scripts.OnClick(resetButton)
+check(db.scale==1 and resetButton.armed==false and resetButton.text=='Reset settings','second click resets')
+-- Long option lists fit a 768-unit screen.
+check(panel.height<=768,'settings panel fits the default UI height')
 for _,key in ipairs({'petGuide','petHappinessWarning','aspectWarning','showRange','showAmmo','lowAmmoWarning','petMendWarning','markWarning','fadeOutOfCombat','showTargetTarget','showAngle'}) do
  local control=panel.controls[key]
  check(control~=nil,'feature has checkbox: '..key)

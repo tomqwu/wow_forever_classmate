@@ -40,6 +40,10 @@ function methods:GetName() return self.name end
 function methods:IsProtected() return self.protected==true,false end
 function methods:GetCenter() return self.cx,self.cy end
 function methods:IsMouseOver() return self.over==true end
+function methods:GetFrameLevel() return rawget(self,'level') or 1 end
+function methods:SetFrameLevel(value) self.level=value end
+function methods:GetFrameStrata() return rawget(self,'strata') or 'MEDIUM' end
+function methods:SetFrameStrata(value) self.strata=value end
 setmetatable(methods,{__index=function() return function() end end})
 
 local created={}
@@ -83,6 +87,7 @@ local children={tracking,questie,clock,fishfry,secure,pin,own,texture,forever,hi
 Minimap.GetChildren=function() return unpack(children) end
 local function Original(button) return button.points[1][2]==Minimap and button.points[1][4]==50 end
 local originalDrag=questie.scripts.OnDragStart
+questie.level,questie.strata=8,'HIGH'
 
 NS.Classes={HUNTER={minimapName='ForeverHunterFriendMinimap',classToken='HUNTER'}}
 assert(loadfile(root..'MinimapTray.lua'))('ForeverUtilities',NS)
@@ -172,6 +177,7 @@ db.groupMinimapButtons=true;Tray.Apply(module,anchor,Settings)
 check(#Tray.Borrowed()==5,'grouping can be turned back on')
 db.showMinimap=false;Tray.Apply(module,anchor,Settings)
 check(#Tray.Borrowed()==0 and questie.parent==Minimap,'hiding the Classmate minimap button returns every button')
+check(questie.level==8 and questie.strata=='HIGH','a returned button gets its own frame level and strata back')
 
 -- Re-borrowing does not stack hooks: one click closes once and runs once.
 db.showMinimap=true;Tray.Apply(module,anchor,Settings);Tray.Toggle()

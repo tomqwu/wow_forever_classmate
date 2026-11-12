@@ -95,6 +95,7 @@ end}
 UnitIsUnit=function(a,b) return a==b end
 ForeverUtilitiesDB={paladin={x=77,y=-88,scale=1.1,locked=false}}
 assert(loadfile(root..'Core.lua'))('ForeverUtilities',NS)
+assert(loadfile(root..'SpellAliases.lua'))('ForeverUtilities',NS)
 assert(loadfile(root..'ClassHost.lua'))('ForeverUtilities',NS)
 assert(loadfile(root..'ClassContext.lua'))('ForeverUtilities',NS)
 assert(loadfile(root..'DotTracker.lua'))('ForeverUtilities',NS)
@@ -420,12 +421,16 @@ local poisonLines=table.concat(comboRogue.cells.upkeep.tooltipLines,'\n')
 check(comboRogue.cells.upkeep.top.text=='Missing' and comboRogue.cells.upkeep.bottom.text=='Off-hand poison'
     and poisonLines:find('Main hand: 10m',1,true) and poisonLines:find('Off hand: no poison',1,true),
     'Rogue poisons are tracked per weapon, naming the hand that needs a coating')
-C_Item.GetWeaponEnchantInfo=function(slot) return {{hasEnchant=true,timeLeft=slot==Enum.WeaponSlot.MainHand and 600000 or 120000}} end
+C_Item.GetWeaponEnchantInfo=function(slot) return {{hasEnchant=true,charges=40,timeLeft=slot==Enum.WeaponSlot.MainHand and 600000 or 120000}} end
 comboRogue.Update()
 check(comboRogue.cells.upkeep.top.text=='2m' and comboRogue.cells.upkeep.bottom.text=='Poison',
     'with both weapons coated, the bar shows the poison that expires first')
 check(named.ForeverClassmateRogueFrame.foldStat.text=='2m' and named.ForeverClassmateRogueFrame.foldStat.label=='Poison time left',
     'Rogue compact stat is the shortest poison time left')
+-- A sharpening stone has no charges: it is a coating, never called a poison.
+C_Item.GetWeaponEnchantInfo=function(slot) return {{hasEnchant=true,charges=slot==Enum.WeaponSlot.MainHand and 40 or 0,timeLeft=600000}} end
+comboRogue.Update()
+check(comboRogue.cells.upkeep.bottom.text=='Weapon coating','an uncharged temporary enchant is a weapon coating, not a poison')
 GetInventoryItemID,C_Item.GetWeaponEnchantInfo=savedItemID,savedEnchant
 local savedCount,savedExists,savedHealth=C_Item.GetItemCount,UnitExists,UnitHealth
 C_Item.GetItemCount=function(id) return id==6265 and 5 or 0 end
@@ -550,6 +555,56 @@ check(not druidPulse.playing,'restoring the Druid buff clears the shared pulse')
 local temporary=Fixture(NS.Rogue,{'Slice and Dice'},{})
 local temporaryPulse=rawget(temporary.cells.upkeep.armorWarning,'warningPulseGroup')
 check(not temporaryPulse or not temporaryPulse.playing,'a missing temporary Rogue finisher does not trigger maintained-buff flashing')
+-- Class coverage (0.42.0).
+for _,module in ipairs({NS.Paladin,NS.Druid,NS.Mage,NS.Warlock,NS.Rogue,NS.Priest}) do
+    for _,key in ipairs({'showUpkeep','showAbilities','showRacial','showTarget','showResource'}) do module.db[key]=true end
+end
+UnitAffectingCombat=function() return false end
+UnitExists=function(unit) return unit=='target' end
+-- Paladin: a missing aura is a maintained-buff warning; a missing blessing is not.
+local auraPaladin=Fixture(NS.Paladin,{'Seal of Wisdom','Devotion Aura','Blessing of Might'},{'Seal of Wisdom','Blessing of Might'})
+check(auraPaladin.cells.upkeep.bottom.text=='Devotion Aura' and named.ForeverClassmatePaladinFrame.foldWarnings.upkeep.active,
+    'a learned Paladin aura that is missing warns')
+auraPaladin=Fixture(NS.Paladin,{'Seal of Wisdom','Devotion Aura','Blessing of Might'},{'Seal of Wisdom','Devotion Aura'})
+check(auraPaladin.cells.upkeep.bottom.text=='Blessing of Might' and not named.ForeverClassmatePaladinFrame.foldWarnings.upkeep.active,
+    'a missing blessing is named without waking the bar')
+-- Druid: combo pips replace the form icon in an energy form.
+UnitPowerType=function() return 3,'ENERGY' end;GetComboPoints=function() return 2 end
+local catDruid=Fixture(NS.Druid,{'Rake'},{})
+check(catDruid.cells.resource.pips[1].shown and not catDruid.cells.resource.cue.shown,'Cat Form shows combo pips')
+UnitPowerType=function() return 0,'MANA' end;GetComboPoints=function() return 0 end
+catDruid.Update()
+check(not catDruid.cells.resource.pips[1].shown,'caster form hides combo pips')
+-- Druid: Clearcasting only follows a learned Omen of Clarity.
+local omenDruid=Fixture(NS.Druid,{'Omen of Clarity'},{'Omen of Clarity','Clearcasting'})
+check(omenDruid.cells.ability.bottom.text=='Clearcasting' and omenDruid.cells.upkeep.bottom.text=='Omen of Clarity',
+    'Omen of Clarity is upkeep and Clearcasting is its proc')
+-- Mage: Arcane Blast stacks are a harmful aura on the player.
+local blastMage=Fixture(NS.Mage,{'Mage Armor','Arcane Blast'},{'Mage Armor'})
+C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
+    if unit=='player' and filter=='HELPFUL' and index==1 then return {name='Mage Armor',icon=500,sourceUnit='player'} end
+    if unit=='player' and filter=='HARMFUL' and index==1 then return {name='Arcane Blast',icon=77,applications=3,expirationTime=110} end
+end
+blastMage.Update()
+check(blastMage.cells.ability.bottom.text=='Arcane Blast' and blastMage.cells.ability.top.text=='×3','Arcane Blast stacks are read from the harmful self-aura')
+-- Warlock: a Demonic Sacrifice buff stands in for the demon.
+UnitExists=function(unit) return unit=='target' end
+local sacrificeLock=Fixture(NS.Warlock,{'Demon Skin','Summon Imp','Demonic Sacrifice'},{'Demon Skin','Burning Shadow'})
+check(sacrificeLock.cells.upkeep.top.text=='2/2' and not table.concat(sacrificeLock.cells.upkeep.tooltipLines,'\n'):find('Demon: missing',1,true),
+    'a sacrifice buff counts as the demon')
+sacrificeLock=Fixture(NS.Warlock,{'Demon Skin','Summon Imp'},{'Demon Skin','Burning Shadow'})
+check(sacrificeLock.cells.upkeep.bottom.text=='Demon','without the talent learned, a missing demon is still missing')
+-- Rogue: crafted poisons are read on the target by name, from you only.
+local poisonRogue=Fixture(NS.Rogue,{},{})
+UnitCanAttack=function() return true end
+C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
+    if unit=='target' and filter=='HARMFUL' and index==1 then return {name='Deadly Poison',icon=88,applications=4,expirationTime=112,sourceUnit='player'} end
+end
+poisonRogue.Update()
+check(poisonRogue.cells.target.bottom.text=='Deadly Poison' and poisonRogue.cells.target.top.text=='×4','a poison debuff from you shows on the target slot')
+C_UnitAuras.GetAuraDataByIndex=function() return nil end;poisonRogue.Update()
+check(not poisonRogue.cells.target.shown,'no learned target spell means no "None" placeholder for an unlearned poison')
+
 -- Reproduce a localized-only spell lookup: English names return nil when
 -- only Chinese spells are learned. No Classic spell IDs are assumed.
 local nativeSpellInfo=C_Spell.GetSpellInfo
@@ -585,6 +640,23 @@ for _,armorName in ipairs({'Demon Skin','Demon Armor','Fel Armor','恶魔皮肤'
     check(not cell.armorWarning.shown and not pulse.playing and cell.top.text~='Missing' and checked.alpha==0.6,
         'restricted aura names do not create a false missing-armor warning')
 end
+-- A zhCN spellbook with English lookups returning nil: the generated client
+-- aliases still find upkeep, target, cue and racial spells.
+for _,key in ipairs({'showUpkeep','showAbilities','showRacial','showTarget'}) do NS.Warrior.db[key]=true;NS.Warlock.db[key]=true end
+local zhWarrior=Fixture(NS.Warrior,{'战斗怒吼','撕裂','压制','生存意志'},{})
+check(NS.Warrior.spells.battleShout and NS.Warrior.spells.rend and NS.Warrior.spells.overpower and NS.Warrior.spells.willToSurvive,
+    'Chinese spellbook names are discovered through the generated aliases')
+check(zhWarrior.cells.upkeep.top.text=='Missing' and zhWarrior.cells.upkeep.bottom.text=='战斗怒吼'
+    and zhWarrior.cells.ability.bottom.text=='压制' and zhWarrior.cells.racial.bottom.text=='生存意志',
+    'a localized Warrior bar names its own learned spells')
+zhWarrior=Fixture(NS.Warrior,{'战斗怒吼'},{'战斗怒吼'})
+check(zhWarrior.cells.upkeep.top.text=='Active' and zhWarrior.cells.upkeep.bottom.text=='战斗怒吼','a Chinese aura name satisfies its upkeep')
+check(next(Fixture(NS.Warrior,{'Not A Real Spell'},{}) and NS.Warrior.spells or {})==nil,'an unrecognized spell name finds nothing')
+-- Aura-only effects follow their learned source: Shadow Trance needs Nightfall.
+local zhLock=Fixture(NS.Warlock,{'夜幕'},{'暗影冥思'})
+check(NS.Warlock.spells.shadowTrance and zhLock.cells.ability.bottom.text=='暗影冥思','the Nightfall proc is read as Shadow Trance')
+zhLock=Fixture(NS.Warlock,{'Corruption'},{'暗影冥思'})
+check(NS.Warlock.spells.shadowTrance==nil,'without Nightfall learned, Shadow Trance is not tracked')
 local checked=Fixture(NS.Warlock,{'恶魔皮肤','Summon Imp'},{})
 UnitExists=function(unit) if unit=='pet' then return secret end;return unit=='target' end
 checked.Update()

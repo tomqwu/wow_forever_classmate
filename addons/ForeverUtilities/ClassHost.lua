@@ -4,7 +4,10 @@ NS.ClassHost=Host
 
 function Host.SetWarning(host,key,active,icon,label)
     host.foldWarnings=host.foldWarnings or {}
+    local old=host.foldWarnings[key]
     host.foldWarnings[key]={active=active==true,icon=icon,label=label}
+    -- Modules report every update; redraw the card only on a real change.
+    if old and old.active==(active==true) and old.icon==icon and old.label==label then return end
     if host.foldRefresh then host.foldRefresh() end
 end
 
@@ -27,10 +30,12 @@ function Host.SetStat(host,stat)
 end
 
 function Host.SetFade(host,content,alpha)
-    content.baseAlpha=alpha
+    local changed=content.baseAlpha~=alpha or host.fadeHovered~=host.hovered
+    content.baseAlpha=alpha;host.fadeHovered=host.hovered
     content:SetAlpha(Host.ContentAlpha(host,content))
     if host.updatePolling then host.updatePolling() end
-    if host.foldRefresh then host.foldRefresh() end
+    -- The card only follows a changed fade; per-update calls redraw nothing.
+    if changed and host.foldRefresh then host.foldRefresh() end
 end
 
 -- Native SetUserPlaced throws on a frame that is neither movable nor resizable,
@@ -263,7 +268,9 @@ function Host.Create(module,db,contentFactory)
     -- forward the hidden content updater. Otherwise no per-frame work runs.
     local polling=false
     host.updatePolling=function()
-        local wanted=db.enabled==true and (db.collapsed==true or host.hovered==true or Host.ContentAlpha(host,content)<1)
+        -- Loading screens stop hover work; world entry resumes it.
+        local wanted=db.enabled==true and host.outsideWorld~=true
+            and (db.collapsed==true or host.hovered==true or Host.ContentAlpha(host,content)<1)
         if wanted==polling then return end
         polling=wanted;hoverElapsed=0
         host:SetScript('OnUpdate',wanted and CheckHover or nil)
@@ -296,7 +303,7 @@ function Host.Create(module,db,contentFactory)
         shell:SetScale(db.scale);Host.Place(host,db)
         host:ClearAllPoints();host:SetPoint('TOPLEFT',shell,'TOPLEFT',4,-4)
         host:EnableMouse(db.enabled)
-        for _,event in ipairs({'PLAYER_LOGIN','PLAYER_ENTERING_WORLD','PLAYER_DEAD','PLAYER_ALIVE','PLAYER_UNGHOST'}) do
+        for _,event in ipairs({'PLAYER_LOGIN','PLAYER_ENTERING_WORLD','PLAYER_LEAVING_WORLD','PLAYER_DEAD','PLAYER_ALIVE','PLAYER_UNGHOST'}) do
             if db.enabled then host:RegisterEvent(event) else host:UnregisterEvent(event) end
         end
         if not db.enabled then host.hovered=false end
@@ -331,6 +338,8 @@ function Host.Create(module,db,contentFactory)
     -- records left by the pre-shell implementation. Disabled hosts do no work.
     host:SetScript('OnEvent',function(_,event)
         if not db.enabled then return end
+        if event=='PLAYER_LEAVING_WORLD' then host.outsideWorld=true;host.updatePolling();return end
+        if event=='PLAYER_ENTERING_WORLD' then host.outsideWorld=false end
         if event=='PLAYER_REGEN_DISABLED' or event=='PLAYER_REGEN_ENABLED' then
             -- A ghost stays folded even if combat state changes.
             if db.autoFold==true and NS.Core.PlayerDead()~=true then Host.SetFold(module,db,event=='PLAYER_REGEN_ENABLED') end

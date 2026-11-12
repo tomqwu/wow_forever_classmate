@@ -77,7 +77,9 @@ end
 Tray.Layout=Layout
 
 local function Grab(button)
+    -- Reparenting resets the frame level, so strata and level return too.
     local record={parent=Core.Call(button.GetParent,button),points={},
+        strata=Core.Call(button.GetFrameStrata,button),level=Core.Call(button.GetFrameLevel,button),
         dragStart=button:GetScript('OnDragStart'),dragStop=button:GetScript('OnDragStop')}
     for index=1,(Core.Call(button.GetNumPoints,button) or 0) do
         record.points[index]={button:GetPoint(index)}
@@ -104,6 +106,8 @@ local function Release(button)
     if not record then return end
     records[button]=nil
     if record.parent then button:SetParent(record.parent) end
+    if type(record.strata)=='string' then Core.Call(button.SetFrameStrata,button,record.strata) end
+    if Core.IsNumber(record.level) then Core.Call(button.SetFrameLevel,button,record.level) end
     button:ClearAllPoints()
     for _,point in ipairs(record.points) do button:SetPoint(unpack(point)) end
     button:SetScript('OnDragStart',record.dragStart);button:SetScript('OnDragStop',record.dragStop)

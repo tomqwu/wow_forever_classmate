@@ -41,8 +41,18 @@ function Context.Totem(slot)
         start=duration and start or nil,duration=duration,left=left}
 end
 
--- Main hand by default; pass true for the off hand (tooltip detail only: an
--- off-hand slot may hold a shield, so its absence is never a warning).
+-- True only when the client confirms the item is a weapon (not a shield or
+-- held-in-off-hand item); nil when its class cannot be read.
+function Context.IsWeapon(itemID)
+    local weaponClass=Enum and Enum.ItemClass and Enum.ItemClass.Weapon
+    if not Core.IsNumber(itemID) or not Core.IsNumber(weaponClass) then return nil end
+    local ok,_,_,_,_,_,classID=pcall(C_Item and C_Item.GetItemInfoInstant,itemID)
+    if not ok or not Core.IsNumber(classID) then return nil end
+    return classID==weaponClass
+end
+
+-- Main hand by default; pass true for the off hand. The off hand may hold a
+-- shield, so it is a warning only when the client confirms a weapon there.
 function Context.WeaponImbue(offHand)
     if type(GetInventoryItemID)~='function' then return nil end
     local inventorySlot=offHand and 17 or 16
@@ -64,10 +74,11 @@ function Context.WeaponImbue(offHand)
             local milliseconds=enchant.timeLeft
             local left=Core.IsNumber(milliseconds) and math.max(0,milliseconds/1000) or nil
             local icon=Core.Icon(enchant.enchantIconID) or Core.Icon(texture)
-            return {equipped=true,active=true,left=left,icon=icon,charges=Core.IsNumber(enchant.charges) and enchant.charges or nil}
+            return {equipped=true,active=true,left=left,icon=icon,charges=Core.IsNumber(enchant.charges) and enchant.charges or nil,
+                weapon=Context.IsWeapon(itemID)}
         end
     end
-    return {equipped=true,active=false,icon=Core.Icon(texture)}
+    return {equipped=true,active=false,icon=Core.Icon(texture),weapon=Context.IsWeapon(itemID)}
 end
 
 function Context.Aura(unit,filter,names,requirePlayer)

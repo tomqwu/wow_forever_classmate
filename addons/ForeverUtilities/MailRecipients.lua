@@ -247,7 +247,9 @@ local function OnEvent(_,event,name)
         if Enabled() and type(attempt)=='table' then RecordRecent(attempt) end
     elseif event=='MAIL_FAILED' or event=='SECURE_TRANSFER_CANCEL' then pending=nil
     elseif event=='MAIL_CLOSED' then closed=true
-    elseif event=='MAIL_SHOW' then closed=false
+    -- An attempt still pending from an earlier visit got no result event; it
+    -- can no longer be matched to a success, so it is dropped.
+    elseif event=='MAIL_SHOW' then closed=false;pending=nil
     elseif event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_LOGIN' then suspended=false;RememberPlayer()
     elseif event=='PLAYER_REGEN_DISABLED' then combatBlocked=true
     elseif event=='PLAYER_REGEN_ENABLED' then combatBlocked=false;RememberPlayer()

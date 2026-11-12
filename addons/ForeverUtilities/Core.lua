@@ -32,6 +32,22 @@ local function Mirror(source,target,onChange)
 end
 Core.Mirror=Mirror
 
+-- English catalog name plus its Simplified Chinese spellings from the Forever
+-- client's own spell table (SpellAliases.lua). Learned-spell discovery
+-- compares these with spellbook names, so a zhCN client finds the same spells.
+function Core.SpellNames(english)
+    local names={english}
+    local aliases=NS.SpellAliases and NS.SpellAliases[english]
+    for _,alias in ipairs(aliases or {}) do names[#names+1]=alias end
+    return names
+end
+-- What to call an effect that has no spellbook entry of its own.
+function Core.SpellDisplayName(english)
+    local aliases=NS.SpellAliases and NS.SpellAliases[english]
+    if aliases and aliases[1] and Core.Call(GetLocale)=='zhCN' then return aliases[1] end
+    return english
+end
+
 -- Turn a 1px separator into the engraved vertical divider. The original
 -- texture stays as the invisible anchor that module layouts already move.
 function Core.EngraveDivider(line,parent,tint)

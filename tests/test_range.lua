@@ -376,6 +376,28 @@ check(not aspectPulse.playing,'Hunter pulse stops when the aspect returns')
 aspect=false;f.scripts.OnEvent(f,'UNIT_AURA','player');check(f.aspectIcon.shown,'removed aspect restores warning')
 combat=false;f.scripts.OnEvent(f,'PLAYER_REGEN_ENABLED');check(not f.aspectIcon.shown,'combat end clears aspect warning')
 check(not aspectPulse.playing,'ending the eligible warning state stops the Hunter pulse')
+-- Cheetah or Pack in combat is a confirmed travel-aspect warning.
+local savedInfo=C_Spell.GetSpellInfo
+C_Spell.GetSpellInfo=function(id)
+    if id==9001 then return {name='Aspect of the Hawk',iconID=987} end
+    if id==9002 then return {name='Aspect of the Cheetah',iconID=988} end
+    if type(id)~='number' then return nil end -- English name queries find nothing
+    return savedInfo(id)
+end
+local savedLine,savedItem=C_SpellBook.GetSpellBookSkillLineInfo,C_SpellBook.GetSpellBookItemInfo
+C_SpellBook.GetSpellBookSkillLineInfo=function() return {itemIndexOffset=0,numSpellBookItems=2} end
+C_SpellBook.GetSpellBookItemInfo=function(slot) return {spellID=9000+slot,isPassive=false,isOffSpec=false} end
+local activeAspect='Aspect of the Cheetah'
+C_UnitAuras.GetAuraDataByIndex=function(unit,i) if unit=='player' and i==1 then return {name=activeAspect} end end
+combat=true;f.scripts.OnEvent(f,'SPELLS_CHANGED')
+check(f.aspectIcon.shown and rangeHost.foldWarnings.aspect.active and rangeHost.foldWarnings.aspect.label=='Travel aspect in combat',
+    'Aspect of the Cheetah in combat warns as a travel aspect')
+activeAspect='Aspect of the Hawk';f.scripts.OnEvent(f,'UNIT_AURA','player')
+check(not f.aspectIcon.shown and not rangeHost.foldWarnings.aspect.active,'a combat aspect clears the travel warning')
+combat=false;f.scripts.OnEvent(f,'PLAYER_REGEN_ENABLED')
+C_Spell.GetSpellInfo=savedInfo;C_SpellBook.GetSpellBookSkillLineInfo,C_SpellBook.GetSpellBookItemInfo=savedLine,savedItem
+C_UnitAuras.GetAuraDataByIndex=function(unit,i) if unit=='player' and aspect and i==1 then return {name='Aspect of the Hawk'} end end
+f.scripts.OnEvent(f,'SPELLS_CHANGED')
 combat=true;db.aspectWarning=false;f.Refresh();check(not f.aspectIcon.shown,'aspect toggle disables warning')
 db.petHappinessWarning=true;db.showTargetTarget=false;combat=false
 UnitExists=function(unit) return unit=='pet' end;UnitIsDead=function() return false end

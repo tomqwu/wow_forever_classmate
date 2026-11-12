@@ -151,6 +151,11 @@ check(Mail.Recents(Mail.Player())[1].address=='Friend Dawn','success records cap
 check(panel.groups.recents.rows[1].item.name=='Friend Dawn','successful recipient appears in side panel')
 NativeSend('FailedFriend Dawn');Event('MAIL_FAILED')
 check(#Mail.Recents(Mail.Player())==1,'failed send does not enter history')
+-- An attempt that never got a result is dropped when the mailbox opens again.
+NativeSend('StaleFriend Dawn');Event('MAIL_CLOSED');Event('MAIL_SHOW')
+check(altRow.enabled~=false,'reopening the mailbox clears a stale pending send')
+Event('MAIL_SEND_SUCCESS')
+check(#Mail.Recents(Mail.Player())==1,'a stale attempt never becomes a recent on a later success')
 NativeSend('CancelledFriend Dawn');Event('SECURE_TRANSFER_CANCEL');Event('MAIL_SEND_SUCCESS')
 check(#Mail.Recents(Mail.Player())==1,'cancelled transfer cannot become a stale recent')
 NativeSend(secret);Event('MAIL_SEND_SUCCESS')

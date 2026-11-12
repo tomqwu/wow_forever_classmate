@@ -134,7 +134,8 @@ local function CreateIndicator(host,db)
     local function Discover()
         Shaman.spells={};shieldNames={};imbueNames={};totemBySpellID={};totemNames={}
         for english,slot in pairs(totemCatalog) do
-            totemNames[english]=slot
+            -- Chinese spellings from the client's spell table (SpellAliases.lua).
+            for _,name in ipairs(Core.SpellNames(english)) do totemNames[name]=slot end
             local data=Core.Call(C_Spell and C_Spell.GetSpellInfo,english)
             if type(data)=='table' and Core.IsReadable(data.name) and type(data.name)=='string' then
                 totemNames[data.name]=slot
@@ -143,6 +144,7 @@ local function CreateIndicator(host,db)
         if not C_SpellBook or not C_Spell or not Enum or not Enum.SpellBookSpellBank then return end
         local wanted={}
         for key,entry in pairs(catalog) do
+            for _,alias in ipairs(Core.SpellNames(entry[1])) do wanted[alias]={key=key,kind=entry[2]} end
             local data=Core.Call(C_Spell.GetSpellInfo,entry[1])
             local name=type(data)=='table' and data.name or entry[1]
             if Core.IsReadable(name) and type(name)=='string' then wanted[name]={key=key,kind=entry[2]} end
@@ -261,10 +263,12 @@ local function CreateIndicator(host,db)
         GameTooltip:SetOwner(self,'ANCHOR_TOP');GameTooltip:SetText(NS.L(weapon.state.active and 'Main-hand weapon imbue active' or 'Main-hand weapon imbue missing'))
         if weapon.state.left then GameTooltip:AddLine(NS.L('Remaining: ')..(Context.FormatTime(weapon.state.left) or ''),1,1,1) end
         if weapon.state.charges then GameTooltip:AddLine(NS.L('Charges: ')..weapon.state.charges,1,1,1) end
-        -- Off hand is detail only: the slot may hold a shield, so no warning.
+        -- The off hand warns only when the client confirms a weapon there.
         local off=weapon.offState
         if off and off.active then
             GameTooltip:AddLine(NS.L('Off-hand imbue active')..(off.left and (' — '..(Context.FormatTime(off.left) or '')) or ''),0.75,0.9,1)
+        elseif off and off.equipped and off.weapon==true then
+            GameTooltip:AddLine(NS.L('Off-hand weapon imbue missing'),1,0.6,0.3)
         end
         GameTooltip:Show()
     end)
@@ -337,7 +341,11 @@ local function CreateIndicator(host,db)
             weapon.icon:SetVertexColor(imbue.active and 1 or 0.45,imbue.active and 1 or 0.45,imbue.active and 1 or 0.45,1)
             weapon.timer:SetText(imbue.active and NS.L(Context.FormatTime(imbue.left) or '') or '')
             weapon.badge:SetText(imbue.active and imbue.charges and imbue.charges>0 and tostring(imbue.charges) or '')
-            local warn=next(imbueNames)~=nil and not imbue.active
+            -- A dual-wielded weapon (confirmed by item class) without an imbue
+            -- also warns; a shield or unreadable item never does.
+            local off=weapon.offState
+            local offMissing=off~=nil and off.equipped and off.weapon==true and off.active==false
+            local warn=next(imbueNames)~=nil and (not imbue.active or offMissing)
             imbueWarn=warn
             weapon.stripe:SetColorTexture(warn and 1 or 0.25,warn and 0.15 or 0.75,warn and 0.1 or 1,1)
             if warn then weapon.edge:SetVertexColor(unpack(Core.Amber)) else weapon.edge:SetVertexColor(0.78,0.8,0.86,1) end
@@ -356,6 +364,8 @@ local function CreateIndicator(host,db)
             shield.icon:SetVertexColor(type(aura)=='table' and 1 or 0.4,type(aura)=='table' and 1 or 0.4,type(aura)=='table' and 1 or 0.45,1)
             local count=type(aura)=='table' and aura.applications or 0
             shield.badge:SetText(count and count>0 and tostring(count) or '')
+            -- The last charge shows in red so a refresh is due.
+            if count==1 then shield.badge:SetTextColor(1,0.3,0.25) else shield.badge:SetTextColor(1,1,1) end
             shield.timer:SetText(type(aura)=='table' and NS.L(Context.FormatTime(aura.left) or '') or '')
             shield.stripe:SetColorTexture(missingShield and 1 or 0.25,missingShield and 0.15 or 0.75,missingShield and 0.1 or 1,1)
             if missingShield then shield.edge:SetVertexColor(unpack(Core.Amber)) else shield.edge:SetVertexColor(0.78,0.8,0.86,1) end
@@ -424,6 +434,11 @@ local function CreateIndicator(host,db)
         local mana=db.showMana~=false and Context.ManaPercent() or nil
         manaText:SetText(mana and NS.L('Mana '..mana..'%') or '');manaText:SetShown(mana~=nil)
         NS.ClassHost.SetFade(host,frame,(db.fadeOutOfCombat==false or inCombat or activeTotems>0 or imbueWarn or missingShield==true) and 1 or (hasTarget and 0.6 or 0.2))
+        -- Tick only while something shown counts down; events cover the rest
+        -- (totem, aura, inventory and power changes).
+        frame.counting=activeTotems>0 or (imbue~=nil and imbue.active==true and imbue.left~=nil)
+            or (type(aura)=='table' and aura.left~=nil) or helper:match('^Riptide %d')~=nil
+        if frame.syncPoll then frame.syncPoll() end
         lastStatus=string.format('Totems %d/4 confirmed, %d unavailable; weapon imbue %s; shield %s; helper %s; mana %s',activeTotems,unknownTotems,
             imbue and (imbue.active and 'active' or (imbue.equipped and 'missing' or 'no weapon')) or 'unavailable',
             missingShield==nil and 'unavailable' or (missingShield and 'missing' or (aura and 'active' or 'inactive')),
@@ -436,8 +451,16 @@ local function CreateIndicator(host,db)
     local function NeedsPoll()
         return db.showTotems~=false or db.showWeaponImbue~=false or db.showShield~=false or db.showSpecHelper~=false or db.showMana~=false or db.totemRecallHint~=false
     end
+    local function Tick(_,delta) elapsed=elapsed+delta;if elapsed>=0.25 then elapsed=0;Update() end end
+    local ticking=false
+    local function StopTicking() ticking=false;frame:SetScript('OnUpdate',nil) end
+    frame.syncPoll=function()
+        local wanted=db.enabled==true and active and not suspended and NeedsPoll() and frame.counting==true
+        if wanted and not ticking then ticking=true;elapsed=0;frame:SetScript('OnUpdate',Tick)
+        elseif not wanted and ticking then StopTicking() end
+    end
     local function Refresh()
-        frame:SetScript('OnUpdate',nil);frame:SetShown(db.enabled);Layout()
+        StopTicking();frame:SetShown(db.enabled);Layout()
         if not db.enabled then
             pulseWeapon(false);pulseShield(false)
             totemCache={};recentCast={}
@@ -446,13 +469,12 @@ local function CreateIndicator(host,db)
         end
         if not active then for _,event in ipairs(events) do frame:RegisterEvent(event) end;active=true;Discover() end
         if suspended or Core.PlayerDead() then pulseWeapon(false);pulseShield(false);frame:Hide();return end
-        Update();elapsed=0
-        if NeedsPoll() then frame:SetScript('OnUpdate',function(_,delta) elapsed=elapsed+delta;if elapsed>=0.25 then elapsed=0;Update() end end) end
+        Update();elapsed=0;frame.syncPoll()
     end
     frame:SetScript('OnEvent',function(_,event,unit,_,spellID)
         if not db.enabled then return end
         if event=='PLAYER_LEAVING_WORLD' or event=='PLAYER_DEAD' then
-            pulseWeapon(false);pulseShield(false);suspended=true;totemCache={};recentCast={};frame:SetScript('OnUpdate',nil);frame:Hide();return
+            pulseWeapon(false);pulseShield(false);suspended=true;totemCache={};recentCast={};StopTicking();frame:Hide();return
         end
         if event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_ALIVE' or event=='PLAYER_UNGHOST' then suspended=false end
         if suspended or Core.PlayerDead() then return end

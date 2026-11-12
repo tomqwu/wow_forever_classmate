@@ -196,7 +196,7 @@ function NS.Folded.Create(host,content,db,module)
         -- warms the outline (its slots already carry the detail and pulse).
         if db.enabled and not Core.PlayerDead() then
             if content:IsShown() then
-                for _,key in ipairs({'upkeep','imbue','shield','aspect'}) do
+                for _,key in ipairs({'upkeep','imbue','shield','aspect','mark','pet'}) do
                     local warning=host.foldWarnings and host.foldWarnings[key]
                     if warning and warning.active==true and Core.Icon(warning.icon) then visibleWarnings[#visibleWarnings+1]=warning end
                 end

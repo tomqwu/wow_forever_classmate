@@ -116,7 +116,8 @@ function Range.Create(host, db)
     markBorder:Hide();NS.Core.StyleWarningFrame(markBorder,frame)
     local markIcon=frame:CreateTexture(nil,'ARTWORK',nil,1)
     markIcon:SetSize(20,20);markIcon:SetPoint('CENTER',markBorder,'CENTER',0,0)
-    markIcon:SetTexture('Interface\\Icons\\Ability_Hunter_SniperShot');markIcon:Hide()
+    local markTexture='Interface\\Icons\\Ability_Hunter_SniperShot'
+    markIcon:SetTexture(markTexture);markIcon:Hide()
     frame.markIcon=markIcon
     local aspectBorder=frame:CreateTexture(nil,'ARTWORK',nil,0)
     aspectBorder:SetSize(24,24);aspectBorder:Hide();NS.Core.StyleWarningFrame(aspectBorder,frame)
@@ -125,9 +126,16 @@ function Range.Create(host, db)
     aspectIcon:SetTexture('Interface\\Icons\\Spell_Nature_RavenForm');aspectIcon:Hide()
     frame.aspectIcon=aspectIcon;frame.aspectWarning=aspectBorder
     local pulseAspect=Core.CreateWarningPulse(frame,aspectBorder)
+    local travelNames,combatNames={},{}
     local function UpdateAspect()
         local missing=db.aspectWarning~=false and NS.TargetContext.AspectMissing(aspectNames)==true
-        NS.ClassHost.SetWarning(host,'aspect',missing,'Interface\\Icons\\Spell_Nature_RavenForm','Aspect missing')
+        -- Cheetah or Pack in combat dazes you: confirmed only when a travel
+        -- aspect is active and no combat aspect is.
+        local travel=not missing and db.aspectWarning~=false and next(combatNames)~=nil
+            and NS.TargetContext.AspectMissing(travelNames)==false and NS.TargetContext.AspectMissing(combatNames)==true
+        NS.ClassHost.SetWarning(host,'aspect',missing or travel,'Interface\\Icons\\Spell_Nature_RavenForm',
+            travel and 'Travel aspect in combat' or 'Aspect missing')
+        missing=missing or travel
         aspectIcon:SetShown(missing);aspectBorder:SetShown(missing)
         pulseAspect(missing and not db.rangeIconOnly and db.flashMissingBuffs~=false)
     end
@@ -155,6 +163,8 @@ function Range.Create(host, db)
     local function UpdateHappiness()
         moodValue=db.petHappinessWarning~=false and NS.TargetContext.PetMoodWarning() or nil
         mood:SetShown(moodValue~=nil)
+        -- Only a confirmed unhappy pet reaches the compact card; content is a hint.
+        NS.ClassHost.SetWarning(host,'pet',moodValue==1,'Interface\\Icons\\Ability_Hunter_BeastTraining','Pet unhappy')
         if moodValue==1 then moodIcon:SetTexCoord(0.375,0.5625,0,0.359375)
         elseif moodValue==2 then moodIcon:SetTexCoord(0.1875,0.375,0,0.359375) end
     end
@@ -281,6 +291,7 @@ function Range.Create(host, db)
     local function ClearContext()
         guide.Clear();ReadoutLayout()
         markIcon:Hide();markBorder:Hide();petHighlight:Hide();portrait:Hide();portrait:SetTexture(nil);angleLabel:SetText('');inspect:Hide()
+        NS.ClassHost.SetWarning(host,'mark',false,markTexture,"Hunter's Mark missing")
     end
     local function UpdateContext()
         if db.rangeIconOnly then return end
@@ -299,6 +310,7 @@ function Range.Create(host, db)
         local missing=db.markWarning~=false and Call(UnitAffectingCombat,'player')==true
             and NS.TargetContext.MarkMissing(markName)==true
         markIcon:SetShown(missing);markBorder:SetShown(missing)
+        NS.ClassHost.SetWarning(host,'mark',missing,markTexture,"Hunter's Mark missing")
         angleLabel:SetShown(db.showAngle~=false)
         if db.showAngle~=false then
             local angle=NS.TargetContext.ReadAngle()
@@ -314,17 +326,24 @@ function Range.Create(host, db)
     local spells, shot, elapsed = {}, nil, 0
     local function Discover()
         spells, shot, markName = {}, nil, nil
-        aspectNames={}
+        aspectNames={};travelNames={};combatNames={}
+        local travelCandidates={}
+        for _,name in ipairs({'Aspect of the Cheetah','Aspect of the Pack'}) do
+            for _,alias in ipairs(Core.SpellNames(name)) do travelCandidates[alias]=true end
+            local data=Call(C_Spell and C_Spell.GetSpellInfo,name)
+            if type(data)=='table' and Core.IsReadable(data.name) and type(data.name)=='string' then travelCandidates[data.name]=true end
+        end
         local aspectCandidates={}
         for _,name in ipairs({'Aspect of the Hawk','Aspect of the Monkey','Aspect of the Cheetah','Aspect of the Pack',
             'Aspect of the Beast','Aspect of the Wild','Aspect of the Viper','Aspect of the Dragonhawk'}) do
-            aspectCandidates[name]=true
+            for _,alias in ipairs(Core.SpellNames(name)) do aspectCandidates[alias]=true end
             local data=Call(C_Spell and C_Spell.GetSpellInfo,name)
             if type(data)=='table' and Core.IsReadable(data.name) and type(data.name)=='string' then aspectCandidates[data.name]=true end
         end
         local markInfo=Call(C_Spell and C_Spell.GetSpellInfo,"Hunter's Mark")
-        local wanted=type(markInfo)=='table' and markInfo.name or "Hunter's Mark"
-        if not Core.IsReadable(wanted) then wanted=nil end
+        local wanted={}
+        for _,alias in ipairs(Core.SpellNames("Hunter's Mark")) do wanted[alias]=true end
+        if type(markInfo)=='table' and Core.IsReadable(markInfo.name) and type(markInfo.name)=='string' then wanted[markInfo.name]=true end
         if not C_SpellBook or not C_Spell or not Enum or not Enum.SpellBookSpellBank then return end
         local count = Call(C_SpellBook.GetNumSpellBookSkillLines)
         if not Core.IsNumber(count) then return end
@@ -344,11 +363,12 @@ function Range.Create(host, db)
                         if type(data)=='table' and Core.IsReadable(data.name) and type(data.name)=='string'
                             and (aspectCandidates[data.name] or data.name:match('^Aspect of ')) then
                             aspectNames[data.name]=true
+                            if travelCandidates[data.name] then travelNames[data.name]=true else combatNames[data.name]=true end
                             if Core.IsNumber(data.iconID) then aspectIcon:SetTexture(data.iconID) end
                         end
-                        if type(data)=='table' and Core.IsReadable(data.name) and wanted and data.name==wanted then
+                        if type(data)=='table' and Core.IsReadable(data.name) and type(data.name)=='string' and wanted[data.name] then
                             markName=data.name
-                            if Core.IsNumber(data.iconID) then markIcon:SetTexture(data.iconID) end
+                            if Core.IsNumber(data.iconID) then markTexture=data.iconID;markIcon:SetTexture(data.iconID) end
                         end
                         if type(data)=='table' and Core.IsNumber(data.minRange) and Core.IsNumber(data.maxRange)
                             and data.minRange>=0 and data.maxRange>data.minRange then

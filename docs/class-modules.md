@@ -28,15 +28,15 @@ Warrior, Rogue, Druid, Priest, and Warlock have an independently toggleable DoT 
 
 ## Forever mechanics represented
 
-- **Paladin:** persistent seals and target judgments, including the readable Unsealed Wrath aura for Retribution.
-- **Warrior:** rage and stance changes, shout upkeep, Rend/Deep Wounds, Bloodthrill, and reactive or execute abilities. The game has its own swing display, so this module does not restore the retired swing bar.
-- **Rogue:** both temporary weapon coatings, energy, combo points, Slice and Dice, Forever's Venom buff, target poison/bleed effects, and Riposte or other learned cooldowns.
-- **Druid:** power changes with form, Mark of the Wild or Thorns, Moonfire/Insect Swarm/Faerie Fire/Rip, Eclipse and other learned procs, plus spec abilities such as Tiger's Fury or Swiftmend.
-- **Mage:** a slim vertical mana meter with a native percentage fallback, armor upkeep and active Mana Shield/Ice Barrier absorption, personal Improved Scorch or Pyroblast effects, Forever Hot Streak stacks, Fingers of Frost, Arcane Blast, and learned cooldowns. Its bar remains readable at 75% idle opacity or 90% with a target outside combat; empty target and ability slots do not repeat the armor icon.
-- **Priest:** self-buff upkeep, Shadow DoTs, Shadowform or Surge of Light, Shadow Word: Death and healing tools, plus all twelve documented Forever Priest racial spells.
-- **Warlock:** mana, health, Soul Shards, armor, demon presence, Corruption/Immolate/Wrack/Banes/Curses, and learned Affliction, Demonology, or Destruction abilities.
+- **Paladin:** persistent seals and target judgments, including the readable Unsealed Wrath aura for Retribution. Any learned aura counts as aura upkeep (a missing one warns); blessings and Righteous Fury are named when missing but never wake the bar.
+- **Warrior:** rage and stance changes, shout upkeep (named when missing, never a warning between fights), Rend/Deep Wounds/Sunder Armor/Thunder Clap/Demoralizing Shout/Hamstring, Bloodthrill, Enrage and Flurry, and reactive or execute abilities including Bloodrage and Berserker Rage. The game has its own swing display, so this module does not restore the retired swing bar.
+- **Rogue:** both temporary weapon coatings ("Poison" only when the coating has charges; a sharpening stone reads as a weapon coating), energy, combo points, Slice and Dice, Forever's Venom buff, your Deadly, Wound, Crippling and Mind-numbing Poison debuffs read on the target by name (they are crafted, not spellbook spells), bleeds and Expose Armor, and Riposte or other learned cooldowns.
+- **Druid:** power changes with form, combo pips in an energy form (Cat), Mark of the Wild, Thorns (named, never a warning), Omen of Clarity upkeep with its Clearcasting proc, Moonfire/Insect Swarm/Faerie Fire/Rip, Eclipse and other learned procs, plus spec abilities such as Tiger's Fury or Swiftmend.
+- **Mage:** a slim vertical mana meter with a native percentage fallback, armor upkeep and active Mana Shield/Ice Barrier absorption, personal Fire Vulnerability (Improved Scorch) or Pyroblast effects, Forever Hot Streak stacks, Fingers of Frost, Arcane Concentration's Clearcasting, Arcane Blast stacks read from their harmful self-aura, and learned cooldowns. Its bar remains readable at 75% idle opacity or 90% with a target outside combat; empty target and ability slots do not repeat the armor icon.
+- **Priest:** self-buff upkeep including Shadow Protection (named, never a warning), Shadow DoTs, Shadowform (from the stance or its aura) or Surge of Light, Inner Focus, Shadow Word: Death and healing tools, plus all twelve documented Forever Priest racial spells.
+- **Warlock:** mana, health, Soul Shards, armor, demon presence (a Demonic Sacrifice buff stands in for the demon once the talent is learned), Corruption/Immolate/Wrack/Banes, every curse, Siphon Life and Unstable Affliction, Nightfall's Shadow Trance proc, and learned Affliction, Demonology, or Destruction abilities.
 
-Research was checked against current Forever 1.60.1 class guides and the current racial guide in September 2026. Beta spell names and mechanics can still change, so runtime discovery takes precedence over a static specialization table.
+Catalog names are checked against the Forever client's own spell table (build 1.60.1.70888); `scripts/import_spell_names.py` writes the Simplified Chinese spelling of each one to `SpellAliases.lua`. Research was checked against current Forever 1.60.1 class guides and the current racial guide in September 2026. Beta spell names and mechanics can still change, so runtime discovery takes precedence over a static specialization table.
 
 ## Racial catalog
 

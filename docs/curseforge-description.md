@@ -4,7 +4,7 @@
 
 Forever Classmate detects your class and shows the compact information that class needs, in one engraved bar that folds into a small card when you don't need it. It supports all nine classes. Only your class's module runs; the others create no frames, events or polling. Every class keeps its own saved settings.
 
-The interface follows the WoW client language: English and Simplified Chinese (`zhCN`). Spell and character names come from the client. Other locales use English.
+The interface follows the WoW client language: English and Simplified Chinese (`zhCN`). Spell and character names come from the client. Spell tracking works on Chinese clients too: every spell and aura the addon watches is matched by its Chinese name from the Forever client's own spell table. Other locales use English.
 
 ## Highlights
 
@@ -19,15 +19,15 @@ The interface follows the WoW client language: English and Simplified Chinese (`
 
 | Class | Live helper |
 | --- | --- |
-| Hunter | Range brackets and validated yards, or an optional red/green range icon; ammo, target of target, facing ("12° left"), Hunter's Mark, aspect, pet care, family guidance and optional player Inspect |
-| Shaman | Four totem slots with live or marked estimated timers, weapon imbue with charges, elemental shield, mana, Totemic Recall, and learned Maelstrom, Riptide, Lightning Mastery, Stormstrike and Totemic Call cues |
-| Paladin | Mana, active seal by name and time, target judgments, Unsealed Wrath, and learned Holy Strike, Holy Shock and Consecration readiness |
-| Warrior | Rage, your stance by name, shout upkeep, Rend and Deep Wounds, and learned cues including Overpower, Slam and Reckless Swings |
-| Rogue | Energy, combo points, poison on each weapon with time left, Slice and Dice, Poised and Venom procs, target poison or bleed, and reactive abilities |
-| Druid | Current form by name and its live power, Mark of the Wild and Thorns, target bleeds and DoTs, readable procs, plus Primal Bite and Shifting Power |
-| Mage | Live mana meter, armor and absorb-shield status, target setup, Hot Streak, Fingers of Frost, Arcane Blast and Missile Barrage, and learned cooldowns |
-| Priest | Mana, Inner Fire, Fortitude and Divine Spirit upkeep, Shadow target effects, Penance and other learned abilities, and Forever's race-specific Priest spells |
-| Warlock | Mana, soul shards, armor, demon presence and health, target DoT, Bane and Curse, and learned abilities including Amplify Curse |
+| Hunter | Range brackets and validated yards, or an optional red/green range icon; ammo, target of target, facing ("12° left"), Hunter's Mark, aspect (including Cheetah or Pack left on in combat), pet care, family guidance and optional player Inspect |
+| Shaman | Four totem slots with live or marked estimated timers, weapon imbue with charges (including a dual-wielded off-hand weapon), elemental shield with its last charge in red, mana, Totemic Recall, and learned Maelstrom, Riptide, Lightning Mastery, Stormstrike and Totemic Call cues |
+| Paladin | Mana, active seal by name and time, your aura, blessings and Righteous Fury, target judgments, Unsealed Wrath, and learned Holy Strike, Holy Shock and Consecration readiness |
+| Warrior | Rage, your stance by name, shout upkeep, Rend, Deep Wounds, Sunder Armor, Thunder Clap, Demoralizing Shout and Hamstring, Enrage and Flurry, and learned cues including Overpower, Slam, Reckless Swings and Bloodrage |
+| Rogue | Energy, combo points, poison on each weapon with time left, Slice and Dice, Poised and Venom procs, your poisons, bleeds and Expose Armor on the target, and reactive abilities |
+| Druid | Current form and its live power, combo points in Cat Form, Mark of the Wild, Thorns and Omen of Clarity with its Clearcasting proc, target bleeds and DoTs, readable procs, plus Primal Bite and Shifting Power |
+| Mage | Live mana meter, armor and absorb-shield status, Fire Vulnerability and other target setup, Hot Streak, Fingers of Frost, Clearcasting, Arcane Blast stacks and Missile Barrage, and learned cooldowns |
+| Priest | Mana, Shadowform, Inner Fire, Fortitude, Divine Spirit and Shadow Protection upkeep, Shadow target effects, Penance, Inner Focus and other learned abilities, and Forever's race-specific Priest spells |
+| Warlock | Mana, soul shards, armor, demon presence and health (or your Demonic Sacrifice buff), every target DoT and curse, Nightfall's Shadow Trance proc, and learned abilities including Amplify Curse |
 
 The standard class bars find every active racial you have learned and show the most useful one now, by name, with the others on hover. This includes Forever racials such as Will to Survive, Elune's Light, Eureka!, Shatter Curse, Read Ley Line and Skysight. "Context" means the game reports that ability unusable right now; the addon does not guess why.
 
@@ -70,7 +70,7 @@ Opening **Send Mail** shows a side panel with **Alts** and **Recent recipients**
 
 Install the `ForeverUtilities` folder into `_forever_/Interface/AddOns/`. Restart WoW the first time, and use `/reload` after updates.
 
-Use `/fclassmate` or `/futils`, or your class command: `/fhunter`, `/fshaman`, `/fpaladin`, `/fwarrior`, `/frogue`, `/fdruid`, `/fmage`, `/fpriest` or `/fwarlock`. Subcommands: `unlock`, `lock`, `scale 0.5..2`, `on`, `off`, `reset` and `status`.
+Use `/fclassmate` or `/futils`, or your class command: `/fhunter`, `/fshaman`, `/fpaladin`, `/fwarrior`, `/frogue`, `/fdruid`, `/fmage`, `/fpriest` or `/fwarlock`. Subcommands: `unlock`, `lock`, `fold`, `expand`, `autofold on|off`, `tray on|off`, `scale 0.5..2`, `on`, `off`, `reset` and `status`. The settings panel's **Reset settings** asks for a second click.
 
 Hunters can switch to a minimal **Icon-only range display**: green when you can shoot, red when you can't. Use `/fhunter unlock` to move it.
 

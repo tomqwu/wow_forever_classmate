@@ -24,12 +24,14 @@ function Context.Discover(catalog)
     end
     for _,entry in ipairs(catalog) do
         aliases[entry.key]={}
-        for _,candidate in ipairs(entry.names or {}) do
+        for _,english in ipairs(entry.names or {}) do
+          for _,candidate in ipairs(Core.SpellNames(english)) do
             Want(candidate,entry)
             aliases[entry.key][candidate]=true
             local info=Call(C_Spell.GetSpellInfo,candidate)
             local name=type(info)=='table' and info.name
             if Core.IsReadable(name) and type(name)=='string' and name~=candidate then Want(name,entry);aliases[entry.key][name]=true end
+          end
         end
     end
     local lineCount=Call(C_SpellBook.GetNumSpellBookSkillLines)
@@ -171,6 +173,8 @@ function Context.WeaponCoatings()
                 if type(enchant)~='table' or not Core.IsReadable(enchant.hasEnchant) or type(enchant.hasEnchant)~='boolean' then return nil end
                 if enchant.hasEnchant==true then
                     result.active=result.active+1;result[entry.key]=true
+                    -- Poisons carry charges; a sharpening stone or oil does not.
+                    if Core.IsNumber(enchant.charges) and enchant.charges>0 then result[entry.key..'Charged']=true end
                     -- Per-weapon time left, only when the client gives a readable number.
                     if Core.IsNumber(enchant.timeLeft) then result[entry.key..'Left']=math.max(0,enchant.timeLeft/1000) end
                     break
@@ -178,6 +182,7 @@ function Context.WeaponCoatings()
             end
         elseif itemID~=nil then return nil end
     end
+    result.charged=result.active>0 and (not result.main or result.mainCharged==true) and (not result.off or result.offCharged==true)
     return result
 end
 

@@ -8,21 +8,21 @@
 
 Forever Classmate supports all nine classes. Forever Classmate detects the player class and starts only that module; other class modules create no frames, events, or polling. Every module has separate saved settings while movement, locking, scale, minimap access, and combat fading remain consistent. Full bars use the same 426-pixel rendered width as Forever's default desktop Main Hand swing timer; Hunters can switch to a 42-pixel range icon.
 
-The interface follows the WoW client language: English and Simplified Chinese (`zhCN`) labels for bars, settings, warnings, and tooltips. Spell and character names come from the client; curated rare-pet names may remain in English. Other client locales use English.
+The interface follows the WoW client language: English and Simplified Chinese (`zhCN`) labels for bars, settings, warnings, and tooltips. Spell and character names come from the client; curated rare-pet names may remain in English. Spell tracking also works on Chinese clients: every tracked spell and aura carries its Chinese name from the Forever client's own spell table. Other client locales use English.
 
 ## Class companions
 
 | Class | Live helper |
 | --- | --- |
-| Hunter | Range brackets and validated yards or an optional red/green range icon; ammo, target of target, facing, Hunter's Mark, aspect, pet care, family guidance, and optional player Inspect |
-| Shaman | Four totem slots with live or marked estimated timers, weapon imbue, elemental shield, mana, Totemic Recall, and learned Maelstrom, Riptide, Lightning Mastery, Stormstrike and Totemic Call cues |
-| Paladin | Mana, active seal, target judgments, Unsealed Wrath aura, and learned Holy Strike/Holy Shock/Consecration readiness |
-| Warrior | Rage, current stance, shout upkeep, Rend/Deep Wounds, and learned cues including Overpower, Slam and Reckless Swings |
-| Rogue | Energy, combo points, both weapon coatings, Slice and Dice upkeep, Poised and Venom procs, target poison or bleed, and reactive abilities |
-| Druid | Current form and its live power type, Mark/Thorns, target bleeds and DoTs, Poised and other readable procs, plus Primal Bite and Shifting Power |
-| Mage | Live mana meter, armor and absorb-shield status, personal target setup, Hot Streak/Fingers of Frost/Arcane Blast/Missile Barrage state, and learned cooldowns |
-| Priest | Mana, self buffs, Shadow target effects, Penance and other healing or Shadow abilities, and Forever's race-specific Priest spells |
-| Warlock | Mana, health, Soul Shards, armor, demon presence, target DoT/Bane/Curse, and learned abilities including Amplify Curse |
+| Hunter | Range brackets and validated yards, or an optional red/green range icon; ammo, target of target, facing ("12° left"), Hunter's Mark, aspect (including Cheetah or Pack left on in combat), pet care, family guidance and optional player Inspect |
+| Shaman | Four totem slots with live or marked estimated timers, weapon imbue with charges (including a dual-wielded off-hand weapon), elemental shield with its last charge in red, mana, Totemic Recall, and learned Maelstrom, Riptide, Lightning Mastery, Stormstrike and Totemic Call cues |
+| Paladin | Mana, active seal by name and time, your aura, blessings and Righteous Fury, target judgments, Unsealed Wrath, and learned Holy Strike, Holy Shock and Consecration readiness |
+| Warrior | Rage, your stance by name, shout upkeep, Rend, Deep Wounds, Sunder Armor, Thunder Clap, Demoralizing Shout and Hamstring, Enrage and Flurry, and learned cues including Overpower, Slam, Reckless Swings and Bloodrage |
+| Rogue | Energy, combo points, poison on each weapon with time left, Slice and Dice, Poised and Venom procs, your poisons, bleeds and Expose Armor on the target, and reactive abilities |
+| Druid | Current form and its live power, combo points in Cat Form, Mark of the Wild, Thorns and Omen of Clarity with its Clearcasting proc, target bleeds and DoTs, readable procs, plus Primal Bite and Shifting Power |
+| Mage | Live mana meter, armor and absorb-shield status, Fire Vulnerability and other target setup, Hot Streak, Fingers of Frost, Clearcasting, Arcane Blast stacks and Missile Barrage, and learned cooldowns |
+| Priest | Mana, Shadowform, Inner Fire, Fortitude, Divine Spirit and Shadow Protection upkeep, Shadow target effects, Penance, Inner Focus and other learned abilities, and Forever's race-specific Priest spells |
+| Warlock | Mana, soul shards, armor, demon presence and health (or your Demonic Sacrifice buff), every target DoT and curse, Nightfall's Shadow Trance proc, and learned abilities including Amplify Curse |
 
 The seven standard class bars discover every learned active racial and surface the one most useful now, while hover details list the others. This includes Forever racials such as Will to Survive, Elune's Light, Eureka!, Shatter Curse, Read Ley Line, and Skysight, plus the twelve race-specific Priest spells. “Context” means the game currently reports the racial unusable; the addon does not guess why.
 
@@ -30,7 +30,7 @@ Resource percentages use Forever’s native percent API when exact power values 
 
 Warrior, Rogue, Druid, Priest, and Warlock can show **slim multi-target DoT bars** to the right of the main bar. Each row identifies an enemy, your active effect, and its readable remaining time. The strip tracks the current target and nearby enemies that have active nameplates; it clears a row when the effect expires or its nameplate disappears. It cannot continue tracking an offscreen enemy whose aura state Forever no longer exposes. Turn it off with **Show multi-target DoT bars** in your class settings. The original 426 × 56 bar stays the same size.
 
-Warlock armor is confirmed out of combat. Learned English and Simplified Chinese armor names are recognized even when English spell-name lookup is unavailable. A confirmed missing armor buff shows "Missing" with the armor's name in an amber warning frame at full opacity; buffing clears it. If combat hides the aura, the upkeep slot can keep the last confirmed armor icon dimmed without status text or an active claim. Other standard-class upkeep slots hide an unreadable count, and target, ability, racial, or resource slots disappear when no useful live state can be read.
+Warlock armor is confirmed out of combat. Learned spells are recognized by their English or Simplified Chinese names, even when English spell-name lookup is unavailable. A confirmed missing armor buff shows "Missing" with the armor's name in an amber warning frame at full opacity; buffing clears it. If combat hides the aura, the upkeep slot can keep the last confirmed armor icon dimmed without status text or an active claim. Other standard-class upkeep slots hide an unreadable count, and target, ability, racial, or resource slots disappear when no useful live state can be read.
 
 **Expanded bar:** the full bar uses the same engraved frame as the compact card, tinted in your class color, with your class crest set half into its left edge. Engraved dividers separate the slots, and slot icons sit in matching engraved frames. Confirmed missing buffs (armor, Hunter's Mark, aspect, Shaman imbue and shield) switch to the amber warning frame with an ember halo, and the whole frame warms to amber while a warning is confirmed. Food and sleeping bag reminders sit in a small tab of amber cells above the bar's right end, clear of the lock and slots. Each slot names what it shows: the missing buff ("Missing / Thorns"), the active one with its time, the target effect, the ready ability and your racial, instead of generic labels or abbreviations. The resource slot is visual: a power meter in its own color, then the shard icon with its count, five combo pips, or your stance or form icon; exact numbers are on hover. Rogue poisons are tracked per weapon, Warlock upkeep shows demon health, Shaman imbue charges appear on the cell, and Hunter facing reads "12° left". Slot positions and the 426 × 56 bar are unchanged.
 
@@ -59,7 +59,10 @@ Hover over the round minimap button to open the addon tray, left-click it or use
 | `<command> unlock` / `lock` | Move or lock the active bar |
 | `<command> scale 1.2` | Set scale from 0.5 to 2 |
 | `<command> on` / `off` | Enable or disable the active class helper |
-| `<command> reset` | Restore that class module's defaults |
+| `<command> fold` / `expand` | Fold the bar into the compact card or expand it |
+| `<command> autofold on` / `off` | Fold outside combat and expand in combat |
+| `<command> tray on` / `off` | Group other addons' minimap buttons into the tray |
+| `<command> reset` | Restore that class module's defaults (the settings panel's button asks for a second click) |
 | `<command> status` | Show version and live diagnostics |
 
 Each information block can be switched independently. Bars use full opacity in combat; the Shaman bar also stays fully visible while a totem is active. Mage uses 90% opacity with a target and 75% while idle outside combat. Without an active totem, the other bars use 60% with a target and 20% while idle. A confirmed missing long-term upkeep buff keeps a standard-class bar fully visible outside combat; an unavailable reading does not. Rogue finisher buffs still use the normal fade between fights. Hovering a bar reveals it at full opacity, even while locked; leaving restores its normal fade. Unlocking does not override fading on its own.

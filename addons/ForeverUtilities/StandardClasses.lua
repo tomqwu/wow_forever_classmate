@@ -4,6 +4,12 @@ local Core,Context=NS.Core,NS.ClassContext
 local function Spell(key,names,kind,passive)
     return {key=key,names=type(names)=='table' and names or {names},kind=kind,allowPassive=passive}
 end
+-- An effect seen only as an aura (a poison debuff, a talent proc, a
+-- sacrifice buff): never a spellbook action. It is tracked only while its
+-- source spell is learned, or always when it has none.
+local function Aura(key,names,kind,source)
+    return {key=key,names=type(names)=='table' and names or {names},kind=kind,auraOnly=true,source=source}
+end
 local function Append(target,source)
     for _,value in ipairs(source) do target[#target+1]=value end
 end
@@ -18,8 +24,11 @@ local function Normalize(db)
     db.x=math.max(-5000,math.min(5000,db.x));db.y=math.max(-5000,math.min(5000,db.y))
     db.scale=math.max(0.5,math.min(2,db.scale))
 end
-local function FirstSpell(spells,keys)
-    for _,key in ipairs(keys or {}) do if spells[key] then return spells[key] end end
+local function FirstSpell(spells,keys,learnedOnly)
+    for _,key in ipairs(keys or {}) do
+        local spell=spells[key]
+        if spell and not (learnedOnly and spell.auraOnly) then return spell end
+    end
 end
 local sharedRacials={}
 for _,entry in ipairs(Context.RacialCatalog) do sharedRacials[#sharedRacials+1]=entry end
@@ -35,21 +44,37 @@ local configs={
             Spell('judgementCrusader',{'Judgement of the Crusader','Judgment of the Crusader'},'target'),Spell('judgementWisdom',{'Judgement of Wisdom','Judgment of Wisdom'},'target'),
             Spell('judgementFury',{'Judgement of Fury','Judgment of Fury'},'target'),Spell('judgementLight',{'Judgement of Light','Judgment of Light'},'target'),Spell('judgementJustice',{'Judgement of Justice','Judgment of Justice'},'target'),
             Spell('holyStrike','Holy Strike','cue'),Spell('holyShock','Holy Shock','cue'),Spell('consecration','Consecration','cue'),Spell('bulwark',{"Templar’s Bulwark","Templar's Bulwark"},'cue'),
-        },upkeepLabel='Seal',upkeepGroups={{label='Seal',keys={'sealCommand','sealRighteousness','sealCrusader','sealWisdom','sealLight','sealJustice','sealFury'}}},targetLabel='Judgment',powerType=0,powerLabel='Mana',
+            Spell('devotionAura','Devotion Aura','upkeep'),Spell('retributionAura','Retribution Aura','upkeep'),Spell('concentrationAura','Concentration Aura','upkeep'),
+            Spell('shadowResistanceAura','Shadow Resistance Aura','upkeep'),Spell('frostResistanceAura','Frost Resistance Aura','upkeep'),
+            Spell('fireResistanceAura','Fire Resistance Aura','upkeep'),Spell('sanctityAura','Sanctity Aura','upkeep'),
+            Spell('righteousFury','Righteous Fury','upkeep'),
+            Spell('blessingMight',{'Blessing of Might','Greater Blessing of Might'},'upkeep'),Spell('blessingWisdom',{'Blessing of Wisdom','Greater Blessing of Wisdom'},'upkeep'),
+            Spell('blessingKings',{'Blessing of Kings','Greater Blessing of Kings'},'upkeep'),Spell('blessingLight','Blessing of Light','upkeep'),
+        },upkeepLabel='Seal',upkeepGroups={{label='Seal',keys={'sealCommand','sealRighteousness','sealCrusader','sealWisdom','sealLight','sealJustice','sealFury'}},
+            -- Any aura counts; blessings and Righteous Fury are situational and never wake the bar.
+            {label='Aura',keys={'devotionAura','retributionAura','concentrationAura','shadowResistanceAura','frostResistanceAura','fireResistanceAura','sanctityAura'}},
+            {label='Blessing',keys={'blessingMight','blessingWisdom','blessingKings','blessingLight'},wakeOnMissing=false},
+            {label='Righteous Fury',keys={'righteousFury'},wakeOnMissing=false}},targetLabel='Judgment',powerType=0,powerLabel='Mana',
         targetSources={judgementFury='sealFury',judgementCrusader='sealCrusader',judgementWisdom='sealWisdom',judgementLight='sealLight',judgementJustice='sealJustice'}},
     WARRIOR={key='warrior',label='Warrior',command='/fwarrior',color={0.78,0.61,0.43},icon='Interface\\Icons\\Ability_Warrior_BattleShout',
         description='Rage, stance, shout upkeep, target effects, reactive abilities, and racial cooldowns.',
         catalog={
             Spell('battleShout','Battle Shout','upkeep'),Spell('commandingShout','Commanding Shout','upkeep'),
-            Spell('rend','Rend','target'),Spell('deepWounds','Deep Wounds','target',true),Spell('bloodthrill','Bloodthrill','proc',true),
+            Spell('rend','Rend','target'),Spell('deepWounds','Deep Wounds','target',true),Spell('sunderArmor','Sunder Armor','target'),
+            Spell('thunderClap','Thunder Clap','target'),Spell('demoralizingShout','Demoralizing Shout','target'),Spell('hamstring','Hamstring','target'),
+            Spell('bloodthrill','Bloodthrill','proc',true),Spell('enrage','Enrage','proc',true),Spell('flurry','Flurry','proc',true),
             Spell('overpower','Overpower','cue'),Spell('execute','Execute','cue'),Spell('victoryRush','Victory Rush','cue'),Spell('bloodthirst','Bloodthirst','cue'),Spell('recklessSwings','Reckless Swings','cue'),Spell('slam','Slam','cue'),
+            Spell('bloodrage','Bloodrage','cue'),Spell('berserkerRage','Berserker Rage','cue'),
         },upkeepLabel='Shout',upkeepGroups={{label='Shout',keys={'battleShout','commandingShout'},wakeOnMissing=false}},targetLabel='Target effect',powerType=1,powerLabel='Rage',showForm=true,dotKeys={'rend','deepWounds'}},
     ROGUE={key='rogue',label='Rogue',command='/frogue',color={1,0.96,0.41},icon='Interface\\Icons\\Ability_Rogue_SliceDice',
         description='Energy, combo points, weapon coatings, finishers, target effects, and racial cooldowns.',
         catalog={
             Spell('sliceDice','Slice and Dice','upkeep'),Spell('venom','Venom','proc',true),Spell('poised','Poised','proc',true),
-            Spell('rupture','Rupture','target'),Spell('deadlyPoison','Deadly Poison','target'),Spell('hemorrhage','Hemorrhage','target'),
-            Spell('garrote','Garrote','target'),Spell('deathMark','Death Mark','target'),
+            Spell('rupture','Rupture','target'),Spell('hemorrhage','Hemorrhage','target'),
+            Spell('garrote','Garrote','target'),Spell('deathMark','Death Mark','target'),Spell('exposeArmor','Expose Armor','target'),
+            -- Poisons are crafted, not spellbook actions; their debuffs are read by name.
+            Aura('deadlyPoison','Deadly Poison','target'),Aura('woundPoison','Wound Poison','target'),
+            Aura('cripplingPoison','Crippling Poison','target'),Aura('mindNumbingPoison','Mind-numbing Poison','target'),
             Spell('riposte','Riposte','cue'),Spell('ambush','Ambush','cue'),Spell('bladeFlurry','Blade Flurry','cue'),Spell('coldBlood','Cold Blood','cue'),Spell('shank','Shank','cue'),
         },upkeepLabel='Coatings / buffs',upkeepGroups={{label='Finisher buff',keys={'sliceDice'},wakeOnMissing=false}},targetLabel='Finisher / poison',powerType=3,powerLabel='Energy',weaponCoatings=true,showCombo=true,dotKeys={'rupture','deadlyPoison','garrote'}},
     DRUID={key='druid',label='Druid',command='/fdruid',color={1,0.49,0.04},icon='Interface\\Icons\\Ability_Druid_CatForm',
@@ -57,16 +82,21 @@ local configs={
         catalog={
             Spell('markWild',{'Mark of the Wild','Gift of the Wild'},'upkeep'),Spell('thorns','Thorns','upkeep'),
             Spell('moonfire','Moonfire','target'),Spell('insectSwarm','Insect Swarm','target'),Spell('faerieFire','Faerie Fire','target'),Spell('rip','Rip','target'),Spell('rake','Rake','target'),Spell('lacerate','Lacerate','target'),
-            Spell('eclipse','Eclipse','proc',true),Spell('naturesGrace',"Nature's Grace",'proc',true),Spell('omenClarity',{'Omen of Clarity','Clearcasting'},'proc',true),
+            Spell('eclipse','Eclipse','proc',true),Spell('naturesGrace',"Nature's Grace",'proc',true),
+            -- Omen of Clarity is the self-buff you keep up; Clearcasting is its proc.
+            Spell('omenClarity','Omen of Clarity','upkeep'),Aura('clearcasting','Clearcasting','proc','omenClarity'),
             Spell('primalBite','Primal Bite','cue'),Spell('shiftingPower','Shifting Power','cue'),Spell('poised','Poised','proc',true),Spell('innervate','Innervate','cue'),Spell('swiftmend','Swiftmend','cue'),
-        },upkeepLabel='Nature buffs',upkeepGroups={{label='Mark of the Wild',keys={'markWild'}},{label='Thorns',keys={'thorns'},wakeOnMissing=false}},targetLabel='Target effect',currentPower=true,showForm=true,dotKeys={'moonfire','insectSwarm','rip','rake','lacerate'}},
+        },upkeepLabel='Nature buffs',upkeepGroups={{label='Mark of the Wild',keys={'markWild'}},{label='Thorns',keys={'thorns'},wakeOnMissing=false},{label='Omen of Clarity',keys={'omenClarity'}}},targetLabel='Target effect',currentPower=true,showForm=true,comboInEnergy=true,dotKeys={'moonfire','insectSwarm','rip','rake','lacerate'}},
     MAGE={key='mage',label='Mage',command='/fmage',color={0.25,0.78,0.92},icon='Interface\\Icons\\Spell_Frost_FrostArmor02',
         description='Live mana meter, armor and absorption shield upkeep, personal damage effects, spec procs, and racial cooldowns.',
         catalog={
             Spell('mageArmor','Mage Armor','upkeep'),Spell('iceArmor','Ice Armor','upkeep'),Spell('frostArmor','Frost Armor','upkeep'),Spell('moltenArmor','Molten Armor','upkeep'),
             Spell('manaShield','Mana Shield','shield'),Spell('iceBarrier','Ice Barrier','shield'),
-            Spell('improvedScorch','Improved Scorch','target',true),Spell('pyroblast','Pyroblast','target'),
-            Spell('hotStreak','Hot Streak','proc',true),Spell('missileBarrage','Missile Barrage','proc',true),Spell('fingersFrost','Fingers of Frost','proc',true),Spell('arcaneBlast','Arcane Blast','proc'),
+            Spell('improvedScorch',{'Improved Scorch','Fire Vulnerability'},'target',true),Spell('pyroblast','Pyroblast','target'),
+            Spell('hotStreak','Hot Streak','proc',true),Spell('missileBarrage','Missile Barrage','proc',true),Spell('fingersFrost','Fingers of Frost','proc',true),
+            Spell('arcaneConcentration','Arcane Concentration','talent',true),Aura('arcaneClearcasting','Clearcasting','proc','arcaneConcentration'),
+            -- Arcane Blast stacks are a harmful aura on the Mage, read separately.
+            Spell('arcaneBlast','Arcane Blast','selfDebuff'),
             Spell('iceLance','Ice Lance','cue'),Spell('fireBlast','Fire Blast','cue'),Spell('presenceMind','Presence of Mind','cue'),Spell('coldSnap','Cold Snap','cue'),
         },upkeepLabel='Armor',upkeepGroups={{label='Armor',keys={'mageArmor','iceArmor','frostArmor','moltenArmor'}}},targetLabel='Damage setup',powerType=0,powerLabel='Mana',
         resourceTextOnly=true,idleAlpha=0.75,targetAlpha=0.9},
@@ -76,8 +106,11 @@ local configs={
             Spell('innerFire','Inner Fire','upkeep'),Spell('fortitude',{'Power Word: Fortitude','Prayer of Fortitude'},'upkeep'),Spell('divineSpirit',{'Divine Spirit','Prayer of Spirit'},'upkeep'),
             Spell('shadowPain','Shadow Word: Pain','target'),Spell('devouringPlague','Devouring Plague','target'),Spell('vampiricEmbrace','Vampiric Embrace','target'),
             Spell('shadowform','Shadowform','form'),Spell('surgeLight','Surge of Light','proc',true),
+            Spell('shadowProtection',{'Shadow Protection','Prayer of Shadow Protection'},'upkeep'),
             Spell('shadowDeath','Shadow Word: Death','cue'),Spell('prayerMending','Prayer of Mending','cue'),Spell('powerInfusion','Power Infusion','cue'),Spell('penance','Penance','cue'),
-        },upkeepLabel='Self buffs',upkeepGroups={{label='Inner Fire',keys={'innerFire'}},{label='Fortitude',keys={'fortitude'}},{label='Divine Spirit',keys={'divineSpirit'}}},targetLabel='Target / healing',powerType=0,powerLabel='Mana',showForm=true,dotKeys={'shadowPain','devouringPlague'}},
+            Spell('innerFocus','Inner Focus','cue'),
+        },upkeepLabel='Self buffs',upkeepGroups={{label='Inner Fire',keys={'innerFire'}},{label='Fortitude',keys={'fortitude'}},{label='Divine Spirit',keys={'divineSpirit'}},
+            {label='Shadow Protection',keys={'shadowProtection'},wakeOnMissing=false}},targetLabel='Target / healing',powerType=0,powerLabel='Mana',showForm=true,dotKeys={'shadowPain','devouringPlague'}},
     WARLOCK={key='warlock',label='Warlock',command='/fwarlock',color={0.53,0.53,0.93},icon='Interface\\Icons\\Spell_Shadow_Metamorphosis',
         description='Mana and health, armor and demon state, DoT or Bane upkeep, abilities, and racial cooldowns.',
         catalog={
@@ -89,9 +122,16 @@ local configs={
             Spell('summon',{'Summon Imp','Summon Voidwalker','Summon Succubus','Summon Incubus','Summon Felhunter','Summon Felguard'},'summon'),
             Spell('corruption','Corruption','target'),Spell('immolate','Immolate','target'),Spell('wrack','Wrack','target'),
             Spell('baneAgony','Bane of Agony','target'),Spell('curseAgony','Curse of Agony','target'),
-            Spell('nightfall','Nightfall','proc',true),Spell('backlash','Backlash','proc',true),
+            Spell('siphonLife','Siphon Life','target'),Spell('unstableAffliction','Unstable Affliction','target'),Spell('curseDoom','Curse of Doom','target'),
+            Spell('curseElements','Curse of the Elements','target'),Spell('curseShadow','Curse of Shadow','target'),Spell('curseWeakness','Curse of Weakness','target'),
+            Spell('curseRecklessness','Curse of Recklessness','target'),Spell('curseTongues','Curse of Tongues','target'),
+            -- The Nightfall talent's proc aura is Shadow Trance.
+            Spell('nightfall','Nightfall','talent',true),Aura('shadowTrance','Shadow Trance','proc','nightfall'),Spell('backlash','Backlash','proc',true),
+            -- Demonic Sacrifice replaces the demon with one of these buffs.
+            Spell('demonicSacrifice','Demonic Sacrifice','talent'),
+            Aura('sacrificeBuff',{'Burning Shadow','Fel Stamina','Touch of Fire','Fel Energy'},'sacrifice','demonicSacrifice'),
             Spell('conflagrate','Conflagrate','cue'),Spell('shadowburn','Shadowburn','cue'),Spell('lifeTap','Life Tap','cue'),Spell('demonicEmpowerment','Demonic Empowerment','cue'),Spell('amplifyCurse','Amplify Curse','cue'),
-        },upkeepLabel='Armor / demon',upkeepGroups={{label='Armor',keys={'demonArmor','demonSkin','felArmor'},observeOutOfCombat=true}},targetLabel='DoT / Bane',powerType=0,powerLabel='Mana',showPet=true,showHealth=true,showShards=true,dotKeys={'corruption','immolate','wrack','baneAgony','curseAgony'}},
+        },upkeepLabel='Armor / demon',upkeepGroups={{label='Armor',keys={'demonArmor','demonSkin','felArmor'},observeOutOfCombat=true}},targetLabel='DoT / Bane',powerType=0,powerLabel='Mana',showPet=true,showHealth=true,showShards=true,dotKeys={'corruption','immolate','wrack','baneAgony','curseAgony','siphonLife','unstableAffliction','curseDoom'}},
 }
 
 -- One compact-card stat per class: the supply or reading you are most likely
@@ -213,23 +253,27 @@ local function CreateIndicator(module,config,host,db)
 
     local function Discover()
         confirmedUpkeep={}
-        local catalog={};Append(catalog,config.catalog);Append(catalog,sharedRacials)
+        local catalog={}
+        for _,entry in ipairs(config.catalog) do if not entry.auraOnly then catalog[#catalog+1]=entry end end
+        Append(catalog,sharedRacials)
         module.spells=Context.Discover(catalog)
-        -- Some debuffs are effects of a learned spell, not separate spellbook actions.
+        -- Some effects are auras of a learned spell, not separate spellbook actions.
         for _,entry in ipairs(config.catalog) do
-            local source=config.targetSources and module.spells[config.targetSources[entry.key]]
-            if source and not module.spells[entry.key] then
+            local sourceKey=entry.source or (config.targetSources and config.targetSources[entry.key])
+            local source=sourceKey and module.spells[sourceKey]
+            if (source or (entry.auraOnly and not entry.source)) and not module.spells[entry.key] then
                 local names={}
-                for _,name in ipairs(entry.names) do
-                    names[name]=true
-                    local info=Core.Call(C_Spell and C_Spell.GetSpellInfo,name)
+                for _,english in ipairs(entry.names) do
+                    for _,name in ipairs(Core.SpellNames(english)) do names[name]=true end
+                    local info=Core.Call(C_Spell and C_Spell.GetSpellInfo,english)
                     if type(info)=='table' and Core.IsReadable(info.name) and type(info.name)=='string' then names[info.name]=true end
                 end
-                module.spells[entry.key]={name=entry.names[1],icon=source.icon,kind='target',auraNames=names}
+                module.spells[entry.key]={name=Core.SpellDisplayName(entry.names[1]),icon=source and source.icon,kind=entry.kind,auraNames=names,auraOnly=true}
             end
         end
         module.upkeepKeys=Keys(config.catalog,'upkeep');module.targetKeys=Keys(config.catalog,'target')
         module.procKeys=Keys(config.catalog,'proc');module.cueKeys=Keys(config.catalog,'cue')
+        module.selfDebuffKeys=Keys(config.catalog,'selfDebuff')
     end
     local function Tooltip(cell,title,detail)
         cell:SetScript('OnEnter',function(self)
@@ -278,12 +322,23 @@ local function CreateIndicator(module,config,host,db)
         else resourceLines[#resourceLines+1]='The client did not expose a readable resource value.' end
         -- One visual cue beside the meter.
         local cueIcon,cueCount,pips
-        if db.showResource~=false and config.showCombo then
+        -- Druids in an energy form (Cat) get combo pips, like Rogues.
+        local comboNow=config.showCombo or (config.comboInEnergy and power and power.label=='Energy')
+        if db.showResource~=false and comboNow then
             local cp=Context.ComboPoints()
             if cp then pips=cp;resourceLines[#resourceLines+1]='Combo points: '..cp..' / 5' end
-        elseif db.showResource~=false and config.showForm then
+        end
+        if db.showResource~=false and config.showForm and not pips then
             local form=Context.Form()
-            if form then cueIcon=form.icon;resourceLines[#resourceLines+1]='Form or stance: '..form.name end
+            if form then cueIcon=form.icon;resourceLines[#resourceLines+1]='Form or stance: '..form.name
+            elseif module.spells.shadowform then
+                -- Shadowform may not be reported as a stance; read its aura.
+                local aura=Context.Aura('player','HELPFUL',Context.Names(module.spells,{'shadowform'}),false)
+                if type(aura)=='table' then
+                    cueIcon=Core.Icon(aura.icon) or module.spells.shadowform.icon
+                    resourceLines[#resourceLines+1]='Form or stance: '..aura.name
+                end
+            end
         end
         if db.showResource~=false and config.showHealth then
             local hp=Context.HealthPercent('player')
@@ -336,7 +391,9 @@ local function CreateIndicator(module,config,host,db)
                         for _,left in ipairs({coatings.mainLeft or math.huge,coatings.offLeft or math.huge}) do
                             if left<math.huge and (not soonest or left<soonest) then soonest=left end
                         end
-                        activeList[#activeList+1]={name=NS.L('Poison'),left=soonest}
+                        -- Charges identify a poison; a stone has none and the client
+                        -- reports both as a temporary enchant.
+                        activeList[#activeList+1]={name=NS.L(coatings.charged and 'Poison' or 'Weapon coating'),left=soonest}
                     else
                         upkeepMissing=upkeepMissing+1;upkeepDim=true;missingBuff=true
                         missingIcon='Interface\\Icons\\Ability_Poisons'
@@ -393,6 +450,12 @@ local function CreateIndicator(module,config,host,db)
                 upkeepActive=upkeepActive+1
                 petHealth=Context.HealthPercent('pet')
                 upkeepLines[#upkeepLines+1]='Demon: active'..(petHealth and (' ('..petHealth..'% health)') or '')
+            elseif (petExists==false or petDead==true) and module.spells.sacrificeBuff
+                and type(Context.Aura('player','HELPFUL',Context.Names(module.spells,{'sacrificeBuff'}),false))=='table' then
+                -- Demonic Sacrifice: the demon's buff replaces the demon.
+                upkeepActive=upkeepActive+1
+                activeList[#activeList+1]={name=NS.L('Demon sacrificed')}
+                upkeepLines[#upkeepLines+1]='Demon: sacrificed (buff active)'
             elseif petExists==false or petDead==true then
                 upkeepMissing=upkeepMissing+1;upkeepDim=true;upkeepLines[#upkeepLines+1]='Demon: missing'
                 missingNames[#missingNames+1]=NS.L('Demon')
@@ -428,20 +491,22 @@ local function CreateIndicator(module,config,host,db)
                     local okHealth,healthMax=pcall(UnitHealthMax,'player')
                     local coverage=Core.IsNumber(absorb) and Core.IsNumber(healthMax) and healthMax>0
                         and math.floor(absorb*100/healthMax+0.5) or nil
-                    upkeepTop=Core.IsNumber(absorb) and tostring(math.floor(absorb+0.5)) or ''
-                    upkeepBottom=coverage and (coverage..'% HP') or 'Shield'
+                    -- A confirmed missing armor keeps its text; the meter still shows the shield.
+                    if not missingBuff then
+                        upkeepTop=Core.IsNumber(absorb) and tostring(math.floor(absorb+0.5)) or ''
+                        upkeepBottom=coverage and (coverage..'% HP') or 'Shield'
+                    end
                     upkeepLines[#upkeepLines+1]=Core.IsNumber(absorb) and ('Total absorbs: '..math.floor(absorb+0.5)..(coverage and (' ('..coverage..'% of max health)') or ''))
                         or 'Total absorbs: amount displayed by client; value is restricted.'
                     upkeepLines[#upkeepLines+1]='Includes all active absorb effects; original shield capacity is not exposed.'
-                    upkeepIcon=shieldAura.icon or upkeepIcon
-                    upkeepDim=false;upkeepWarn=false
+                    if not missingBuff then upkeepIcon=shieldAura.icon or upkeepIcon;upkeepDim=false;upkeepWarn=false end
                     local meterOK=okHealth and (Core.IsNumber(healthMax) and healthMax>0 or not Core.IsReadable(healthMax))
                         and pcall(upkeep.meter.SetMinMaxValues,upkeep.meter,0,healthMax)
                         and pcall(upkeep.meter.SetValue,upkeep.meter,absorb)
                     upkeep.meter:SetShown(meterOK==true)
                     if not Core.IsReadable(absorb) then protectedAbsorb=absorb;hasProtectedAbsorb=true end
                 else
-                    upkeepTop='';upkeepBottom='Shield';upkeepIcon=shieldAura.icon or upkeepIcon
+                    if not missingBuff then upkeepTop='';upkeepBottom='Shield';upkeepIcon=shieldAura.icon or upkeepIcon end
                     upkeepLines[#upkeepLines+1]='Shield active; absorb amount unavailable.'
                     upkeep.meter:SetShown(false)
                 end
@@ -458,6 +523,10 @@ local function CreateIndicator(module,config,host,db)
 
         local showTarget=db.showTarget~=false;local showAbilities=db.showAbilities~=false
         local proc;if showAbilities then proc=Context.Aura('player','HELPFUL',Context.Names(module.spells,module.procKeys),false) end
+        if showAbilities and type(proc)~='table' and module.selfDebuffKeys and #module.selfDebuffKeys>0 then
+            local stacks=Context.Aura('player','HARMFUL',Context.Names(module.spells,module.selfDebuffKeys),false)
+            if type(stacks)=='table' then proc=stacks end
+        end
         local targetAura
         if showTarget and hostile then targetAura=Context.Aura('target','HARMFUL',Context.Names(module.spells,module.targetKeys),true) end
         local cue=showAbilities and Context.BestCue(module.spells,module.cueKeys) or nil
@@ -471,7 +540,7 @@ local function CreateIndicator(module,config,host,db)
             local remaining=Context.FormatTime(targetAura.left)
             targetLines[#targetLines+1]=targetAura.name..(remaining and (' — '..remaining) or ' — active')
         elseif showTarget and hostile then
-            local targetSpell=FirstSpell(module.spells,module.targetKeys)
+            local targetSpell=FirstSpell(module.spells,module.targetKeys,true)
             if targetSpell and targetAura==false then
                 targetText='None';targetDim=true;targetName=targetSpell.name
                 targetLines[#targetLines+1]='No tracked effect from you is active.'

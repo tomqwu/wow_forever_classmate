@@ -97,6 +97,8 @@ function Buffs.Create(host,content,db)
     local active,suspended,retired=false,false,false
     local function Fade()
         if content.baseAlpha then NS.ClassHost.SetFade(host,content,content.baseAlpha) end
+        -- Reminder changes are card changes even when the fade is unchanged.
+        if host.foldRefresh then host.foldRefresh() end
     end
     local function Clear()
         host.levelingBuffMissing=false

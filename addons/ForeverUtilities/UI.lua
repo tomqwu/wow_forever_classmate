@@ -39,7 +39,8 @@ local function OpenPanel()
     if panel and panel.module~=module then panel:Hide();panel=nil end
     if not panel then
         panel=CreateFrame('Frame',module.panelName,UIParent);panel.module=module
-        local rows=math.ceil(#module.options/2);local footerY=-138-rows*42
+        -- Long option lists use tighter rows so the panel fits a 768-unit screen.
+        local rows=math.ceil(#module.options/2);local rowHeight=rows>10 and 32 or 42;local footerY=-138-rows*rowHeight
         panel:SetSize(760,-footerY+50);panel:SetPoint('CENTER');panel:SetFrameStrata('DIALOG')
         panel:SetClampedToScreen(true);panel:EnableMouse(true);panel:SetMovable(true);panel:RegisterForDrag('LeftButton')
         panel:SetScript('OnDragStart',function(self) self:StartMoving() end)
@@ -50,7 +51,7 @@ local function OpenPanel()
         panel.enabled=Check(panel,module.enableLabel,20,-78,function(value) module.SetEnabled(value) end)
         panel.controls={}
         for index,option in ipairs(module.options) do
-            local key=option.key;local x=index<=rows and 20 or 390;local y=-120-((index-1)%rows)*42
+            local key=option.key;local x=index<=rows and 20 or 390;local y=-120-((index-1)%rows)*rowHeight
             if option.kind=='toggle' then
                 panel.controls[key]=Check(panel,option.label,x,y,function(value)
                     module.db[key]=value
@@ -66,7 +67,19 @@ local function OpenPanel()
                 Button(panel,'+',x+275,y,28,function() Adjust(option.step) end)
             end
         end
-        Button(panel,'Reset settings',20,footerY,150,function() module.Reset() end)
+        -- Two clicks: the first arms the reset for a few seconds.
+        local reset
+        reset=Button(panel,'Reset settings',20,footerY,150,function()
+            if reset.armed==true then
+                reset.armed=false;reset:SetText(L('Reset settings'));module.Reset()
+            else
+                reset.armed=true;reset:SetText(L('Click again to reset'))
+                if C_Timer and type(C_Timer.After)=='function' then
+                    C_Timer.After(4,function() if reset.armed==true then reset.armed=false;reset:SetText(L('Reset settings')) end end)
+                end
+            end
+        end)
+        panel.reset=reset
         Button(panel,'Close',660,footerY,80,function() panel:Hide() end)
         if UISpecialFrames then table.insert(UISpecialFrames,module.panelName) end
     end
@@ -183,8 +196,19 @@ SlashCmdList.FOREVERUTILITIES=function(message)
         if not NS.Core.IsNumber(value) or value<0.5 or value>2 then Say('Scale must be 0.5 to 2.');return end
         db.scale=value;module.Apply()
     elseif command=='reset' then module.Reset()
+    elseif command=='fold' or command=='expand' then
+        -- A typed view is the player's choice, like a click.
+        if command=='expand' and NS.Core.PlayerDead()==true then Say('Expands when you are alive');return end
+        db.collapsed=command=='fold';db.foldedByDeath=nil;module.Apply()
+    elseif command=='autofold' or command=='tray' then
+        local key=command=='autofold' and 'autoFold' or 'groupMinimapButtons'
+        if arg=='on' or arg=='off' then db[key]=arg=='on'
+        elseif arg=='' then db[key]=db[key]==false
+        else Say(module.command..' '..command..' on | off');return end
+        module.Apply()
+        Say((command=='autofold' and 'Fold outside combat, expand in combat' or 'Group addon minimap buttons')..': '..(db[key]~=false and 'on' or 'off'))
     elseif command=='status' then
         Say('v'..NS.Version..' | '..module.name..' | '..(db.enabled and 'Enabled' or 'Disabled'))
         if db.enabled and module.instance then Say(module.instance.Status()) end
-    else Say(module.command..': unlock | lock | on | off | scale 0.5..2 | reset | status') end
+    else Say(module.command..': unlock | lock | on | off | fold | expand | autofold on/off | tray on/off | scale 0.5..2 | reset | status') end
 end
