@@ -6,7 +6,7 @@ Forever Classmate
 
 ## Short summary
 
-Compact class companions, leveling reminders, and alt/recent mail recipients for WoW Forever.
+Class companions in an engraved bar and compact card, leveling reminders, a minimap button tray, and alt/recent mail recipients for WoW Forever.
 
 ## GitHub description
 
@@ -29,5 +29,3 @@ The shared mail utility adds paginated Alts and Recent recipients lists beside n
 ## Keywords
 
 WoW Forever, class helper, Hunter, Shaman, Paladin, Warrior, Rogue, Druid, Mage, Priest, Warlock, racials, cooldowns, resources, pets, totems
-
-**Foldable bar:** click the small **<** button to fold the bar into a shared image-based frame. Confirmed missing buffs appear as equal **32 × 32** icons: one or two reminders use one row; three or four use two rows. The frame fits the visible icons with four-pixel padding, and the final row is centered. Each warning clears when its buff returns, its option is disabled, or its reading becomes unavailable; existing level and combat rules apply. When there are no confirmed warnings, a dim **64 × 64** Classmate logo serves as the expand button without claiming that a class buff is active or missing. Hover reveals the frame and lists its warnings. **Flash missing buffs** controls the outline pulse; active warnings keep the frame bright. Click the compact frame to expand, or unlock to drag. The expanded 426 × 56 bar remains inside its shared 450 × 64 frame. **Collapsed warning icon** and **Show collapse button** are independent settings. The shared container owns position and size; legacy WoW layout-cache entries cannot independently move its contents.

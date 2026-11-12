@@ -1,3 +1,10 @@
+## 0.40.0
+
+- When you die, the expanded bar now folds down to your class crest instead of leaving an empty frame. It expands again once you are resurrected or back in your body. A card you folded yourself stays folded, and with **Fold outside combat, expand in combat** on, revival follows that setting. Logging out while dead still restores the bar next time.
+- Refreshed the CurseForge and README descriptions for the current design: engraved bar, compact card and class stat, combat auto-fold, minimap button tray, and named slot text.
+
+Use `/reload`. Automated checks use mocked events; death and spirit-release behavior still needs in-game confirmation.
+
 ## 0.39.0
 
 - The compact card has a class stat slot: the one number each class watches most. Hunter shows ammo, Warlock soul shards, Shaman Ankhs (once Reincarnation is learned), Mage conjured water (every rank added up), and Rogue the shortest poison time left. Paladin, Priest and Druid show mana %, and Warrior shows health %.

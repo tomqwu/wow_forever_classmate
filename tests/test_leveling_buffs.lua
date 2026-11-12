@@ -511,6 +511,37 @@ check(not foldHost.events.PLAYER_REGEN_DISABLED and not foldHost.events.PLAYER_R
     'turning auto-fold off removes its combat listeners')
 foldHost.scripts.OnEvent(foldHost,'PLAYER_REGEN_DISABLED')
 check(foldedDB.collapsed,'queued combat events are ignored once auto-fold is off')
+-- Death folds the bar to the crest card; revival restores only a death fold.
+foldedDB.autoFold=false;foldedDB.collapsed=false;foldedDB.foldedByDeath=nil;combat=false;dead=false;foldInstance.Apply()
+check(foldHost.events.PLAYER_DEAD and foldHost.events.PLAYER_ALIVE and foldHost.events.PLAYER_UNGHOST,
+    'the enabled host listens for death and revival')
+local deathPlays=transition.intro.plays
+dead=true;foldHost.scripts.OnEvent(foldHost,'PLAYER_DEAD')
+check(foldedDB.collapsed and foldedDB.foldedByDeath and not foldInstance.visual.shown and not summary.card.shown
+    and summary.crest.shown and foldHost.width==48 and transition.intro.plays==deathPlays+1,
+    'dying folds the expanded bar down to the crest alone')
+foldHost.scripts.OnEvent(foldHost,'PLAYER_ALIVE')
+check(foldedDB.collapsed,'releasing as a ghost keeps the bar folded')
+foldHost.scripts.OnEvent(foldHost,'PLAYER_REGEN_DISABLED')
+check(foldedDB.collapsed,'combat events cannot expand a ghost')
+dead=false;foldHost.scripts.OnEvent(foldHost,'PLAYER_UNGHOST')
+check(not foldedDB.collapsed and foldedDB.foldedByDeath==nil and foldInstance.visual.shown,
+    'returning to life expands the bar that death folded')
+foldedDB.collapsed=true;foldInstance.Apply()
+dead=true;foldHost.scripts.OnEvent(foldHost,'PLAYER_DEAD')
+check(foldedDB.collapsed and foldedDB.foldedByDeath==nil,'a card the player folded is not marked as a death fold')
+dead=false;foldHost.scripts.OnEvent(foldHost,'PLAYER_UNGHOST')
+check(foldedDB.collapsed,'revival leaves a player-chosen card folded')
+foldedDB.collapsed=false;foldInstance.Apply()
+dead=true;foldHost.scripts.OnEvent(foldHost,'PLAYER_DEAD')
+dead=false;foldedDB.autoFold=true;foldHost.scripts.OnEvent(foldHost,'PLAYER_ALIVE')
+check(foldedDB.collapsed and foldedDB.foldedByDeath==nil,'with combat auto-fold on, revival out of combat stays folded')
+foldedDB.autoFold=false;foldedDB.collapsed=false;foldInstance.Apply()
+dead=true;foldHost.scripts.OnEvent(foldHost,'PLAYER_DEAD')
+-- Logged out while dead: the saved flag restores the bar after login.
+dead=false;foldHost.scripts.OnEvent(foldHost,'PLAYER_ENTERING_WORLD')
+check(not foldedDB.collapsed and foldedDB.foldedByDeath==nil,'a death fold saved across logout is restored when alive')
+foldedDB.collapsed=true;foldInstance.Apply()
 -- Class stat cell: first in the row, neutral frame, never glows or pulses.
 foldedDB.autoFold=false;foldedDB.collapsed=true;combat=false
 auras={{spellId=429959,name='Well-Rested'},{spellId=1248420,name='Well Fed'}};foldInstance.Apply()

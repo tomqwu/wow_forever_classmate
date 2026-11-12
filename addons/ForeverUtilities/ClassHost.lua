@@ -75,6 +75,19 @@ function Host.SyncCombatFold(module,db)
     elseif combat==false then Host.SetFold(module,db,true) end
 end
 
+-- Fold to the crest card on death; expand again on revival only when death
+-- did the folding. A view the player chose stays as chosen. The flag is
+-- saved so a logout while dead still restores correctly.
+function Host.SyncDeathFold(module,db)
+    local dead=NS.Core.Call(UnitIsDeadOrGhost or UnitIsDead,'player')
+    if dead==true then
+        if not db.collapsed then db.foldedByDeath=true;Host.SetFold(module,db,true) end
+    elseif dead==false and db.foldedByDeath then
+        db.foldedByDeath=nil
+        if db.autoFold==true then Host.SyncCombatFold(module,db) else Host.SetFold(module,db,false) end
+    end
+end
+
 -- Scale animations exist under two names across client generations.
 local function SetScaleRange(animation,from,to)
     if animation.SetScaleFrom then animation:SetScaleFrom(from,from);animation:SetScaleTo(to,to)
@@ -283,7 +296,7 @@ function Host.Create(module,db,contentFactory)
         shell:SetScale(db.scale);Host.Place(host,db)
         host:ClearAllPoints();host:SetPoint('TOPLEFT',shell,'TOPLEFT',4,-4)
         host:EnableMouse(db.enabled)
-        for _,event in ipairs({'PLAYER_LOGIN','PLAYER_ENTERING_WORLD'}) do
+        for _,event in ipairs({'PLAYER_LOGIN','PLAYER_ENTERING_WORLD','PLAYER_DEAD','PLAYER_ALIVE','PLAYER_UNGHOST'}) do
             if db.enabled then host:RegisterEvent(event) else host:UnregisterEvent(event) end
         end
         if not db.enabled then host.hovered=false end
@@ -319,11 +332,17 @@ function Host.Create(module,db,contentFactory)
     host:SetScript('OnEvent',function(_,event)
         if not db.enabled then return end
         if event=='PLAYER_REGEN_DISABLED' or event=='PLAYER_REGEN_ENABLED' then
-            if db.autoFold==true then Host.SetFold(module,db,event=='PLAYER_REGEN_ENABLED') end
+            -- A ghost stays folded even if combat state changes.
+            if db.autoFold==true and NS.Core.PlayerDead()~=true then Host.SetFold(module,db,event=='PLAYER_REGEN_ENABLED') end
+            return
+        end
+        if event=='PLAYER_DEAD' or event=='PLAYER_ALIVE' or event=='PLAYER_UNGHOST' then
+            Host.SyncDeathFold(module,db)
             return
         end
         Apply()
-        if db.autoFold==true then Host.SyncCombatFold(module,db) end
+        if NS.Core.PlayerDead()==true or db.foldedByDeath then Host.SyncDeathFold(module,db)
+        elseif db.autoFold==true then Host.SyncCombatFold(module,db) end
     end)
     host:SetScript('OnDragStart',function(self) if db.enabled and not db.locked then shell:StartMoving() end end)
     host:SetScript('OnDragStop',function(self)
