@@ -8,7 +8,7 @@ The interface follows the WoW client language: English and Simplified Chinese (`
 
 ## Highlights
 
-- **Engraved class bar.** A 426 × 56 bar (the width of Forever's default swing timer) in an engraved frame tinted in your class color, with your class crest set half into its left edge. Slots name what they show, like "Ready / Overpower", "12s / Rend", "Missing / Thorns", "28m / Seal of Command", "3 combo" or "5 shards".
+- **Engraved class bar.** A 426 × 56 bar (the width of Forever's default swing timer) in an engraved frame tinted in your class color, with your class crest set half into its left edge. Your resource is a colored meter (blue mana, red rage, yellow energy) with your shard count, combo pips or stance icon beside it, and the other slots name what they show, like "Ready / Overpower", "12s / Rend", "Missing / Thorns" or "28m / Seal of Command".
 - **Compact card.** Fold the bar into a small card: your class crest on top, then one class stat and any confirmed missing buffs, each in a matching framed cell with an ember glow.
 - **Class stat at a glance.** The card always shows the number your class watches most: Hunter ammo, Warlock soul shards, Shaman Ankhs, Mage conjured water, Rogue poison time, mana for Paladin, Priest and Druid, and health for Warrior.
 - **Fold outside combat, expand in combat.** Optional automatic switching with a class-colored flare as the bar bursts out or the card drops in.

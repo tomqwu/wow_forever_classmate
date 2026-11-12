@@ -31,6 +31,9 @@ function methods:EnableMouse(v) self.mouse=v end
 function methods:SetShown(v) self.shown=v end
 function methods:IsShown() return self.shown end
 function methods:SetValue(v) self.value=v end
+function methods:SetStatusBarColor(r,g,b) self.color={r,g,b} end
+function methods:SetTextColor(r,g,b) self.textColor={r,g,b} end
+function methods:SetColorTexture(r,g,b,a) self.color={r,g,b,a} end
 function methods:SetMinMaxValues(minimum,maximum) self.minimum,self.maximum=minimum,maximum end
 function methods:Show() self.shown=true end
 function methods:Hide() self.shown=false end
@@ -151,7 +154,8 @@ host.scripts.OnDragStart(host);check(rawget(host,'moving')==nil,'locked bar rema
 host.scripts.OnLeave(host);NS.Paladin.db.locked=false;NS.Paladin.Apply()
 check(rawget(indicator,'dotTracker')==nil and not NS.Paladin.db.showMultiDots,'Paladin has no DoT side strip')
 check(indicator.events.LEARNED_SPELL_IN_SKILL_LINE and not indicator.events.LEARNED_SPELL_IN_TAB,'class discovery uses the Forever learned-spell event')
-check(indicator.cells.resource.top.width==57 and not indicator.cells.resource.icon.shown and rawget(indicator,'crest')==nil,
+check(indicator.cells.resource.top.text=='' and not indicator.cells.resource.icon.shown and rawget(indicator,'crest')==nil
+    and indicator.cells.resource.meter.shown and indicator.cells.resource.meter.value==70,
     'the resource slot is text only: no duplicate class spell icon inside the bar')
 check(indicator.cells.upkeep.x==82 and indicator.cells.target.x==162 and indicator.cells.ability.x==242
     and indicator.cells.racial.x==322,'slots keep their original even widths')
@@ -255,7 +259,7 @@ C_UnitAuras.GetAuraDataByIndex=function(unit,index,filter)
 end
 local savedPowerType=UnitPowerType;UnitPowerType=nil
 local ok=pcall(druidIndicator.Update)
-check(ok and druidIndicator.cells.resource.top.text=='' and druidIndicator.cells.resource.bottom.text==''
+check(ok and not druidIndicator.cells.resource.meter.shown and not druidIndicator.cells.resource.cue.shown
     and not druidIndicator.cells.resource.shown,
     'with no readable power and no form, the Druid resource slot shows nothing rather than a vague Base label')
 check(druidIndicator.cells.upkeep.top.text=='Missing' and druidIndicator.cells.upkeep.bottom.text=='Mark of the Wild'
@@ -315,9 +319,10 @@ local oldExists,oldCombat=UnitExists,UnitAffectingCombat
 UnitExists=function() return false end;UnitAffectingCombat=function() return false end
 mage.Update()
 check(mage.alpha==0.75,'Mage bar remains readable with no target outside combat')
-check(not mage.cells.resource.icon.shown and mage.cells.resource.top.text=='70%' and mage.cells.resource.bottom.text==''
-    and mage.cells.resource.meter.value==70 and mage.cells.resource.top.width==43,
-    'Mage mana uses a compact vertical meter and percentage without a redundant label')
+check(not mage.cells.resource.icon.shown and mage.cells.resource.top.text=='' and mage.cells.resource.bottom.text==''
+    and mage.cells.resource.meter.shown and mage.cells.resource.meter.value==70
+    and mage.cells.resource.tooltipLines[1]=='Mana: 70 / 100 (70%)',
+    'Mage mana is a vertical meter with no percentage text; exact values are in the tooltip')
 check(mage.cells.upkeep.icon.shown and mage.cells.upkeep.icon.texture==500,'active Mage armor keeps its own icon')
 check(not mage.cells.target.shown and not mage.cells.ability.shown,
     'empty target and ability slots disappear instead of displaying placeholder status')
@@ -325,16 +330,16 @@ local savedPower,savedMax=UnitPower,UnitPowerMax
 UnitPower=function() return secret end;UnitPowerMax=function() return secret end
 UnitPowerPercent=function() return 0.56 end
 mage.Update()
-check(mage.cells.resource.top.text=='56%' and mage.cells.resource.bottom.text=='' and mage.cells.resource.meter.value==56
+check(mage.cells.resource.top.text=='' and mage.cells.resource.meter.shown and mage.cells.resource.meter.value==56
     and mage.cells.resource.tooltipLines[1]:find('exact values unavailable',1,true),
     'Mage shows readable mana percentage while exact current and maximum are restricted')
 CurveConstants={ScaleTo100={}}
 UnitPowerPercent=function() return secret end
 mage.Update()
-check(mage.cells.resource.top.formattedFormat=='%.0f%%' and mage.cells.resource.top.formattedValue==secret
+check(rawget(mage.cells.resource.top,'formattedValue')~=secret
     and mage.cells.resource.shown and mage.cells.resource.meter.shown and mage.cells.resource.meter.value==secret
-    and mage.cells.resource.tooltipLines[1]:find('displayed by the client',1,true),
-    'Mage forwards a restricted native percentage only to the documented font renderer')
+    and mage.cells.resource.tooltipLines[1]:find('drawn by the client',1,true),
+    'a restricted native percentage is handed only to the native meter, never inspected or printed')
 UnitPowerPercent=nil;CurveConstants=nil;mage.Update()
 check(not mage.cells.resource.shown and not mage.cells.resource.meter.shown,
     'Mage hides resource status when neither Lua nor a native renderer can display a reading')
@@ -383,14 +388,20 @@ check(namedWarrior.cells.ability.top.text=='Ready' and namedWarrior.cells.abilit
 GetShapeshiftForm=function() return 1 end
 GetShapeshiftFormInfo=function() return 132349,true,nil,4003 end
 namedWarrior.Update()
-check(namedWarrior.cells.resource.bottom.text=='Battle Stance','the stance line shows the client stance name instead of Form/Base')
+check(namedWarrior.cells.resource.cue.shown and namedWarrior.cells.resource.cue.texture==132349 and namedWarrior.cells.resource.bottom.text==''
+    and namedWarrior.cells.resource.meter.color[1]==0.9
+    and table.concat(namedWarrior.cells.resource.tooltipLines,'\n'):find('Battle Stance',1,true),
+    'Warrior shows a red rage meter and the stance icon, with the stance name in the tooltip')
 check(named.ForeverClassmateWarriorFrame.foldStat.text=='90%' and named.ForeverClassmateWarriorFrame.foldStat.label=='Health',
     'Warrior compact stat is health')
 GetShapeshiftForm=function() return 0 end;namedWarrior.Update()
-check(namedWarrior.cells.resource.bottom.text=='','no stance name is invented when none is active or readable')
+check(not namedWarrior.cells.resource.cue.shown,'no stance icon is invented when none is active or readable')
 local comboRogue=Fixture(NS.Rogue,{},{})
 GetComboPoints=function() return 3 end;comboRogue.Update()
-check(comboRogue.cells.resource.bottom.text=='3 combo','combo points read as "3 combo" instead of CP3')
+local lit=0
+for _,pip in ipairs(comboRogue.cells.resource.pips) do if pip.shown and pip.color[1]==1 then lit=lit+1 end end
+check(lit==3 and #comboRogue.cells.resource.pips==5 and comboRogue.cells.resource.pips[5].shown,
+    'combo points show as five pips with three lit')
 GetComboPoints=function() return 0 end
 local savedItemID,savedEnchant=GetInventoryItemID,C_Item.GetWeaponEnchantInfo
 GetInventoryItemID=function(_,slot) return 100+slot end
@@ -415,8 +426,9 @@ C_Item.GetItemCount=function(id) return id==6265 and 5 or 0 end
 UnitExists=function(unit) return unit=='target' or unit=='pet' end
 UnitHealth=function(unit) return unit=='pet' and 80 or 90 end
 local petLock=Fixture(NS.Warlock,{'Demon Skin','Summon Imp','Will to Survive'},{'Demon Skin'})
-check(petLock.cells.resource.bottom.text=='5 shards' and table.concat(petLock.cells.resource.tooltipLines,'\n'):find('Health: 90%',1,true),
-    'Warlock shards read "5 shards"; player health moves to the tooltip')
+check(petLock.cells.resource.cue.shown and petLock.cells.resource.count.text=='5' and petLock.cells.resource.bottom.text==''
+    and table.concat(petLock.cells.resource.tooltipLines,'\n'):find('Health: 90%',1,true),
+    'Warlock shards show as the shard icon with a count; player health stays in the tooltip')
 check(petLock.cells.upkeep.top.text=='2/2' and petLock.cells.upkeep.bottom.text=='Demon 80%',
     'with armor and demon both up, the upkeep line shows the demon health')
 check(petLock.cells.racial.bottom.text=='Will to Survive','the racial slot names the racial instead of "Racial"')
@@ -428,6 +440,8 @@ NS.Warlock.db.compactStat=true
 C_Item.GetItemCount=function() return 0 end;petLock.Update()
 check(named.ForeverClassmateWarlockFrame.foldStat.text=='0' and named.ForeverClassmateWarlockFrame.foldStat.color[1]==1,
     'zero soul shards shows in red')
+check(petLock.cells.resource.count.text=='0' and petLock.cells.resource.count.textColor[1]==1 and petLock.cells.resource.count.textColor[2]==0.25,
+    'the bar shows an empty shard count in red too')
 C_Item.GetItemCount,UnitExists,UnitHealth=savedCount,savedExists,savedHealth
 local warlock=Fixture(NS.Warlock,{'Demon Armor','Demon Skin'},{'Demon Skin'})
 check(warlock.cells.upkeep.top.text=='Active' and warlock.cells.upkeep.bottom.text=='Demon Skin' and warlock.alpha==0.6,

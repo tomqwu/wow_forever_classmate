@@ -57,14 +57,14 @@ before the lock control:
 
 | Slot | Bounds | Visible status |
 | --- | --- | --- |
-| Resource | 7–82 | Percentage, then the stance/form name, `3 combo`, or `5 shards` (text only) |
+| Resource | 7–82 | 9px power meter colored by power type, then one cue: shard icon + count, five combo pips, or stance/form icon (no text) |
 | Upkeep | 82–162 | `Missing` + the missing buff's name; or one active buff's time + name; or `2/2` + `All active` (Warlock: demon health) |
 | Target | 162–242 | Own target-effect timer, stacks, or `None`, with the effect name below |
 | Ability | 242–322 | Proc stacks/timer or learned ability readiness, with the spell name below |
 | Racial | 322–398 | Best learned active-racial state, with the racial's name below |
 | Control | 400–420 | Shared lock button |
 
-Every full bar's 44 × 44 class crest is centered on the frame's left edge, half outside and half inside. First content starts 20px into the bar to clear it: Hunter's range icon (text at 76), Shaman's first totem, and the standard resource text (Mage meter at 22). Standard resource slots are text only; the old fixed class spell icon is gone. Mage uses a 9px vertical mana meter in the resource slot. An active Mana Shield or Ice Barrier uses a 4px coverage meter in upkeep, showing total absorbs against maximum health when the client exposes those values. Armor details remain on hover. This coverage is not a percentage of the shield’s original capacity.
+Every full bar's 44 × 44 class crest is centered on the frame's left edge, half outside and half inside. First content starts 20px into the bar to clear it: Hunter's range icon (text at 76), Shaman's first totem, and the standard resource text (Mage meter at 22). Standard resource slots are text only; the old fixed class spell icon is gone. Every standard class uses the 9px vertical meter; percentages appear only in the tooltip. An active Mana Shield or Ice Barrier uses a 4px coverage meter in upkeep, showing total absorbs against maximum health when the client exposes those values. Armor details remain on hover. This coverage is not a percentage of the shield’s original capacity.
 
 Warrior, Rogue, Druid, Priest, and Warlock may show a 212px-wide DoT strip immediately to the right of the standard bar. It grows vertically only for active, readable player-owned effects on the target or live nameplates, up to twelve effect rows across five enemies. The strip follows the bar when it moves or scales and uses the same combat fade. A separate setting hides it without changing the five fixed slots or the 426px main-bar width. Empty, expired, and unavailable observations do not create placeholder rows.
 

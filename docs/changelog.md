@@ -1,3 +1,10 @@
+## 0.41.0
+
+- The resource slot on standard class bars is now visual instead of text. A slim vertical meter shows your power in its own color: blue mana, red rage, yellow energy (the Druid meter follows the current form). Beside it, Warlocks see the Soul Shard icon with a count (red at zero), Rogues see five combo pips, and Warriors, Druids and Priests see their stance or form icon. "100%", "3 combo" and the stance name are gone from the bar; exact values and names are in the tooltip.
+- A percentage the game keeps restricted still fills the meter, drawn by the game itself; the addon never reads or prints that value.
+
+Use `/reload`. Automated checks use mocked APIs; meter colors and icons still need in-game confirmation.
+
 ## 0.40.1
 
 - While you're dead or a ghost, the folded crest takes on a spirit look: the crest fades to a pale blue-grey inside a soft spirit glow that slowly breathes in and out, in place of the usual class-colored glow. It returns to normal the moment you're alive again. This also applies when you had already folded the bar yourself.

@@ -137,6 +137,9 @@ local function CompactStat(config)
     end
 end
 
+local powerColors={Mana={0.25,0.55,1},Rage={0.9,0.22,0.18},Energy={1,0.85,0.25}}
+local function PowerColor(label) return powerColors[label] or powerColors.Mana end
+
 local function MakeCell(frame,x,width)
     local cell=CreateFrame('Button',nil,frame);cell:SetSize(width,48);cell:SetPoint('TOPLEFT',frame,'TOPLEFT',x,-4)
     local icon=cell:CreateTexture(nil,'ARTWORK');icon:SetSize(24,24);icon:SetPoint('LEFT',cell,'LEFT',3,0)
@@ -179,9 +182,22 @@ local function CreateIndicator(module,config,host,db)
     local ability=MakeCell(frame,242,80);local racial=MakeCell(frame,322,76)
     -- The class crest clasps the frame's left edge (ClassHost frame art), so
     -- the resource slot is text only and starts just past the crest.
-    resource.textInset=15
+    -- The resource slot is visual: a power meter, then one class cue (shard
+    -- icon and count, combo pips, or stance/form icon). Numbers are in the tooltip.
+    resource.meter=MakeMeter(resource,15,9,{0.25,0.55,1})
+    local cue=resource:CreateTexture(nil,'ARTWORK');cue:SetSize(24,24);cue:SetPoint('LEFT',resource,'LEFT',32,0)
+    cue:SetTexCoord(0.08,0.92,0.08,0.92);cue:Hide()
+    resource.cue=cue;resource.cueFrame=Core.IconFrame(resource,cue,28)
+    local count=resource:CreateFontString(nil,'OVERLAY','GameFontHighlight');count:SetPoint('LEFT',cue,'RIGHT',4,0)
+    count:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',13,'OUTLINE');count:Hide()
+    resource.count=count
+    resource.pips={}
+    for index=1,5 do
+        local pip=resource:CreateTexture(nil,'ARTWORK');pip:SetSize(7,7)
+        pip:SetPoint('LEFT',resource,'LEFT',32+(index-1)*9,0);pip:Hide()
+        resource.pips[index]=pip
+    end
     if config.key=='mage' then
-        resource.meter=MakeMeter(resource,15,9,{0.2,0.65,1})
         upkeep.meter=MakeMeter(upkeep,72,4,{0.4,0.85,1})
     end
     frame.cells={resource=resource,upkeep=upkeep,target=target,ability=ability,racial=racial}
@@ -248,7 +264,6 @@ local function CreateIndicator(module,config,host,db)
             if config.currentPower then power=Context.CurrentPower() else power=Context.Power(config.powerType,config.powerLabel) end
         end
         local resourceTop=power and (power.percent..'%') or ''
-        local resourceBottom=''
         local resourceLines={}
         local protectedPercent,hasProtectedPercent
         if db.showResource~=false and not power and not config.currentPower and type(UnitPowerPercent)=='function'
@@ -257,19 +272,20 @@ local function CreateIndicator(module,config,host,db)
             if ok and not Core.IsReadable(value) then protectedPercent=value;hasProtectedPercent=true end
         end
         if power and Core.IsNumber(power.current) and Core.IsNumber(power.maximum) then
-            resourceLines[#resourceLines+1]=(power.label or 'Power')..': '..math.floor(power.current+0.5)..' / '..math.floor(power.maximum+0.5)
+            resourceLines[#resourceLines+1]=(power.label or 'Power')..': '..math.floor(power.current+0.5)..' / '..math.floor(power.maximum+0.5)..' ('..power.percent..'%)'
         elseif power then resourceLines[#resourceLines+1]=(power.label or 'Power')..': '..power.percent..'% (exact values unavailable)'
-        elseif hasProtectedPercent then resourceLines[#resourceLines+1]='Percentage is displayed by the client; exact values are restricted.'
+        elseif hasProtectedPercent then resourceLines[#resourceLines+1]='The meter is drawn by the client; exact values are restricted.'
         else resourceLines[#resourceLines+1]='The client did not expose a readable resource value.' end
+        -- One visual cue beside the meter.
+        local cueIcon,cueCount,pips
         if db.showResource~=false and config.showCombo then
-            local cp=Context.ComboPoints();resourceBottom=cp and (cp..' '..NS.L('combo')) or ''
-            if cp then resourceLines[#resourceLines+1]='Combo points: '..cp..' / 5' end
+            local cp=Context.ComboPoints()
+            if cp then pips=cp;resourceLines[#resourceLines+1]='Combo points: '..cp..' / 5' end
         elseif db.showResource~=false and config.showForm then
-            -- The client's own stance or form name; nothing when in no form.
-            local form=Context.Form();resourceBottom=form and form.name or ''
-            if form then resourceLines[#resourceLines+1]='Form or stance: '..form.name end
-        elseif db.showResource~=false and config.showHealth then
-            -- Health stays in the tooltip; the bar line carries the class resource.
+            local form=Context.Form()
+            if form then cueIcon=form.icon;resourceLines[#resourceLines+1]='Form or stance: '..form.name end
+        end
+        if db.showResource~=false and config.showHealth then
             local hp=Context.HealthPercent('player')
             if hp then resourceLines[#resourceLines+1]='Health: '..hp..'%' end
         end
@@ -277,33 +293,31 @@ local function CreateIndicator(module,config,host,db)
             -- By item ID: the English item name would miss on localized clients.
             local shards=Context.ItemCount(6265)
             if shards then
-                resourceBottom=(resourceBottom~='' and (resourceBottom..' · ') or '')..shards..' '..NS.L(shards==1 and 'shard' or 'shards')
+                cueIcon=ItemIcon(6265,'Interface\\Icons\\INV_Misc_Gem_Amethyst_02');cueCount=tostring(shards)
                 resourceLines[#resourceLines+1]='Soul Shards: '..shards
             end
         end
         resource.tooltipTitle='Player resources';resource.tooltipLines=resourceLines
-        -- The clasped crest replaces the old fixed class spell icon here.
-        local resourceIcon=nil
-        if config.resourceTextOnly then resourceBottom='' end
-        Paint(resource,resourceIcon,resourceTop,resourceBottom,config.color,power==nil and not hasProtectedPercent)
+        Paint(resource,nil,'','',config.color,false)
+        -- The power meter takes the power's own color; a client-restricted
+        -- percentage is handed to the native bar without being inspected.
         local meterOK=false
-        if config.key=='mage' then
-            resource.top:ClearAllPoints();resource.top:SetPoint('TOPLEFT',resource,'TOPLEFT',29,-17);resource.top:SetWidth(43)
-            resource.bottom:SetText('')
-            local meterValue=power and power.percent or protectedPercent
-            if power or hasProtectedPercent then
-                meterOK=pcall(resource.meter.SetValue,resource.meter,meterValue)
-            end
-            resource.meter:SetShown(db.showResource~=false and meterOK)
-            resource.meter.background:SetShown(db.showResource~=false and meterOK)
+        if db.showResource~=false and (power or hasProtectedPercent) then
+            local c=PowerColor(power and power.label or config.powerLabel)
+            resource.meter:SetStatusBarColor(c[1],c[2],c[3])
+            meterOK=pcall(resource.meter.SetValue,resource.meter,power and power.percent or protectedPercent)==true
         end
-        local renderedProtectedPercent=false
-        if hasProtectedPercent then
-            renderedProtectedPercent=pcall(resource.top.SetFormattedText,resource.top,'%.0f%%',protectedPercent)
-            if renderedProtectedPercent then resourceTop='client percentage'
-            else resourceLines[1]='The client did not permit a readable resource percentage.' end
+        resource.meter:SetShown(meterOK);resource.meter.background:SetShown(meterOK)
+        if hasProtectedPercent and meterOK then resourceTop='client percentage' end
+        resource.cue:SetTexture(cueIcon);resource.cue:SetShown(cueIcon~=nil)
+        resource.count:SetText(cueCount or '');resource.count:SetShown(cueIcon~=nil and cueCount~=nil)
+        local shardsOut=cueCount=='0'
+        if shardsOut then resource.count:SetTextColor(1,0.25,0.2) else resource.count:SetTextColor(1,1,1) end
+        for index,pip in ipairs(resource.pips) do
+            pip:SetShown(pips~=nil)
+            if pips and index<=pips then pip:SetColorTexture(1,0.82,0.2,1) else pip:SetColorTexture(0.18,0.18,0.2,0.9) end
         end
-        resource:SetShown(db.showResource~=false and (power~=nil or renderedProtectedPercent or meterOK or resourceBottom~=''))
+        resource:SetShown(db.showResource~=false and (meterOK or cueIcon~=nil or pips~=nil))
 
         local upkeepTotal,upkeepActive,upkeepMissing,upkeepUnknown=0,0,0,0
         local missingBuff=false;local missingArmor=false
