@@ -64,6 +64,29 @@ function NS.Folded.Create(host,content,db,module)
     local crest=top:CreateTexture(nil,'ARTWORK');crest:SetSize(L.CREST,L.CREST)
     crest:SetTexture(token and (media..'Classes\\'..token) or (media..'ForeverClassmate'))
     glow:SetPoint('CENTER',crest,'CENTER',0,0)
+    -- Spirit glow while dead or a ghost: a pale halo that slowly breathes
+    -- behind a faded crest. One native looping animation, no polling.
+    local spirit=top:CreateTexture(nil,'BACKGROUND',nil,1);spirit:SetTexture(media..'Glow')
+    spirit:SetSize(L.CREST+44,L.CREST+44);spirit:SetPoint('CENTER',crest,'CENTER',0,0)
+    spirit:SetVertexColor(0.55,0.8,1,1);spirit:Hide()
+    if spirit.SetBlendMode then spirit:SetBlendMode('ADD') end
+    local breathe=type(spirit.CreateAnimationGroup)=='function' and spirit:CreateAnimationGroup() or nil
+    if breathe then
+        local fadeAnim=breathe:CreateAnimation('Alpha')
+        fadeAnim:SetFromAlpha(0.35);fadeAnim:SetToAlpha(0.95);fadeAnim:SetDuration(1.6)
+        if fadeAnim.SetSmoothing then fadeAnim:SetSmoothing('IN_OUT') end
+        breathe:SetLooping('BOUNCE')
+    end
+    local function Spirit(on)
+        spirit:SetShown(on);glow:SetShown(not on)
+        crest:SetDesaturated(on)
+        if on then crest:SetVertexColor(0.78,0.88,1,1) else crest:SetVertexColor(1,1,1,1) end
+        if breathe then
+            if on and not breathe:IsPlaying() then breathe:Play()
+            elseif not on and breathe:IsPlaying() then breathe:Stop() end
+        end
+    end
+    button:HookScript('OnHide',function() Spirit(false) end)
     -- Cell frames and halos sit on their own frames so the warning pulse fades
     -- only those decorations; wells and icons stay fully readable.
     local pulseEdges=Core.CreateWarningPulse(button,edges)
@@ -219,6 +242,7 @@ function NS.Folded.Create(host,content,db,module)
         -- stays readable while idle; warnings stay fully visible.
         local alpha=NS.ClassHost.ContentAlpha(host,content)
         if collapsed then alpha=(warning or host.hovered) and 1 or math.max(0.8,alpha) end
+        Spirit(collapsed and db.enabled==true and Core.PlayerDead())
         button:SetAlpha(alpha);fold:SetAlpha(alpha)
         -- The compact card brings its own frame; the expanded shell panel is hidden.
         if host.shellFill then host.shellFill:SetAlpha(collapsed and 0 or alpha) end
@@ -231,6 +255,6 @@ function NS.Folded.Create(host,content,db,module)
     content:HookScript('OnHide',Refresh);content:HookScript('OnShow',Refresh)
     return {Refresh=Refresh,overflow=overflow,button=button,fold=fold,badges=badges,wells=wells,frames=frames,glows=glows,halos=halos,
         edges=edges,card=card,slices=slices,divider=divider,glow=glow,fill=fill,border=border,
-        primary=crest,crest=crest,main=main,row=row,
+        primary=crest,crest=crest,main=main,row=row,spirit=spirit,spiritAnimation=breathe,
         stat={well=statWell,icon=statIcon,frame=statFrame,text=statText}}
 end

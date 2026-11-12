@@ -45,7 +45,7 @@ Bars are fully visible in combat and fade between fights: 60% with a target and 
 
 Click the small **<** on the bar to fold it into a card. Your class crest sits on top, breaking through the card's upper edge with a soft class-colored glow. Below an engraved divider, one row holds your class stat followed by up to three confirmed missing buffs; any further warnings are counted on the last cell and listed on hover. Zero shards, water or Ankhs and low ammo show in red. With nothing to report, only the glowing crest remains. The crest stays exactly where you place it.
 
-When you die the bar folds down to your crest, and it expands again when you're back on your feet. Click the card to expand again. Turn on **Fold outside combat, expand in combat** to switch automatically; a click still overrides it until your next combat change. **Show class stat in compact card**, **Collapsed warning icon** and **Show collapse button** are separate settings.
+When you die the bar folds down to your crest, which fades to a ghostly tint inside a slowly breathing spirit glow, and it expands again when you're back on your feet. Click the card to expand again. Turn on **Fold outside combat, expand in combat** to switch automatically; a click still overrides it until your next combat change. **Show class stat in compact card**, **Collapsed warning icon** and **Show collapse button** are separate settings.
 
 ## Minimap button tray
 

@@ -338,6 +338,8 @@ function Host.Create(module,db,contentFactory)
         end
         if event=='PLAYER_DEAD' or event=='PLAYER_ALIVE' or event=='PLAYER_UNGHOST' then
             Host.SyncDeathFold(module,db)
+            -- A card the player already folded still switches its spirit glow.
+            if host.foldRefresh then host.foldRefresh() end
             return
         end
         Apply()

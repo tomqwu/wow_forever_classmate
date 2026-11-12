@@ -1,3 +1,9 @@
+## 0.40.1
+
+- While you're dead or a ghost, the folded crest takes on a spirit look: the crest fades to a pale blue-grey inside a soft spirit glow that slowly breathes in and out, in place of the usual class-colored glow. It returns to normal the moment you're alive again. This also applies when you had already folded the bar yourself.
+
+Use `/reload`. Automated checks use mocked events and animations; the glow still needs in-game confirmation.
+
 ## 0.40.0
 
 - When you die, the expanded bar now folds down to your class crest instead of leaving an empty frame. It expands again once you are resurrected or back in your body. A card you folded yourself stays folded, and with **Fold outside combat, expand in combat** on, revival follows that setting. Logging out while dead still restores the bar next time.

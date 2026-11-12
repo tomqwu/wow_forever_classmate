@@ -520,6 +520,8 @@ dead=true;foldHost.scripts.OnEvent(foldHost,'PLAYER_DEAD')
 check(foldedDB.collapsed and foldedDB.foldedByDeath and not foldInstance.visual.shown and not summary.card.shown
     and summary.crest.shown and foldHost.width==48 and transition.intro.plays==deathPlays+1,
     'dying folds the expanded bar down to the crest alone')
+check(summary.spirit.shown and summary.spiritAnimation.playing and summary.spiritAnimation.looping=='BOUNCE'
+    and not summary.glow.shown,'a pale spirit glow breathes around the crest while dead, replacing the class glow')
 foldHost.scripts.OnEvent(foldHost,'PLAYER_ALIVE')
 check(foldedDB.collapsed,'releasing as a ghost keeps the bar folded')
 foldHost.scripts.OnEvent(foldHost,'PLAYER_REGEN_DISABLED')
@@ -527,11 +529,14 @@ check(foldedDB.collapsed,'combat events cannot expand a ghost')
 dead=false;foldHost.scripts.OnEvent(foldHost,'PLAYER_UNGHOST')
 check(not foldedDB.collapsed and foldedDB.foldedByDeath==nil and foldInstance.visual.shown,
     'returning to life expands the bar that death folded')
+check(not summary.spirit.shown and not summary.spiritAnimation.playing,'the spirit glow stops on revival')
 foldedDB.collapsed=true;foldInstance.Apply()
 dead=true;foldHost.scripts.OnEvent(foldHost,'PLAYER_DEAD')
 check(foldedDB.collapsed and foldedDB.foldedByDeath==nil,'a card the player folded is not marked as a death fold')
+check(summary.spirit.shown and summary.spiritAnimation.playing,'an already folded card still shows the spirit glow on death')
 dead=false;foldHost.scripts.OnEvent(foldHost,'PLAYER_UNGHOST')
 check(foldedDB.collapsed,'revival leaves a player-chosen card folded')
+check(not summary.spirit.shown and summary.glow.shown,'the class glow returns on revival')
 foldedDB.collapsed=false;foldInstance.Apply()
 dead=true;foldHost.scripts.OnEvent(foldHost,'PLAYER_DEAD')
 dead=false;foldedDB.autoFold=true;foldHost.scripts.OnEvent(foldHost,'PLAYER_ALIVE')
