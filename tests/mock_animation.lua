@@ -9,10 +9,14 @@ return function(methods)
             function a:SetToAlpha(v) self.to=v end
             function a:SetDuration(v) self.duration=v end
             function a:SetOrder(v) self.order=v end
+            function a:SetScaleFrom(x,y) self.scaleFrom=x end
+            function a:SetScaleTo(x,y) self.scaleTo=x end
+            function a:SetSmoothing(v) self.smoothing=v end
             self.animations[#self.animations+1]=a
             return a
         end
         function group:SetLooping(value) self.looping=value end
+        function group:SetScript(event,fn) self[event]=fn end
         function group:IsPlaying() return self.playing end
         function group:Play() self.plays=self.plays+1;self.playing=true end
         function group:Stop() self.stops=self.stops+1;self.playing=false end

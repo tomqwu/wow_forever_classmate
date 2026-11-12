@@ -1,3 +1,12 @@
+## 0.34.0
+
+- New option for every class: **Fold outside combat, expand in combat** (off by default). Entering combat expands the full bar; leaving combat folds it back into the compact card.
+- View changes now animate. Expanding bursts the bar out with a class-colored flare across it; folding drops the card in with a flare blooming around the crest. Manual clicks get the same effect.
+- A click still overrides the automatic view until the next time you enter or leave combat. If the client cannot confirm your combat state, the view stays as it is.
+- The option listens for combat only while it is on and the class bar is enabled. Animations are native, one-shot effects with no extra polling, and stop when the bar is disabled or hidden.
+
+Use `/reload`. Automated checks use mocked frames and animations; in-game rendering still needs confirmation.
+
 ## 0.33.1
 
 - Warnings are easier to spot in the compact card. Each warning cell now has a warm ember halo and a brighter amber frame.

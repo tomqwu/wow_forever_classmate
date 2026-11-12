@@ -471,7 +471,42 @@ foldedDB.locked=false;foldHost.scripts.OnDragStop(foldHost)
 check(foldedDB.x==140 and foldedDB.y==50 and foldInstance.shell.point=='TOP' and foldInstance.shell.x==140 and foldInstance.shell.y==78,
     'compact drag saves the crest center, not the center of a temporary card')
 foldedDB.locked=true
+-- Combat auto-fold: off by default; when on, combat expands and leaving
+-- combat folds, each with a one-shot transition.
+check(not foldHost.events.PLAYER_REGEN_DISABLED and not foldHost.events.PLAYER_REGEN_ENABLED,
+    'auto-fold registers no combat listeners unless chosen')
+local transition=foldHost.transition
+combat=true;foldedDB.autoFold=true;foldInstance.Apply()
+check(foldHost.events.PLAYER_REGEN_DISABLED and foldHost.events.PLAYER_REGEN_ENABLED and not foldedDB.collapsed
+    and foldInstance.visual.shown,'turning auto-fold on in combat expands right away')
+check(transition.bloom.playing and transition.flare.shown and transition.grow.scaleFrom==0.9 and transition.grow.scaleTo==1
+    and transition.flare.relative==foldInstance.shell and transition.flare.point=='CENTER',
+    'expanding bursts the bar out from 90% with a flare across it')
+local plays=transition.intro.plays
+combat=false;foldHost.scripts.OnEvent(foldHost,'PLAYER_REGEN_ENABLED')
+check(foldedDB.collapsed and not foldInstance.visual.shown and transition.intro.plays==plays+1
+    and transition.grow.scaleFrom==1.12 and transition.flare.width==110
+    and transition.flare.relativePoint=='TOP' and transition.flare.y==-28,
+    'leaving combat folds the card, dropping it in with a flare on the crest')
+summary.button.scripts.OnMouseDown();summary.button.scripts.OnClick()
+check(not foldedDB.collapsed,'a manual click still expands outside combat')
+plays=transition.intro.plays
+combat=true;foldHost.scripts.OnEvent(foldHost,'PLAYER_REGEN_DISABLED')
+check(not foldedDB.collapsed and transition.intro.plays==plays,'entering combat while already expanded does not replay the effect')
+combat=false;foldHost.scripts.OnEvent(foldHost,'PLAYER_REGEN_ENABLED')
+check(foldedDB.collapsed,'the next combat exit folds again')
+combat=secret;foldedDB.collapsed=false;foldInstance.Apply();foldHost.scripts.OnEvent(foldHost,'PLAYER_ENTERING_WORLD')
+check(not foldedDB.collapsed,'an unreadable combat state never folds or expands on its own')
+combat=false;foldHost.scripts.OnEvent(foldHost,'PLAYER_ENTERING_WORLD')
+check(foldedDB.collapsed,'world entry folds when confirmed out of combat')
+transition.Play(false,450,64);foldedDB.autoFold=false;foldInstance.Apply()
+check(not foldHost.events.PLAYER_REGEN_DISABLED and not foldHost.events.PLAYER_REGEN_ENABLED,
+    'turning auto-fold off removes its combat listeners')
+foldHost.scripts.OnEvent(foldHost,'PLAYER_REGEN_DISABLED')
+check(foldedDB.collapsed,'queued combat events are ignored once auto-fold is off')
+transition.Play(true,48,48)
 foldedDB.enabled=false;foldInstance.Apply()
+check(not transition.bloom.playing and not transition.intro.playing and not transition.flare.shown,'disable stops the transition effect')
 check(not summary.button.shown and not summary.edges.warningPulseGroup.playing and not summary.halos.warningPulseGroup.playing,'disable clears collapsed presentation and animation')
 check(not next(foldHost.events),'disabled host unregisters native-layout lifecycle listeners')
 foldHost:SetPoint('LEFT',UIParent,'LEFT',69,-261)

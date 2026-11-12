@@ -49,6 +49,74 @@ function Host.Place(host,db)
     end
 end
 
+-- Fold or expand through the module's own Apply, so every dependent
+-- feature (DoT sidebars, reminders) refreshes as it does for a click.
+function Host.SetFold(module,db,collapsed)
+    if db.collapsed==collapsed then return end
+    db.collapsed=collapsed
+    if module.Apply then module.Apply() end
+end
+
+-- Expanded in confirmed combat, folded when confirmed out of combat; an
+-- unreadable combat state leaves the current view alone.
+function Host.SyncCombatFold(module,db)
+    local combat=NS.Core.Call(UnitAffectingCombat,'player')
+    if combat==true then Host.SetFold(module,db,false)
+    elseif combat==false then Host.SetFold(module,db,true) end
+end
+
+-- Scale animations exist under two names across client generations.
+local function SetScaleRange(animation,from,to)
+    if animation.SetScaleFrom then animation:SetScaleFrom(from,from);animation:SetScaleTo(to,to)
+    elseif animation.SetFromScale then animation:SetFromScale(from,from);animation:SetToScale(to,to)
+    else return false end
+    return true
+end
+
+-- One-shot native animations for view changes: the new view fades and
+-- scales into place while a class-colored flare blooms behind it. Nothing
+-- polls; the groups stop on disable and hide.
+local function CreateTransition(shell,classToken)
+    local color=NS.Folded and NS.Folded.ClassColors and NS.Folded.ClassColors[classToken] or {1,0.82,0.5}
+    local inert={Play=function() end,Stop=function() end}
+    if type(shell.CreateAnimationGroup)~='function' or type(shell.CreateTexture)~='function' then return inert end
+    local intro=shell:CreateAnimationGroup()
+    if not intro then return inert end
+    local fade=intro:CreateAnimation('Alpha');fade:SetFromAlpha(0);fade:SetToAlpha(1);fade:SetDuration(0.22)
+    local grow=intro:CreateAnimation('Scale');grow:SetDuration(0.22)
+    if grow.SetSmoothing then grow:SetSmoothing('OUT') end
+    local flare=shell:CreateTexture(nil,'OVERLAY')
+    flare:SetTexture('Interface\\AddOns\\ForeverUtilities\\Textures\\Glow')
+    flare:SetVertexColor(color[1],color[2],color[3],1);flare:Hide()
+    if flare.SetBlendMode then flare:SetBlendMode('ADD') end
+    if not flare or type(flare.CreateAnimationGroup)~='function' then return inert end
+    local bloom=flare:CreateAnimationGroup()
+    if not bloom then return inert end
+    local flash=bloom:CreateAnimation('Alpha');flash:SetFromAlpha(0.9);flash:SetToAlpha(0);flash:SetDuration(0.5)
+    local spread=bloom:CreateAnimation('Scale');spread:SetDuration(0.5);SetScaleRange(spread,0.6,1.5)
+    if bloom.SetScript then bloom:SetScript('OnFinished',function() flare:Hide() end) end
+    local transition={intro=intro,bloom=bloom,flare=flare,grow=grow}
+    function transition.Stop()
+        if intro:IsPlaying() then intro:Stop() end
+        if bloom:IsPlaying() then bloom:Stop() end
+        flare:Hide()
+    end
+    -- Folding drops the card in from slightly larger; expanding bursts the
+    -- bar out from slightly smaller. The flare follows the crest or the bar.
+    function transition.Play(collapsed,width,height)
+        transition.Stop()
+        SetScaleRange(grow,collapsed and 1.12 or 0.9,1)
+        flare:ClearAllPoints()
+        if collapsed then
+            flare:SetSize(110,110);flare:SetPoint('CENTER',shell,'TOP',0,-Host.CompactCrestOffset)
+        else
+            flare:SetSize(width+60,height+50);flare:SetPoint('CENTER',shell,'CENTER',0,0)
+        end
+        flare:Show();intro:Play();bloom:Play()
+    end
+    return transition
+end
+
 function Host.Create(module,db,contentFactory)
     local height=type(module.height)=='function' and module.height(db) or (module.height or 56)
     local width=type(module.width)=='function' and module.width(db) or (module.width or NS.ClassBarWidth)
@@ -67,6 +135,10 @@ function Host.Create(module,db,contentFactory)
     outline:SetBackdrop({edgeFile='Interface\\Tooltips\\UI-Tooltip-Border',edgeSize=8})
     outline:SetBackdropBorderColor(0.65,0.65,0.65,0.85)
     host.outline=outline
+    local transition=CreateTransition(shell,module.classToken)
+    host.transition=transition
+    shell:HookScript('OnHide',transition.Stop)
+    local shownCollapsed,lastAutoFold
     host.foldWarnings={};host.hovered=false
     host:SetSize(width,height);host:SetFrameStrata('MEDIUM')
     -- Only the shell clamps to the screen; its inset host must keep its anchor
@@ -165,14 +237,35 @@ function Host.Create(module,db,contentFactory)
             if db.locked then texture:SetColorTexture(0.8,0.85,0.9,1)
             else texture:SetColorTexture(0.3,1,0.5,1) end
         end
+        -- Combat auto-fold listens only while enabled and switched on.
+        for _,event in ipairs({'PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED'}) do
+            if db.enabled and db.autoFold==true then host:RegisterEvent(event) else host:UnregisterEvent(event) end
+        end
         content.Refresh()
         if levelingBuffs then levelingBuffs.Refresh() end
         if folded then folded.Refresh() end
+        local collapsed=db.collapsed==true
+        if not db.enabled then
+            transition.Stop();shownCollapsed=nil
+        elseif shownCollapsed~=nil and shownCollapsed~=collapsed and NS.Folded then
+            transition.Play(collapsed,shell:GetWidth() or width,shell:GetHeight() or height)
+        end
+        if db.enabled then shownCollapsed=collapsed end
+        -- Turning the option on syncs the view to the current combat state once.
+        local auto=db.enabled and db.autoFold==true
+        if auto and lastAutoFold==false then Host.SyncCombatFold(module,db) end
+        lastAutoFold=auto
     end
     -- Reapply after native startup layout restoration, including old cache
     -- records left by the pre-shell implementation. Disabled hosts do no work.
-    host:SetScript('OnEvent',function()
-        if db.enabled then Apply() end
+    host:SetScript('OnEvent',function(_,event)
+        if not db.enabled then return end
+        if event=='PLAYER_REGEN_DISABLED' or event=='PLAYER_REGEN_ENABLED' then
+            if db.autoFold==true then Host.SetFold(module,db,event=='PLAYER_REGEN_ENABLED') end
+            return
+        end
+        Apply()
+        if db.autoFold==true then Host.SyncCombatFold(module,db) end
     end)
     host:SetScript('OnDragStart',function(self) if db.enabled and not db.locked then shell:StartMoving() end end)
     host:SetScript('OnDragStop',function(self)

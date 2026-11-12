@@ -29,7 +29,7 @@ end
 Shaman.normalize=Normalize
 Shaman.defaults={enabled=true,locked=true,x=0,y=-210,scale=1,showMinimap=true,minimapInspect=true,showLockButton=true,
     showTotems=true,showWeaponImbue=true,showShield=true,showSpecHelper=true,showMana=true,
-    totemRecallHint=true,flashMissingBuffs=true,sleepingBagReminder=true,foodXPReminder=true,mailRecipients=true,collapsed=false,showFoldButton=true,fadeOutOfCombat=true,minimapAngle=35}
+    totemRecallHint=true,flashMissingBuffs=true,sleepingBagReminder=true,foodXPReminder=true,mailRecipients=true,collapsed=false,showFoldButton=true,autoFold=false,fadeOutOfCombat=true,minimapAngle=35}
 Shaman.options={
     {key='flashMissingBuffs',label='Flash missing buffs',kind='toggle'},
     {key='sleepingBagReminder',label='Sleeping bag buff reminder (below level 60)',kind='toggle'},
@@ -37,6 +37,7 @@ Shaman.options={
     {key='mailRecipients',label='Mail recipients: alts and recents',kind='toggle'},
     {key='collapsed',label='Collapsed warning icon',kind='toggle'},
     {key='showFoldButton',label='Show collapse button',kind='toggle'},
+    {key='autoFold',label='Fold outside combat, expand in combat',kind='toggle'},
     {key='showMinimap',label='Show minimap settings button',kind='toggle'},
     {key='minimapInspect',label='Right-click minimap to inspect players',kind='toggle'},
     {key='showLockButton',label='Show lock button on bar',kind='toggle'},
