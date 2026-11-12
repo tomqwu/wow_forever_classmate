@@ -12,12 +12,14 @@ and WoW addon list.
 The previous Hunter's Friend artwork remains in source history, but new pages and
 packages should use the Forever Classmate assets.
 
-## Class crests and cell frame
+## Class crests, frame, divider and glow
 
-`addons/ForeverUtilities/Textures/Classes/<TOKEN>.tga` and `Textures/IconFrame.tga`
+`addons/ForeverUtilities/Textures/Classes/<TOKEN>.tga`, `Textures/IconFrame.tga` and `Textures/Divider.tga`
 come from the author's ForeverHUD project (`tomqwu/wow_forever_weakaura`): the
 AI-painted masters and prompts are in its `assets/ai`, exported by its
 `scripts/media.py`. `scripts/import_class_art.py` only box-filters those 256 × 256
-crests and the 128 × 128 frame to 64 × 64 so the 32 × 32 compact cells stay sharp.
-It does not recolor or redraw the art. Game spell and item icons are still read
+crests and the 128 × 128 frame to 64 × 64 and the divider to 256 × 16. The frame
+and divider are converted to greyscale so the addon can tint them per class; the
+crests keep their original colors. `Textures/Glow.tga` is a plain generated
+radial falloff. Nothing is redrawn. Game spell and item icons are still read
 from the client at runtime and are not bundled.

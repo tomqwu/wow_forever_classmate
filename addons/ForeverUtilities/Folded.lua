@@ -1,50 +1,87 @@
 local _,NS=...
 local Core=NS.Core
 NS.Folded={}
--- Compact strip: a fixed 32 x 32 class crest, then up to four 32 x 32 warning
--- cells in one row. Every cell uses one template (dark well, engraved frame,
--- inset cropped icon), so item art with or without its own square background
--- lines up the same way.
-local CELL,GAP,CREST_GAP,INSET=32,2,4,3
-NS.Folded.CELL,NS.Folded.GAP,NS.Folded.CREST_GAP=CELL,GAP,CREST_GAP
+-- Compact card: a 48 x 48 class crest on top that breaks through the card's
+-- upper edge, an engraved divider, then up to four 30 x 30 warning cells.
+-- One class-tinted frame surrounds everything; each cell keeps its own amber
+-- frame, dark well and inset icon so item art always lines up. With no
+-- warnings the card disappears and only the glowing crest remains.
+local L={CREST=48,OVER=18,CELL=30,GAP=4,PAD=7,DIVIDER=10,CORNER=12,INSET=3}
+NS.Folded.Layout=L
 local media='Interface\\AddOns\\ForeverUtilities\\Textures\\'
-function NS.Folded.Width(count)
-    if count<=0 then return CELL end
-    return CELL+CREST_GAP+count*CELL+(count-1)*GAP
+-- Standard class colors; used only to tint addon-owned frame art.
+local classColors={WARRIOR={0.78,0.61,0.43},PALADIN={0.96,0.55,0.73},HUNTER={0.67,0.83,0.45},
+    ROGUE={1,0.96,0.41},PRIEST={1,1,1},SHAMAN={0,0.44,0.87},MAGE={0.41,0.8,0.94},
+    WARLOCK={0.58,0.51,0.79},DRUID={1,0.49,0.04}}
+NS.Folded.ClassColors=classColors
+
+-- Returns width, height, cell row width and the y of the cell row.
+function NS.Folded.Size(count)
+    if count<=0 then return L.CREST,L.CREST,0,0 end
+    local row=count*L.CELL+(count-1)*L.GAP
+    local cellY=L.CREST+1+L.DIVIDER+1
+    return math.max(64,row+L.PAD*2),cellY+L.CELL+L.PAD,row,cellY
 end
+
+local function Level(frame,base,offset)
+    if type(base)=='number' and frame.SetFrameLevel then frame:SetFrameLevel(base+offset) end
+end
+
 function NS.Folded.Create(host,content,db,module)
     local button=CreateFrame('Button',nil,host)
-    button:SetSize(CELL,CELL);button:SetPoint('TOPLEFT',host,'TOPLEFT',0,0);button:RegisterForDrag('LeftButton');button:EnableMouse(true)
+    button:SetSize(L.CREST,L.CREST);button:SetPoint('TOPLEFT',host,'TOPLEFT',0,0);button:RegisterForDrag('LeftButton');button:EnableMouse(true)
     local main=CreateFrame('Frame',nil,button);main:SetAllPoints(button)
-    -- The class crest identifies the module. It is never a buff state claim.
-    local crest=main:CreateTexture(nil,'ARTWORK');crest:SetSize(CELL,CELL);crest:SetPoint('TOPLEFT',host,'TOPLEFT',0,0)
     local token=module and module.classToken
-    local crestTexture=token and (media..'Classes\\'..token) or (media..'ForeverClassmate')
-    crest:SetTexture(crestTexture)
+    local color=classColors[token] or {0.8,0.8,0.8}
+    local light={0.55+0.45*color[1],0.55+0.45*color[2],0.55+0.45*color[3]}
+    -- Draw order, back to front: card, cells, cell frames, crest.
+    local card=CreateFrame('Frame',nil,main)
     local row=CreateFrame('Frame',nil,main);row:SetAllPoints(main)
-    -- Frames sit on their own child so the warning pulse fades only the
+    local edges=CreateFrame('Frame',nil,main);edges:SetAllPoints(main)
+    local top=CreateFrame('Frame',nil,main);top:SetAllPoints(main)
+    local base=main.GetFrameLevel and main:GetFrameLevel()
+    Level(card,base,1);Level(row,base,2);Level(edges,base,3);Level(top,base,4)
+    local fill=card:CreateTexture(nil,'BACKGROUND')
+    fill:SetPoint('TOPLEFT',card,'TOPLEFT',3,-3);fill:SetPoint('BOTTOMRIGHT',card,'BOTTOMRIGHT',-3,3)
+    fill:SetColorTexture(0.025,0.025,0.03,0.88)
+    -- Nine-slice of the engraved frame: fixed corners, stretched edges.
+    local slices={}
+    local k=L.CORNER/64
+    for _,y in ipairs({{'TOP',0,k},{'MIDDLE',k,1-k},{'BOTTOM',1-k,1}}) do
+        for _,x in ipairs({{'LEFT',0,k},{'CENTER',k,1-k},{'RIGHT',1-k,1}}) do
+            local slice=card:CreateTexture(nil,'BORDER');slice:SetTexture(media..'IconFrame')
+            slice:SetTexCoord(x[2],x[3],y[2],y[3]);slice:SetVertexColor(light[1],light[2],light[3])
+            slice.column,slice.row=x[1],y[1];slices[#slices+1]=slice
+        end
+    end
+    local divider=card:CreateTexture(nil,'ARTWORK');divider:SetTexture(media..'Divider')
+    divider:SetVertexColor(light[1],light[2],light[3])
+    local glow=top:CreateTexture(nil,'BACKGROUND');glow:SetTexture(media..'Glow')
+    glow:SetSize(L.CREST+28,L.CREST+28);glow:SetVertexColor(color[1],color[2],color[3],0.55)
+    if glow.SetBlendMode then glow:SetBlendMode('ADD') end
+    -- The crest identifies the class only. It is never a buff state claim.
+    local crest=top:CreateTexture(nil,'ARTWORK');crest:SetSize(L.CREST,L.CREST)
+    crest:SetTexture(token and (media..'Classes\\'..token) or (media..'ForeverClassmate'))
+    glow:SetPoint('CENTER',crest,'CENTER',0,0)
+    -- Cell frames sit on their own frame so the warning pulse fades only the
     -- engraved edges; wells and icons stay fully readable.
-    local edges=CreateFrame('Frame',nil,row);edges:SetAllPoints(row)
-    local cells=CreateFrame('Frame',nil,row);cells:SetAllPoints(row)
     local pulse=Core.CreateWarningPulse(button,edges)
     local badges,wells,frames={},{},{}
     for index=1,4 do
-        local well=cells:CreateTexture(nil,'BACKGROUND');well:SetSize(CELL-4,CELL-4);well:SetColorTexture(0.03,0.03,0.035,0.88)
-        local badge=cells:CreateTexture(nil,'ARTWORK');badge:SetSize(CELL-INSET*2,CELL-INSET*2)
+        local well=row:CreateTexture(nil,'BACKGROUND');well:SetSize(L.CELL-4,L.CELL-4);well:SetColorTexture(0.03,0.03,0.035,0.92)
+        local badge=row:CreateTexture(nil,'ARTWORK');badge:SetSize(L.CELL-L.INSET*2,L.CELL-L.INSET*2)
         badge:SetTexCoord(0.08,0.92,0.08,0.92)
-        local frame=edges:CreateTexture(nil,'OVERLAY');frame:SetSize(CELL,CELL);frame:SetTexture(media..'IconFrame')
-        frame:SetVertexColor(1,0.78,0.45)
+        local frame=edges:CreateTexture(nil,'OVERLAY');frame:SetSize(L.CELL,L.CELL);frame:SetTexture(media..'IconFrame')
+        frame:SetVertexColor(1,0.72,0.35)
         well:Hide();badge:Hide();frame:Hide()
         badges[index],wells[index],frames[index]=badge,well,frame
     end
-    -- Edges draw above the icon so the engraving overlaps a clean icon crop.
-    if edges.SetFrameLevel and cells.GetFrameLevel then edges:SetFrameLevel((cells:GetFrameLevel() or 0)+1) end
     local visibleWarnings={}
-    -- More than four warnings: the tooltip lists all, the last icon counts the rest.
+    -- More than four warnings: the tooltip lists all, the last cell counts the rest.
     local overflow=edges:CreateFontString(nil,'OVERLAY','NumberFontNormal')
     overflow:SetPoint('BOTTOMRIGHT',badges[4],'BOTTOMRIGHT',-1,1);overflow:Hide()
     local border=host.outline
-    -- A plain glyph on the shell's own outline; no second button border.
+    -- A plain glyph on the expanded shell's outline; no second button border.
     local fold=CreateFrame('Button',nil,host.shell)
     fold:SetSize(14,24);fold:SetPoint('RIGHT',host.shell,'RIGHT',-5,0)
     local glyph=fold:CreateFontString(nil,'OVERLAY','GameFontHighlight');glyph:SetPoint('CENTER',fold,'CENTER',0,0);glyph:SetText('<')
@@ -80,6 +117,19 @@ function NS.Folded.Create(host,content,db,module)
         host.hovered=false;if GameTooltip then GameTooltip:Hide() end
         if content.baseAlpha then NS.ClassHost.SetFade(host,content,content.baseAlpha) end
     end)
+    local function LayoutCard(width,height)
+        card:ClearAllPoints();card:SetPoint('TOPLEFT',host,'TOPLEFT',0,-L.OVER);card:SetSize(width,height-L.OVER)
+        local inner,innerH=width-L.CORNER*2,height-L.OVER-L.CORNER*2
+        for _,slice in ipairs(slices) do
+            local w=slice.column=='CENTER' and inner or L.CORNER
+            local h=slice.row=='MIDDLE' and innerH or L.CORNER
+            local x=slice.column=='LEFT' and 0 or (slice.column=='CENTER' and L.CORNER or width-L.CORNER)
+            local y=slice.row=='TOP' and 0 or (slice.row=='MIDDLE' and L.CORNER or height-L.OVER-L.CORNER)
+            slice:SetSize(w,h);slice:ClearAllPoints();slice:SetPoint('TOPLEFT',card,'TOPLEFT',x,-y)
+        end
+        divider:SetSize(width-L.PAD*2,L.DIVIDER);divider:ClearAllPoints()
+        divider:SetPoint('TOPLEFT',host,'TOPLEFT',L.PAD,-(L.CREST+1))
+    end
     local function Refresh()
         local collapsed=db.collapsed==true
         button:SetShown(db.enabled and collapsed)
@@ -101,22 +151,25 @@ function NS.Folded.Create(host,content,db,module)
         end
         local total=collapsed and #visibleWarnings or 0
         local count=math.min(4,total)
-        local width=NS.Folded.Width(count)
+        local width,height,rowWidth,cellY=NS.Folded.Size(count)
         if collapsed then
-            host:SetSize(width,CELL);button:SetSize(width,CELL)
-            host.shell:SetSize(width+8,CELL+8)
+            host:SetSize(width,height);button:SetSize(width,height)
+            host.shell:SetSize(width+8,height+8)
         end
-        row:SetShown(count>0)
+        crest:ClearAllPoints();crest:SetPoint('TOPLEFT',host,'TOPLEFT',(width-L.CREST)/2,0)
+        card:SetShown(count>0);row:SetShown(count>0)
+        if count>0 then LayoutCard(width,height) end
+        local firstX=(width-rowWidth)/2
         for index,badge in ipairs(badges) do
             local warning=visibleWarnings[index]
             local shown=warning~=nil and index<=count
             badge:SetShown(shown);wells[index]:SetShown(shown);frames[index]:SetShown(shown)
             if shown then
-                local x=CELL+CREST_GAP+(index-1)*(CELL+GAP)
+                local x=firstX+(index-1)*(L.CELL+L.GAP)
                 badge:SetTexture(Core.Icon(warning.icon))
-                badge:ClearAllPoints();badge:SetPoint('TOPLEFT',host,'TOPLEFT',x+INSET,-INSET)
-                wells[index]:ClearAllPoints();wells[index]:SetPoint('TOPLEFT',host,'TOPLEFT',x+2,-2)
-                frames[index]:ClearAllPoints();frames[index]:SetPoint('TOPLEFT',host,'TOPLEFT',x,0)
+                badge:ClearAllPoints();badge:SetPoint('TOPLEFT',host,'TOPLEFT',x+L.INSET,-(cellY+L.INSET))
+                wells[index]:ClearAllPoints();wells[index]:SetPoint('TOPLEFT',host,'TOPLEFT',x+2,-(cellY+2))
+                frames[index]:ClearAllPoints();frames[index]:SetPoint('TOPLEFT',host,'TOPLEFT',x,-cellY)
             end
         end
         overflow:SetShown(total>4);overflow:SetText(total>4 and ('+'..(total-4)) or '')
@@ -126,7 +179,7 @@ function NS.Folded.Create(host,content,db,module)
         local alpha=NS.ClassHost.ContentAlpha(host,content)
         if collapsed then alpha=(warning or host.hovered) and 1 or math.max(0.8,alpha) end
         button:SetAlpha(alpha);fold:SetAlpha(alpha)
-        -- Compact mode has no panel behind the crest and cells.
+        -- The compact card brings its own frame; the expanded shell panel is hidden.
         host.shell:SetBackdropColor(0.04,0.045,0.055,collapsed and 0 or 0.55*alpha)
         border:SetShown(not collapsed)
         border:SetBackdropBorderColor(warning and 1 or 0.65,warning and 0.65 or 0.65,warning and 0.2 or 0.65,0.9)
@@ -136,5 +189,6 @@ function NS.Folded.Create(host,content,db,module)
     host.foldRefresh=Refresh
     content:HookScript('OnHide',Refresh);content:HookScript('OnShow',Refresh)
     return {Refresh=Refresh,overflow=overflow,button=button,fold=fold,badges=badges,wells=wells,frames=frames,
-        edges=edges,border=border,primary=crest,crest=crest,main=main,row=row}
+        edges=edges,card=card,slices=slices,divider=divider,glow=glow,fill=fill,border=border,
+        primary=crest,crest=crest,main=main,row=row}
 end

@@ -1,3 +1,13 @@
+## 0.33.0
+
+- The compact view is now a single framed card. A larger 48 × 48 class crest sits on top, breaking through the card's upper edge with a soft class-colored glow. An engraved divider separates it from the warning cells below.
+- One engraved frame surrounds the crest and the warnings, tinted in your class color (bronze Warrior, blue Mage, violet Warlock, and so on). Each warning keeps its own amber frame, dark well and inset icon.
+- With no warnings, the card disappears and only the glowing crest remains.
+- The crest stays exactly where you placed it; the card grows below and around it. Saved positions carry over.
+- Flash missing buffs still pulses only the warning cell frames.
+
+Use a full game restart: this release adds new texture files. Automated checks use mocked frames; in-game rendering still needs confirmation.
+
 ## 0.32.0
 
 - The compact view is now a single strip with a painted crest for your class at the left. The crest stays visible outside combat (idle opacity never drops below 80%), so the folded bar no longer looks empty or anonymous. It identifies the class only; it does not claim any buff is active or missing.
