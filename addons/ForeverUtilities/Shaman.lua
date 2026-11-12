@@ -388,16 +388,15 @@ local function CreateIndicator(host,db)
             if type(tide)=='table' then helper='Riptide '..(Context.FormatTime(tide.left) or 'active');icon=Shaman.spells.riptide.icon;color={0.25,0.8,1}
             else
                 local state=NS.ClassContext.SpellState(Shaman.spells.riptide)
+                -- Riptide's cooldown timer is left to the Cooldown Manager.
                 if state and state.status=='ready' then helper='Riptide ready';icon=Shaman.spells.riptide.icon
-                elseif state and state.status=='cooldown' then helper='Riptide '..(Context.FormatTime(state.left) or 'CD');icon=Shaman.spells.riptide.icon
                 elseif state and state.status=='context' then helper='Riptide: context';icon=Shaman.spells.riptide.icon end
             end
         elseif db.showSpecHelper~=false and (Shaman.spells.lightningMastery or Shaman.spells.stormstrike or Shaman.spells.totemicCall) then
             local state=NS.ClassContext.BestCue(Shaman.spells,{'lightningMastery','stormstrike','totemicCall'})
             if state then
                 icon=state.spell.icon
-                local status=state.status=='ready' and 'Ready' or state.status=='context' and 'Context'
-                    or Context.FormatTime(state.left) or 'CD'
+                local status=state.status=='ready' and 'Ready' or 'Context'
                 compactStatus=NS.L(status);helper=state.spell.name..' '..compactStatus
                 if state.ready then color={0.25,1,0.45} end
             end

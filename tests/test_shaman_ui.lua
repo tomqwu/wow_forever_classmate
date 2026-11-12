@@ -250,7 +250,7 @@ check(indicator.helperText.text=='' and not indicator.helperIcon.shown,
 C_Spell.GetSpellCooldown=function(id) assert(id==2001);return {startTime=140,duration=10,isEnabled=true} end
 C_Spell.IsSpellUsable=function() return true,false end
 indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')
-check(indicator.helperIcon.shown and indicator.helperText.text:find('8s',1,true),'Lightning Mastery uses live cooldown')
+check(not indicator.helperText.text:find('8s',1,true),'a cooling-down cue shows no timer (Cooldown Manager owns cooldowns)')
 NS.Shaman.spells={riptide={id=2000,name='Riptide',icon=123}}
 C_Spell.GetSpellCooldown=nil
 indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')
@@ -259,7 +259,8 @@ check(indicator.helperText.text=='' and not indicator.helperIcon.shown,
 C_Spell.GetSpellCooldown=function() return {startTime=140,duration=10,isEnabled=true} end
 C_Spell.IsSpellUsable=function() return true,false end
 indicator.scripts.OnEvent(indicator,'UNIT_AURA','player')
-check(indicator.helperText.text=='Riptide 8s','Riptide reports a cooldown instead of unconditional ready')
+check(indicator.helperText.text~='Riptide ready' and not indicator.helperText.text:find('8s',1,true),
+    'Riptide on cooldown is neither ready nor timed on the bar')
 NS.Shaman.spells=savedSpells
 indicator.scripts.OnEvent(indicator,'PLAYER_DEAD')
 indicator.scripts.OnEvent(indicator,'UNIT_AURA','player');indicator.Refresh()

@@ -66,7 +66,8 @@ GetTime=function() return now end
 local cooldown=C.Cooldown(spells.willToSurvive)
 check(cooldown.left==20,'real cooldown remaining')
 local racial=C.Racial(spells,'WARRIOR')
-check(racial and racial.spell.name=='Will to Survive' and not racial.ready and racial.left==20,'racial state uses cooldown')
+check(racial==nil,'a racial on cooldown is left to the Cooldown Manager')
+check(C.SpellState(spells.willToSurvive).status=='cooldown','the cooldown is still read, so it never counts as ready')
 C_Spell.GetSpellCooldown=function() return {startTime=secret,duration=30,isEnabled=true} end
 check(C.Cooldown(spells.willToSurvive)==nil,'secret cooldown hidden')
 -- The documented isOnGCD flag marks the global cooldown, not the spell's own.
@@ -205,6 +206,7 @@ for _,name in ipairs({'Read Leyline','Read Ley Line','解读魔网'}) do
   'Skyborne racial discovers each client spelling and localized metadata')
  C_Spell.GetSpellCooldown=function(id) assert(id==7001);return {startTime=90,duration=120,isEnabled=true} end
  C_Spell.IsSpellUsable=function() return true,false end
- check(C.Racial(discovered,'MAGE').left==110,'racial follows live cooldown rather than a stored tuning value')
+ check(C.Racial(discovered,'MAGE')==nil and C.SpellState(discovered.readLeyLine).left==110,
+  'racial cooldown is read live but not shown on the bar')
 end
 print('PASS: '..count..' shared class context checks')

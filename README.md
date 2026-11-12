@@ -20,7 +20,7 @@ The interface follows the WoW client language: English and Simplified Chinese (`
 | Warrior | Rage, your stance by name, shout upkeep, Rend, Deep Wounds, Sunder Armor, Thunder Clap, Demoralizing Shout and Hamstring, Enrage and Flurry, and learned cues including Overpower, Slam, Reckless Swings and Bloodrage |
 | Rogue | Energy, combo points, poison on each weapon with time left, Slice and Dice, Poised and Venom procs, your poisons, bleeds and Expose Armor on the target, and reactive abilities |
 | Druid | Current form and its live power, combo points in Cat Form, Mark of the Wild, Thorns and Omen of Clarity with its Clearcasting proc, target bleeds and DoTs, readable procs, plus Primal Bite and Shifting Power |
-| Mage | Live mana meter, armor and absorb-shield status, Fire Vulnerability and other target setup, Hot Streak, Fingers of Frost, Clearcasting, Arcane Blast stacks and Missile Barrage, and learned cooldowns |
+| Mage | Live mana meter, armor and absorb-shield status, Fire Vulnerability and other target setup, Hot Streak, Fingers of Frost, Clearcasting, Arcane Blast stacks and Missile Barrage, and learned abilities when ready |
 | Priest | Mana, Shadowform, Inner Fire, Fortitude, Divine Spirit and Shadow Protection upkeep, Shadow target effects, Penance, Inner Focus and other learned abilities, and Forever's race-specific Priest spells |
 | Warlock | Mana, soul shards, armor, demon presence and health (or your Demonic Sacrifice buff), every target DoT and curse, Nightfall's Shadow Trance proc, and learned abilities including Amplify Curse |
 

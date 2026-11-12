@@ -35,7 +35,7 @@ for _,entry in ipairs(Context.RacialCatalog) do sharedRacials[#sharedRacials+1]=
 
 local configs={
     PALADIN={key='paladin',label='Paladin',command='/fpaladin',color={0.96,0.55,0.73},icon='Interface\\Icons\\Spell_Holy_SealOfMight',
-        description='Mana, seal upkeep, judgments, learned combat abilities, and racial cooldowns.',
+        description='Mana, seal upkeep, judgments, learned combat abilities, and racials.',
         catalog={
             Spell('sealCommand','Seal of Command','upkeep'),Spell('sealRighteousness','Seal of Righteousness','upkeep'),
             Spell('sealCrusader','Seal of the Crusader','upkeep'),Spell('sealWisdom','Seal of Wisdom','upkeep'),Spell('sealLight','Seal of Light','upkeep'),
@@ -57,7 +57,7 @@ local configs={
             {label='Righteous Fury',keys={'righteousFury'},wakeOnMissing=false}},targetLabel='Judgment',powerType=0,powerLabel='Mana',
         targetSources={judgementFury='sealFury',judgementCrusader='sealCrusader',judgementWisdom='sealWisdom',judgementLight='sealLight',judgementJustice='sealJustice'}},
     WARRIOR={key='warrior',label='Warrior',command='/fwarrior',color={0.78,0.61,0.43},icon='Interface\\Icons\\Ability_Warrior_BattleShout',
-        description='Rage, stance, shout upkeep, target effects, reactive abilities, and racial cooldowns.',
+        description='Rage, stance, shout upkeep, target effects, reactive abilities, and racials.',
         catalog={
             Spell('battleShout','Battle Shout','upkeep'),Spell('commandingShout','Commanding Shout','upkeep'),
             Spell('rend','Rend','target'),Spell('deepWounds','Deep Wounds','target',true),Spell('sunderArmor','Sunder Armor','target'),
@@ -67,7 +67,7 @@ local configs={
             Spell('bloodrage','Bloodrage','cue'),Spell('berserkerRage','Berserker Rage','cue'),
         },upkeepLabel='Shout',upkeepGroups={{label='Shout',keys={'battleShout','commandingShout'},wakeOnMissing=false}},targetLabel='Target effect',powerType=1,powerLabel='Rage',showForm=true,dotKeys={'rend','deepWounds'}},
     ROGUE={key='rogue',label='Rogue',command='/frogue',color={1,0.96,0.41},icon='Interface\\Icons\\Ability_Rogue_SliceDice',
-        description='Energy, combo points, weapon coatings, finishers, target effects, and racial cooldowns.',
+        description='Energy, combo points, weapon coatings, finishers, target effects, and racials.',
         catalog={
             Spell('sliceDice','Slice and Dice','upkeep'),Spell('venom','Venom','proc',true),Spell('poised','Poised','proc',true),
             Spell('rupture','Rupture','target'),Spell('hemorrhage','Hemorrhage','target'),
@@ -78,7 +78,7 @@ local configs={
             Spell('riposte','Riposte','cue'),Spell('ambush','Ambush','cue'),Spell('bladeFlurry','Blade Flurry','cue'),Spell('coldBlood','Cold Blood','cue'),Spell('shank','Shank','cue'),
         },upkeepLabel='Coatings / buffs',upkeepGroups={{label='Finisher buff',keys={'sliceDice'},wakeOnMissing=false}},targetLabel='Finisher / poison',powerType=3,powerLabel='Energy',weaponCoatings=true,showCombo=true,dotKeys={'rupture','deadlyPoison','garrote'}},
     DRUID={key='druid',label='Druid',command='/fdruid',color={1,0.49,0.04},icon='Interface\\Icons\\Ability_Druid_CatForm',
-        description='Current form and power, buff upkeep, target effects, learned spec cues, and racial cooldowns.',
+        description='Current form and power, buff upkeep, target effects, learned spec cues, and racials.',
         catalog={
             Spell('markWild',{'Mark of the Wild','Gift of the Wild'},'upkeep'),Spell('thorns','Thorns','upkeep'),
             Spell('moonfire','Moonfire','target'),Spell('insectSwarm','Insect Swarm','target'),Spell('faerieFire','Faerie Fire','target'),Spell('rip','Rip','target'),Spell('rake','Rake','target'),Spell('lacerate','Lacerate','target'),
@@ -88,7 +88,7 @@ local configs={
             Spell('primalBite','Primal Bite','cue'),Spell('shiftingPower','Shifting Power','cue'),Spell('poised','Poised','proc',true),Spell('innervate','Innervate','cue'),Spell('swiftmend','Swiftmend','cue'),
         },upkeepLabel='Nature buffs',upkeepGroups={{label='Mark of the Wild',keys={'markWild'}},{label='Thorns',keys={'thorns'},wakeOnMissing=false},{label='Omen of Clarity',keys={'omenClarity'}}},targetLabel='Target effect',currentPower=true,showForm=true,comboInEnergy=true,dotKeys={'moonfire','insectSwarm','rip','rake','lacerate'}},
     MAGE={key='mage',label='Mage',command='/fmage',color={0.25,0.78,0.92},icon='Interface\\Icons\\Spell_Frost_FrostArmor02',
-        description='Live mana meter, armor and absorption shield upkeep, personal damage effects, spec procs, and racial cooldowns.',
+        description='Live mana meter, armor and absorption shield upkeep, personal damage effects, spec procs, and racials.',
         catalog={
             Spell('mageArmor','Mage Armor','upkeep'),Spell('iceArmor','Ice Armor','upkeep'),Spell('frostArmor','Frost Armor','upkeep'),Spell('moltenArmor','Molten Armor','upkeep'),
             Spell('manaShield','Mana Shield','shield'),Spell('iceBarrier','Ice Barrier','shield'),
@@ -112,7 +112,7 @@ local configs={
         },upkeepLabel='Self buffs',upkeepGroups={{label='Inner Fire',keys={'innerFire'}},{label='Fortitude',keys={'fortitude'}},{label='Divine Spirit',keys={'divineSpirit'}},
             {label='Shadow Protection',keys={'shadowProtection'},wakeOnMissing=false}},targetLabel='Target / healing',powerType=0,powerLabel='Mana',showForm=true,dotKeys={'shadowPain','devouringPlague'}},
     WARLOCK={key='warlock',label='Warlock',command='/fwarlock',color={0.53,0.53,0.93},icon='Interface\\Icons\\Spell_Shadow_Metamorphosis',
-        description='Mana and health, armor and demon state, DoT or Bane upkeep, abilities, and racial cooldowns.',
+        description='Mana and health, armor and demon state, DoT or Bane upkeep, abilities, and racials.',
         catalog={
             -- Spell-name lookup can be localized-only. English metadata queries
             -- returning nil must not make learned Chinese armor disappear.
@@ -293,7 +293,7 @@ local function CreateIndicator(module,config,host,db)
     Tooltip(target,function() return config.targetLabel end,function() return 'Tracks your readable target effects.' end)
     Tooltip(ability,function() return 'Ability' end,function() return 'Tracks a readable proc or learned usable ability.' end)
     Tooltip(racial,function() return racial.state and racial.state.spell.name or 'Racial ability' end,function()
-        return 'The learned active racial with its real cooldown and current usability. Context means the game reports it unusable now.'
+        return 'A learned active racial that is ready now. Context means the game reports it unusable now; cooldown timers are left to the Cooldown Manager.'
     end)
 
     local function Update()
@@ -556,10 +556,8 @@ local function CreateIndicator(module,config,host,db)
         elseif showAbilities and cue and cue.status~='unknown' then
             abilityIcon=cue.spell.icon;abilityName=cue.spell.name
             if cue.status=='ready' then abilityText='Ready';abilityColor={0.3,1,0.48}
-            elseif cue.status=='cooldown' then abilityText=Context.FormatTime(cue.left) or 'CD'
             elseif cue.status=='context' then abilityText='Context';abilityDim=true end
-            local detail=cue.status=='cooldown' and (Context.FormatTime(cue.left) or 'cooldown') or cue.status
-            abilityLines[#abilityLines+1]=cue.spell.name..': '..detail
+            abilityLines[#abilityLines+1]=cue.spell.name..': '..cue.status
         end
         target.tooltipTitle=config.targetLabel;target.tooltipLines=targetLines
         ability.tooltipTitle=abilityName or 'Ability';ability.tooltipLines=abilityLines
@@ -577,14 +575,10 @@ local function CreateIndicator(module,config,host,db)
         if racialState then
             local status,color
             if racialState.status=='ready' then status='Ready';color={0.3,1,0.48}
-            elseif racialState.status=='cooldown' then status=Context.FormatTime(racialState.left);color={1,0.72,0.28}
             elseif racialState.status=='context' then status='Context';color={0.65,0.7,0.78} end
             racial.tooltipTitle=racialState.spell.name;racial.tooltipLines={}
             for _,state in ipairs(racialStates) do
-                if state.status~='unknown' then
-                    local stateText=state.status=='cooldown' and (Context.FormatTime(state.left) or 'cooldown') or state.status
-                    racial.tooltipLines[#racial.tooltipLines+1]=state.spell.name..': '..stateText
-                end
+                if state.status~='unknown' then racial.tooltipLines[#racial.tooltipLines+1]=state.spell.name..': '..state.status end
             end
             Paint(racial,racialState.spell.icon,status,racialState.spell.name,color,not racialState.ready)
         else
@@ -598,7 +592,7 @@ local function CreateIndicator(module,config,host,db)
             or (hasTarget and (config.targetAlpha or 0.6) or (config.idleAlpha or 0.2)))
         lastStatus=string.format('%s; upkeep %s; target %s; ability %s; racial %s',resourceTop~='' and resourceTop or 'hidden',
             upkeepBottom~='' and upkeepBottom or 'hidden',targetText or 'hidden',abilityText or 'hidden',
-            racialState and (racialState.spell.name..' '..(racialState.status=='cooldown' and (Context.FormatTime(racialState.left) or 'cooldown') or racialState.status)) or 'hidden')
+            racialState and (racialState.spell.name..' '..racialState.status) or 'hidden')
     end
 
     local events={'PLAYER_ENTERING_WORLD','PLAYER_LEAVING_WORLD','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED','PLAYER_TARGET_CHANGED',

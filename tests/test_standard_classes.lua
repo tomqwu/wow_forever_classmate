@@ -392,6 +392,14 @@ check(paladin.cells.target.bottom.text=='Judgement of Wisdom','the target slot n
 local namedWarrior=Fixture(NS.Warrior,{'Battle Shout','Overpower','Battle Stance'},{'Battle Shout'})
 check(namedWarrior.cells.ability.top.text=='Ready' and namedWarrior.cells.ability.bottom.text=='Overpower'
     and namedWarrior.cells.ability.tooltipTitle=='Overpower','the ability slot names the spell, and its tooltip is titled with it')
+-- Cooldown timers are left to the game's Cooldown Manager.
+local savedCooldown=C_Spell.GetSpellCooldown
+C_Spell.GetSpellCooldown=function() return {startTime=GetTime()-2,duration=12,isEnabled=true} end
+namedWarrior.Update()
+check(not namedWarrior.cells.ability.shown and not namedWarrior.cells.racial.shown,
+    'abilities and racials on cooldown show no timer and leave their slots empty')
+C_Spell.GetSpellCooldown=savedCooldown;namedWarrior.Update()
+check(namedWarrior.cells.ability.top.text=='Ready','the slot returns when the ability is ready')
 GetShapeshiftForm=function() return 1 end
 GetShapeshiftFormInfo=function() return 132349,true,nil,4003 end
 namedWarrior.Update()

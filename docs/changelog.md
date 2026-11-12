@@ -1,3 +1,10 @@
+## 0.43.0
+
+- Cooldown timers are gone from the bar, since the game's Cooldown Manager already shows them. The ability slot shows a proc or a learned ability that is **Ready** (or **Context** when the game reports it unusable), and the racial slot shows a racial that is ready. An ability or racial on cooldown simply leaves its slot empty until it is ready again. The Shaman helper no longer counts down Riptide or its other cues either.
+- Cooldowns are still read, so a cooling-down spell is never shown as ready.
+
+Use `/reload`. Automated checks use mocked APIs; still needs in-game confirmation.
+
 ## 0.42.0
 
 Everything left from the full design and class review:
