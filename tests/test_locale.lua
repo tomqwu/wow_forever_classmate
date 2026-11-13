@@ -20,6 +20,8 @@ check(NS.L('shards'),'碎片','soul shard unit')
 check(NS.L('Off-hand poison'),'副手毒药','missing off-hand poison')
 -- 0.42.0 UI text
 check(NS.L('Click again to reset'),'再次点击以重置','reset confirmation')
+check(NS.L('Total'),'合计','alt gold total')
+check(NS.L("As of that character's last login"),'以该角色上次登录时为准','alt detail freshness note')
 check(NS.L('Expands when you are alive'),'复活后展开','dead crest tooltip')
 check(NS.L('Weapon coating'),'武器涂层','uncharged weapon coating')
 check(NS.L('Demon sacrificed'),'恶魔已牺牲','Demonic Sacrifice upkeep')

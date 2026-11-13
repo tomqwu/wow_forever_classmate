@@ -83,7 +83,7 @@ ClassContext.lua and StandardClasses.lua own the Paladin, Warrior, Rogue, Druid,
 `MailRecipients.lua` is a shared utility, controlled by the active class's
 `mailRecipients` preference independently of its bar. Preserve account-wide
 `ForeverUtilitiesDB.mail` character/history records. Learn alts only from observed
-logins and filter them by realm/faction. Forever uses first name plus surname:
+logins and filter them by realm/faction. Alt records (0.44.0) also keep the character's own class token, level and `GetMoney` gold, saved at login, `PLAYER_LEVEL_UP` and `PLAYER_MONEY` only when readable; rows show crest, class-colored name, level and gold, and the Alts heading totals gold. Never read amounts in mail. Forever uses first name plus surname:
 read the complete name from `GetUnitName`, with a readable two-part
 `UnitFullName` fallback. The second tuple value is a surname, never a realm.
 Read realm context independently. Preserve complete native recipient addresses;

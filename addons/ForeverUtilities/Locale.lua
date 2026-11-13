@@ -43,7 +43,7 @@ local zh={
     ['Loaded']='已加载',['opens settings.']='打开设置。',['Drag to move']='拖动以移动',
     [' more']=' 项未显示',['Name match']='名称匹配',[' guide']='指南',
     [' family guide']='家族指南',['Pet guide']='宠物指南',
-    ['Level']='等级',['Wild level']='野外等级',['Family guide']='家族指南',
+    ['Level']='等级',['Total']='合计',["As of that character's last login"]='以该角色上次登录时为准',['Wild level']='野外等级',['Family guide']='家族指南',
     ['Guide-listed family skill to verify']='待核实的家族技能',
     ['Possible rare origin']='可能来自稀有宠物',['Roster match']='名录匹配',
     ['Watch list']='关注名单',['Beta guide']='测试版指南',

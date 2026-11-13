@@ -33,6 +33,7 @@ end
 function methods:Show() self:SetShown(true) end
 function methods:Hide() self:SetShown(false) end
 function methods:SetText(value) self.text=value end
+function methods:SetTexture(value) self.texture=value end
 function methods:GetText() return self.text end
 function methods:SetEnabled(value) self.enabled=value end
 function methods:IsEnabled() return self.enabled~=false end
@@ -111,9 +112,25 @@ player=Mail.Player()
 local alts=Mail.Alts(player)
 check(#alts==1 and alts[1].name=='Bank Dawn','alts exclude current character, other faction, and same-name other realm IDs')
 -- A renamed character replaces its old observed entry by readable whole GUID.
+-- Class, level and gold are the character's own, read at login.
+local classToken,level,money='MAGE',42,1234567
+UnitClass=function() return 'Mage',classToken,8 end
+UnitLevel=function() return level end
+GetMoney=function() return money end
 name='RenamedBank';guid='Player-123-B';Event('PLAYER_ENTERING_WORLD')
+classToken,level,money='WARRIOR',60,50000
 name='Alice';guid='Player-123-A';Event('PLAYER_ENTERING_WORLD')
 alts=Mail.Alts(Mail.Player())
+check(alts[1].class=='MAGE' and alts[1].level==42 and alts[1].money==1234567,'an alt keeps its own class, level and gold')
+check(Mail.FormatGold(12345678):match('^1,234')~=nil and Mail.FormatGold(secret)==nil and Mail.FormatGold(-1)==nil,
+    'gold is formatted with separators and never from an unreadable value')
+-- Level-up and money events refresh the saved record; unreadable values are dropped.
+Event('PLAYER_LEVEL_UP',61);check(saved.mail.characters[Mail.Player().savedKey].level==61,'level-up saves the new level from the event')
+money=90000;Event('PLAYER_MONEY');check(saved.mail.characters[Mail.Player().savedKey].money==90000,'money changes are saved')
+money=secret;level=secret;classToken=secret;Event('PLAYER_MONEY')
+local own=saved.mail.characters[Mail.Player().savedKey]
+check(own.money==nil and own.level==nil and own.class==nil,'secret class, level or gold are never saved as values')
+classToken,level,money='WARRIOR',60,50000;Event('PLAYER_MONEY')
 check(#alts==1 and alts[1].name=='RenamedBank Dawn','same GUID updates renamed alt without retaining an old suggestion')
 -- Malformed saved records cannot break a mailbox.
 saved.mail.characters.bad={name='Bad-Realm',faction='Alliance'}
@@ -134,6 +151,11 @@ check(panel and panel.shown and panel.width==220 and panel.height==440 and panel
 check(SendMailNameEditBox.text=='DraftRecipient' and sends==0,'opening suggestions never overwrites the draft or sends mail')
 local altRow=panel.groups.alts.rows[1]
 check(altRow.item.name=='RenamedBank Dawn','observed alt appears in its section')
+check(altRow.icon.shown and altRow.icon.texture:find('Classes\\MAGE',1,true) and altRow.detail.shown
+    and altRow.detail.text:find('Level 42',1,true) and altRow.detail.text:find('123',1,true),
+    'an alt row shows its class crest, level and gold')
+check(panel.groups.alts.total.text:find('128',1,true)~=nil,'the alts heading totals this character and its alts')
+check(not panel.groups.recents.rows[1].icon.shown,'recent recipients carry no class or gold details')
 altRow.scripts.OnClick(altRow,'LeftButton')
 check(SendMailNameEditBox.text=='RenamedBank Dawn' and sends==0,'click fills recipient only')
 SendMailNameEditBox.enabled=false;SendMailNameEditBox.text='Untouched'
@@ -229,7 +251,9 @@ for _,row in ipairs(panel.groups.alts.rows) do
     if type(row.item)=='table' and row.item.name=='Spell Ward' then selected=row end
 end
 selected.scripts.OnClick(selected,'LeftButton')
-check(SendMailNameEditBox.text=='Spell Ward' and selected.label.height==24,
+-- With class/level/gold known the name takes the top line of the same 24px row.
+check(SendMailNameEditBox.text=='Spell Ward' and selected.label.text=='Spell Ward' and selected.label.width==166
+    and selected.label.height==12 and selected.height==24,
     'alt label and clicked recipient retain the surname within the existing row size')
 realmID=secret;Mail.Apply()
 check(not panel.shown and Mail.Player()==nil,'unreadable available realm ID cannot mix identical realm names')

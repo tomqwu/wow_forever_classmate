@@ -1,3 +1,12 @@
+## 0.44.0
+
+- The mail panel's **Alts** list now shows each alt's class crest, its name in class color, and its level and gold. Hover a row for "Level 60 Mage" and the gold balance, both as of that character's last login.
+- The Alts heading shows the total gold of the character you're on plus its alts on the realm.
+- Class, level and gold are saved for each character when you log in, level up or your money changes. Alts you haven't played since this update show just their name until you log into them once.
+- Only each character's own balance is stored; mail contents and the gold you send are never read.
+
+Use `/reload`. Automated checks use mocked APIs; still needs in-game confirmation.
+
 ## 0.43.0
 
 - Cooldown timers are gone from the bar, since the game's Cooldown Manager already shows them. The ability slot shows a proc or a learned ability that is **Ready** (or **Context** when the game reports it unusable), and the racial slot shows a racial that is ready. An ability or racial on cooldown simply leaves its slot empty until it is ready again. The Shaman helper no longer counts down Riptide or its other cues either.

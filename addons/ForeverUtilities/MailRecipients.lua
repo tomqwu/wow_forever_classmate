@@ -24,6 +24,18 @@ function Mail.Recipient(value)
     -- evidence of a realm suffix. Preserve the complete observed address.
     return {name=value,address=value,key=key:lower()}
 end
+-- Class, level and gold are the character's own, saved at login and on level
+-- or money changes. Mail contents and amounts sent are never read or stored.
+local classNames={WARRIOR='Warrior',PALADIN='Paladin',HUNTER='Hunter',ROGUE='Rogue',PRIEST='Priest',
+    SHAMAN='Shaman',MAGE='Mage',WARLOCK='Warlock',DRUID='Druid'}
+Mail.ClassNames=classNames
+function Mail.FormatGold(copper)
+    if not Core.IsNumber(copper) or copper<0 then return nil end
+    local gold=tostring(math.floor(copper/10000))
+    -- Thousands separators keep large balances readable.
+    gold=gold:reverse():gsub('(%d%d%d)','%1,'):reverse():gsub('^,','')
+    return gold..'|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t'
+end
 local function Scope(player)
     return (player.realmID and ('id:'..player.realmID) or ('realm:'..player.realm:lower()))..'/'..player.faction
 end
@@ -44,6 +56,12 @@ function Mail.Player()
     recipient.faction=faction;recipient.scope=Scope(recipient)
     recipient.savedKey=recipient.scope..'/'..recipient.key
     recipient.guid=String(Core.Call(UnitGUID,'player'))
+    local _,classToken=Core.Call(UnitClass,'player')
+    recipient.class=classNames[classToken] and classToken or nil
+    local level=Core.Call(UnitLevel,'player')
+    recipient.level=Core.IsNumber(level) and level>=1 and level<=100 and math.floor(level) or nil
+    local money=Core.Call(GetMoney)
+    recipient.money=Core.IsNumber(money) and money>=0 and math.floor(money) or nil
     return recipient
 end
 local function SameRealm(a,b)
@@ -61,10 +79,12 @@ local function OutOfCombat()
     if type(InCombatLockdown)=='function' then return Core.Call(InCombatLockdown)==false end
     return Core.Call(UnitAffectingCombat,'player')==false
 end
-local function RememberPlayer()
+local function RememberPlayer(level)
     if not Enabled() or suspended or not OutOfCombat() then return end
     local player=Mail.Player()
     if not player then return end
+    -- PLAYER_LEVEL_UP carries the new level before UnitLevel catches up.
+    if Core.IsNumber(level) and level>=1 and level<=100 then player.level=math.floor(level) end
     for key,record in pairs(db.characters) do
         if type(record)=='table' and player.guid and record.guid==player.guid and key~=player.savedKey then
             db.characters[key]=nil
@@ -81,7 +101,11 @@ function Mail.Alts(player)
             local realm=Realm(record.realm)
             if item and realm and realm~='' and record.faction==player.faction and SameRealm({realm=realm,realmID=record.realmID},player)
                 and item.key~=player.key and not seen[item.key] then
-                seen[item.key]=true;item.savedKey=key;result[#result+1]=item
+                seen[item.key]=true;item.savedKey=key
+                item.class=classNames[record.class] and record.class or nil
+                item.level=Core.IsNumber(record.level) and record.level or nil
+                item.money=Core.IsNumber(record.money) and record.money>=0 and record.money or nil
+                result[#result+1]=item
             end
         end
     end
@@ -162,6 +186,10 @@ local function CreatePanel()
         local y=-40-(index-1)*183
         Text(panel,definition.title,12,y,196):SetTextColor(1,0.82,0.3)
         local group={page=1,rows={}}
+        if definition.key=='alts' then
+            -- Gold across this character and its listed alts on the realm.
+            group.total=Text(panel,'',100,y,108);group.total:SetJustifyH('RIGHT')
+        end
         panel.groups[definition.key]=group
         group.empty=Text(panel,definition.empty,12,y-24,196,96);group.empty:SetJustifyV('TOP')
         for rowIndex=1,pageSize do
@@ -170,6 +198,10 @@ local function CreatePanel()
             row:RegisterForClicks('LeftButtonUp','RightButtonUp')
             local hover=row:CreateTexture(nil,'HIGHLIGHT');hover:SetAllPoints();hover:SetColorTexture(1,0.8,0.3,0.18)
             row.label=Text(row,'',6,0,184,24);row.label:SetWordWrap(true)
+            -- Alt rows: class crest, class-colored name, then level and gold.
+            row.icon=row:CreateTexture(nil,'ARTWORK');row.icon:SetSize(18,18);row.icon:SetPoint('LEFT',row,'LEFT',4,0);row.icon:Hide()
+            row.detail=row:CreateFontString(nil,'OVERLAY','GameFontDisableSmall')
+            row.detail:SetPoint('TOPLEFT',row,'TOPLEFT',26,-12);row.detail:SetSize(166,12);row.detail:SetJustifyH('LEFT');row.detail:Hide()
             row:SetScript('OnClick',function(self,button)
                 local player=Mail.Player()
                 if not Enabled() or not self.item or not player or pending~=nil or not OutOfCombat() then return end
@@ -179,6 +211,15 @@ local function CreatePanel()
             row:SetScript('OnEnter',function(self)
                 if GameTooltip and self.item then
                     GameTooltip:SetOwner(self,'ANCHOR_RIGHT');GameTooltip:SetText(self.item.address)
+                    local item=self.item
+                    if item.level or item.class then
+                        local who=(item.level and (NS.L('Level')..' '..item.level) or '')
+                            ..(item.class and ((item.level and ' ' or '')..NS.L(classNames[item.class])) or '')
+                        GameTooltip:AddLine(who,0.85,0.9,1)
+                    end
+                    local gold=Mail.FormatGold(item.money)
+                    if gold then GameTooltip:AddLine(gold,1,0.85,0.4) end
+                    if item.level or item.money then GameTooltip:AddLine(NS.L('As of that character\'s last login'),0.7,0.7,0.7,true) end
                     GameTooltip:AddLine(NS.L('Click: use name. Right-click: forget.'),1,1,1,true);GameTooltip:Show()
                 end
             end)
@@ -210,7 +251,31 @@ Refresh=function()
         for index,row in ipairs(group.rows) do
             local item=entries[(group.page-1)*pageSize+index]
             row.item=item;row:SetShown(item~=nil);row:SetEnabled(pending==nil)
-            if item then row.label:SetText(item.name) end
+            if item then
+                local rich=kind=='alts' and (item.class or item.level or item.money)
+                row.icon:SetShown(rich and item.class~=nil)
+                if rich and item.class then row.icon:SetTexture('Interface\\AddOns\\ForeverUtilities\\Textures\\Classes\\'..item.class) end
+                row.label:ClearAllPoints()
+                if rich then
+                    row.label:SetPoint('TOPLEFT',row,'TOPLEFT',26,0);row.label:SetSize(166,12);row.label:SetWordWrap(false)
+                    local c=item.class and NS.Folded and NS.Folded.ClassColors[item.class]
+                    if c then row.label:SetTextColor(c[1],c[2],c[3]) else row.label:SetTextColor(1,1,1) end
+                    local parts={}
+                    if item.level then parts[#parts+1]=NS.L('Level')..' '..item.level end
+                    local gold=Mail.FormatGold(item.money)
+                    if gold then parts[#parts+1]=gold end
+                    row.detail:SetText(table.concat(parts,'  '));row.detail:Show()
+                else
+                    row.label:SetPoint('TOPLEFT',row,'TOPLEFT',6,0);row.label:SetSize(184,24);row.label:SetWordWrap(true)
+                    row.label:SetTextColor(1,1,1);row.detail:Hide()
+                end
+                row.label:SetText(item.name)
+            end
+        end
+        if group.total then
+            local sum=player.money
+            if sum then for _,alt in ipairs(entries) do sum=sum+(alt.money or 0) end end
+            group.total:SetText(sum and (NS.L('Total')..' '..Mail.FormatGold(sum)) or '')
         end
     end
     panel:Show()
@@ -238,7 +303,8 @@ local function HookSend()
     end)
 end
 local events={'PLAYER_LOGIN','PLAYER_ENTERING_WORLD','PLAYER_LEAVING_WORLD','MAIL_SHOW','MAIL_CLOSED',
-    'MAIL_SEND_SUCCESS','MAIL_FAILED','SECURE_TRANSFER_CANCEL','ADDON_LOADED','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED'}
+    'MAIL_SEND_SUCCESS','MAIL_FAILED','SECURE_TRANSFER_CANCEL','ADDON_LOADED','PLAYER_REGEN_DISABLED','PLAYER_REGEN_ENABLED',
+    'PLAYER_LEVEL_UP','PLAYER_MONEY'}
 local function OnEvent(_,event,name)
     if not Enabled() then Hide();return end
     if event=='PLAYER_LEAVING_WORLD' then suspended=true;pending=nil;Hide();return end
@@ -253,6 +319,8 @@ local function OnEvent(_,event,name)
     elseif event=='PLAYER_ENTERING_WORLD' or event=='PLAYER_LOGIN' then suspended=false;RememberPlayer()
     elseif event=='PLAYER_REGEN_DISABLED' then combatBlocked=true
     elseif event=='PLAYER_REGEN_ENABLED' then combatBlocked=false;RememberPlayer()
+    elseif event=='PLAYER_LEVEL_UP' then RememberPlayer(name)
+    elseif event=='PLAYER_MONEY' then RememberPlayer()
     elseif event=='ADDON_LOADED' and (not Core.IsReadable(name) or name~='Blizzard_MailFrame') then return end
     Bind();HookSend();Refresh()
 end

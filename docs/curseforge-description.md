@@ -64,7 +64,7 @@ Combat, death, level 60 and unreadable aura data hide both.
 
 ## Mail recipients
 
-Opening **Send Mail** shows a side panel with **Alts** and **Recent recipients**. Click a name to fill the recipient field, or right-click to forget it. Recents keep your newest 20 successful recipients for the current realm and faction, shared across your characters, with full first name and surname. Log into each alt once to record it. No mail contents, items or gold amounts are stored. Toggle **Mail recipients: alts and recents** independently of the class bar.
+Opening **Send Mail** shows a side panel with **Alts** and **Recent recipients**. Click a name to fill the recipient field, or right-click to forget it. Recents keep your newest 20 successful recipients for the current realm and faction, shared across your characters, with full first name and surname. Each alt shows its class crest, its name in class color, its level and its gold, and the Alts heading totals the gold of this character and its alts on the realm. Log into each alt once to record it; class, level and gold refresh every time you play that character. No mail contents, items or gold sent are stored. Toggle **Mail recipients: alts and recents** independently of the class bar.
 
 ## Setup and commands
 

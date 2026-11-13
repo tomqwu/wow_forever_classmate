@@ -10,6 +10,13 @@ to forget its saved record. Names include both first name and surname, with wrap
 - Log into each character once with Classmate and its mail feature enabled.
   The addon records that observed character; it cannot enumerate the account's
   unplayed roster. The current character is excluded from its own alt list.
+- Each observed character also keeps its own class token (`UnitClass`), level
+  (`UnitLevel`, or the `PLAYER_LEVEL_UP` argument) and gold (`GetMoney`),
+  refreshed at login, on level-up and on `PLAYER_MONEY`. Unreadable or secret
+  values are not saved. Alt rows show the class crest, a class-colored name and
+  `Level N` plus gold "as of that character's last login"; records without
+  these fields show only the name. The Alts heading totals the current
+  character's gold with its listed alts. Amounts in mail are never read.
 - Alts are filtered to the current realm and faction. Readable realm IDs keep
   identically named realms separate. Whole readable player GUIDs update an
   observed character's renamed entry without parsing GUID components.
