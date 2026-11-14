@@ -57,12 +57,14 @@ before the lock control:
 
 | Slot | Bounds | Visible status |
 | --- | --- | --- |
-| Resource | 7–82 | 9px power meter colored by power type, then one cue: shard icon + count, five combo pips, or stance/form icon (no text) |
-| Upkeep | 82–162 | `Missing` + the missing buff's name; or one active buff's time + name; or `2/2` + `All active` (Warlock: demon health) |
-| Target | 162–242 | Own target-effect timer, stacks, or `None`, with the effect name below |
-| Ability | 242–322 | Proc stacks/timer or learned ability readiness, with the spell name below |
-| Racial | 322–398 | Best learned active-racial state, with the racial's name below |
+| Resource | 7 to 42, 70 or 90 | 9px power meter colored by power type, then one cue: shard icon + count, five combo pips, or stance/form icon (no text) |
+| Upkeep | card 1 | `Missing` + the missing buff's name; or one active buff's time + name; or `2/2` + `All active` (Warlock: demon health) |
+| Ability | card 2 | Proc stacks/timer or learned ability readiness, with the spell name below |
+| Racial | card 3 | Best learned active-racial state, with the racial's name below |
+| Target | card 4, ends at 398 | Own target-effect timer, stacks, or `None`, with the effect name below |
 | Control | 400–420 | Shared lock button |
+
+Slot widths (0.44.1). The resource slot is fixed per class by its cue: 83px for the Warlock shard count or combo pips (Rogue, Druid), 63px for a stance/form icon (Warrior, Priest), 35px for the meter alone (Paladin, Mage). The four cards split the rest evenly: 77, 82 or 89px. Each card has a 22px icon in a 26px frame at the top left with the state beside it (11px), and the name on its own row across the full card (9px, `width - 10`). The target-dependent card is last so a bar without a target has no hole in its middle. Positions never change during play.
 
 Every full bar's 44 × 44 class crest is centered on the frame's left edge, half outside and half inside. First content starts 20px into the bar to clear it: Hunter's range icon (text at 76), Shaman's first totem, and the standard resource text (Mage meter at 22). Standard resource slots are text only; the old fixed class spell icon is gone. Every standard class uses the 9px vertical meter; percentages appear only in the tooltip. An active Mana Shield or Ice Barrier uses a 4px coverage meter in upkeep, showing total absorbs against maximum health when the client exposes those values. Armor details remain on hover. This coverage is not a percentage of the shield’s original capacity.
 

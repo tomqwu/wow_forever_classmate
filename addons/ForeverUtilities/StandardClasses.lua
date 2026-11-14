@@ -180,26 +180,29 @@ end
 local powerColors={Mana={0.25,0.55,1},Rage={0.9,0.22,0.18},Energy={1,0.85,0.25}}
 local function PowerColor(label) return powerColors[label] or powerColors.Mana end
 
+-- A slot is a small card: icon and state on the first row, then the name on
+-- its own row across the whole slot, so names are not squeezed beside the icon.
 local function MakeCell(frame,x,width)
     local cell=CreateFrame('Button',nil,frame);cell:SetSize(width,48);cell:SetPoint('TOPLEFT',frame,'TOPLEFT',x,-4)
-    local icon=cell:CreateTexture(nil,'ARTWORK');icon:SetSize(24,24);icon:SetPoint('LEFT',cell,'LEFT',3,0)
-    local top=cell:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');top:SetPoint('TOPLEFT',cell,'TOPLEFT',31,-8)
-    top:SetWidth(width-34);top:SetJustifyH('LEFT');top:SetWordWrap(false);top:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',10,'OUTLINE')
-    local bottom=cell:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');bottom:SetPoint('TOPLEFT',cell,'TOPLEFT',31,-26)
-    bottom:SetWidth(width-34);bottom:SetJustifyH('LEFT');bottom:SetWordWrap(false);bottom:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',9,'OUTLINE')
+    local icon=cell:CreateTexture(nil,'ARTWORK');icon:SetSize(22,22);icon:SetPoint('TOPLEFT',cell,'TOPLEFT',6,-7)
+    local top=cell:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');top:SetPoint('LEFT',cell,'TOPLEFT',33,-18)
+    top:SetWidth(width-37);top:SetJustifyH('LEFT');top:SetWordWrap(false);top:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',11,'OUTLINE')
+    local bottom=cell:CreateFontString(nil,'OVERLAY','GameFontHighlightSmall');bottom:SetPoint('TOPLEFT',cell,'TOPLEFT',5,-34)
+    bottom:SetWidth(width-10);bottom:SetJustifyH('LEFT');bottom:SetWordWrap(false);bottom:SetFont(STANDARD_TEXT_FONT or 'Fonts\\FRIZQT__.TTF',9,'OUTLINE')
     local line=frame:CreateTexture(nil,'ARTWORK');line:SetSize(1,36);line:SetPoint('RIGHT',cell,'RIGHT',0,0)
     Core.EngraveDivider(line,frame)
     cell.icon,cell.top,cell.bottom,cell.line=icon,top,bottom,line
-    cell.iconFrame=Core.IconFrame(cell,icon,28)
+    cell.iconFrame=Core.IconFrame(cell,icon,26)
     return cell
 end
 local function Paint(cell,icon,top,bottom,color,dim)
     cell.icon:SetTexture(icon);cell.icon:SetShown(icon~=nil)
     cell.icon:SetVertexColor(dim and 0.42 or 1,dim and 0.42 or 1,dim and 0.45 or 1,1)
-    local textX=icon and 31 or (type(cell.textInset)=='number' and cell.textInset or 3)
+    -- Without an icon the state starts at the slot's left padding.
+    local textX=icon and 33 or 5
     if cell.textX~=textX then
-        cell.top:ClearAllPoints();cell.top:SetPoint('TOPLEFT',cell,'TOPLEFT',textX,-8);cell.top:SetWidth(cell:GetWidth()-textX-3)
-        cell.bottom:ClearAllPoints();cell.bottom:SetPoint('TOPLEFT',cell,'TOPLEFT',textX,-26);cell.bottom:SetWidth(cell:GetWidth()-textX-3)
+        cell.top:ClearAllPoints();cell.top:SetPoint('LEFT',cell,'TOPLEFT',textX,-18)
+        cell.top:SetWidth(cell:GetWidth()-textX-4-(type(cell.rightInset)=='number' and cell.rightInset or 0))
         cell.textX=textX
     end
     cell.top:SetText(NS.L(top or ''));cell.bottom:SetText(NS.L(bottom or ''))
@@ -218,8 +221,15 @@ local function CreateIndicator(module,config,host,db)
     frame.foldShell=host.shell
     local background=frame:CreateTexture(nil,'BACKGROUND');background:SetAllPoints(frame);background:SetColorTexture(0.012,0.02,0.035,0.94)
     -- The class crest and tinted frame carry identity; no separate color stripe.
-    local resource=MakeCell(frame,7,75);local upkeep=MakeCell(frame,82,80);local target=MakeCell(frame,162,80)
-    local ability=MakeCell(frame,242,80);local racial=MakeCell(frame,322,76)
+    -- The resource slot is as wide as its class cue needs (count or pips,
+    -- one form icon, or the meter alone); the four card slots share the rest
+    -- evenly up to the lock control. Always-present slots come first and the
+    -- target-dependent one last, so an idle bar has no hole in the middle.
+    local resourceWidth=(config.showShards or config.showCombo or config.comboInEnergy) and 83 or (config.showForm and 63 or 35)
+    local slotWidth=(398-7-resourceWidth)/4;local first=7+resourceWidth
+    local resource=MakeCell(frame,7,resourceWidth);local upkeep=MakeCell(frame,first,slotWidth)
+    local ability=MakeCell(frame,first+slotWidth,slotWidth);local racial=MakeCell(frame,first+slotWidth*2,slotWidth)
+    local target=MakeCell(frame,first+slotWidth*3,slotWidth)
     -- The class crest clasps the frame's left edge (ClassHost frame art), so
     -- the resource slot is text only and starts just past the crest.
     -- The resource slot is visual: a power meter, then one class cue (shard
@@ -238,11 +248,12 @@ local function CreateIndicator(module,config,host,db)
         resource.pips[index]=pip
     end
     if config.key=='mage' then
-        upkeep.meter=MakeMeter(upkeep,72,4,{0.4,0.85,1})
+        upkeep.meter=MakeMeter(upkeep,slotWidth-9,4,{0.4,0.85,1})
+        upkeep.rightInset=8;upkeep.top:SetWidth(slotWidth-45);upkeep.bottom:SetWidth(slotWidth-18)
     end
     frame.cells={resource=resource,upkeep=upkeep,target=target,ability=ability,racial=racial}
     local armorWarning=upkeep:CreateTexture(nil,'BACKGROUND')
-    armorWarning:SetSize(28,28);armorWarning:SetPoint('LEFT',upkeep,'LEFT',1,0)
+    armorWarning:SetSize(26,26);armorWarning:SetPoint('LEFT',upkeep.icon,'LEFT',-2,0)
     armorWarning:Hide();Core.StyleWarningFrame(armorWarning,upkeep,nil,upkeep.iconFrame)
     upkeep.armorWarning=armorWarning
     local pulseUpkeep=Core.CreateWarningPulse(frame,armorWarning)
@@ -477,7 +488,7 @@ local function CreateIndicator(module,config,host,db)
             upkeepBottom=petHealth and (NS.L('Demon')..' '..petHealth..'%') or 'All active'
         end
         -- With no icon, use a narrow warning stripe instead of an empty square.
-        armorWarning:SetSize(upkeepIcon and 28 or 3,28)
+        armorWarning:SetSize(upkeepIcon and 26 or 3,26)
         armorWarning:SetShown(missingBuff)
         pulseUpkeep(missingBuff and db.flashMissingBuffs~=false)
         NS.ClassHost.SetWarning(host,'upkeep',missingBuff,missingIcon,missingArmor and 'Armor missing' or 'Class upkeep missing')
@@ -516,7 +527,6 @@ local function CreateIndicator(module,config,host,db)
         upkeep.tooltipTitle=config.key=='mage' and 'Mage armor and absorbs' or config.upkeepLabel;upkeep.tooltipLines=upkeepLines
         Paint(upkeep,upkeepIcon,upkeepTop,upkeepBottom,
             upkeepWarn and {1,0.25,0.18} or config.color,upkeepDim or (upkeepUnknown>0 and upkeepActive==0))
-        if config.key=='mage' then upkeep.top:SetWidth(39);upkeep.bottom:SetWidth(39) end
         if hasProtectedAbsorb then pcall(upkeep.top.SetFormattedText,upkeep.top,'%.0f',protectedAbsorb) end
         upkeep:SetShown((db.showUpkeep~=false and (upkeepIcon~=nil or upkeepTop~='' or upkeepBottom~=''))
             or (config.key=='mage' and db.showMageShield~=false and type(shieldAura)=='table'))

@@ -1,3 +1,11 @@
+## 0.44.1
+
+- Slot spacing on the Paladin, Warrior, Rogue, Druid, Mage, Priest and Warlock bars is rebuilt. Each slot is now a small card: the icon and its state ("Ready", "2/2", a timer) on the first row, and the name on its own row across the whole slot, so "All active", "Blood Fury" and similar names are no longer cut off.
+- The resource slot is sized to what the class shows: wide enough for the Warlock shard count or the combo pips (the count no longer runs into the next slot), narrower for a single stance/form icon, and narrowest for a mana meter alone. The other four slots share the remaining width evenly.
+- Slot order is now Resource, Upkeep, Ability, Racial, Target. The target slot is last, so a bar with no target no longer has an empty hole in its middle. Slots still never move during play.
+
+Use `/reload`. Automated checks use mocked APIs; still needs in-game confirmation.
+
 ## 0.44.0
 
 - The mail panel's **Alts** list now shows each alt's class crest, its name in class color, and its level and gold. Hover a row for "Level 60 Mage" and the gold balance, both as of that character's last login.

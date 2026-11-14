@@ -158,12 +158,20 @@ check(indicator.events.LEARNED_SPELL_IN_SKILL_LINE and not indicator.events.LEAR
 check(indicator.cells.resource.top.text=='' and not indicator.cells.resource.icon.shown and rawget(indicator,'crest')==nil
     and indicator.cells.resource.meter.shown and indicator.cells.resource.meter.value==70,
     'the resource slot is text only: no duplicate class spell icon inside the bar')
-check(indicator.cells.upkeep.x==82 and indicator.cells.target.x==162 and indicator.cells.ability.x==242
-    and indicator.cells.racial.x==322,'slots keep their original even widths')
+-- A meter-only class gives the room its resource slot does not need to the cards.
+check(indicator.cells.resource.width==35 and indicator.cells.upkeep.x==42 and indicator.cells.ability.x==131
+    and indicator.cells.racial.x==220 and indicator.cells.target.x==309,
+    'the target-dependent slot is last and always-present slots stay together')
+for _,key in ipairs({'upkeep','ability','racial','target'}) do
+    local cell=indicator.cells[key]
+    check(cell.width==89 and cell.bottom.width==cell.width-10 and cell.bottom.x==5 and cell.bottom.y==-34
+        and cell.icon.width==22 and cell.icon.x==6 and cell.iconFrame.width==26,
+        key..' card puts the name on its own row across the whole slot')
+end
 check(host.outline.crest.shown and host.outline.crest.width==44 and host.outline.crest.x==0
     and host.outline.crest.texture=='Interface\\AddOns\\ForeverUtilities\\Textures\\Classes\\PALADIN',
     'the class crest is centered on the frame edge, half inside, ending before the resource text')
-check(indicator.cells.racial.x+indicator.cells.racial.width==398,'all five class slots end before the lock control')
+check(indicator.cells.target.x+indicator.cells.target.width==398,'all five class slots end before the lock control')
 indicator.scripts.OnEvent(indicator,'PLAYER_LEAVING_WORLD');check(indicator.scripts.OnUpdate==nil,'world exit stops polling')
 indicator.scripts.OnEvent(indicator,'PLAYER_ENTERING_WORLD');check(indicator.scripts.OnUpdate~=nil,'world entry restarts polling')
 NS.Paladin.SetEnabled(false);check(not host.shown and indicator.scripts.OnUpdate==nil,'disable hides helper and stops polling')
@@ -491,6 +499,10 @@ check(upkeepCell.armorWarning.texture=='Interface\\AddOns\\ForeverUtilities\\Tex
     'the armor warning is an engraved amber frame with an ember halo, replacing the neutral icon frame')
 check(warlock.cells.resource.line.engraved and warlock.cells.resource.line.engraved.texture=='Interface\\AddOns\\ForeverUtilities\\Textures\\Divider'
     and warlock.cells.resource.line.engraved.width==6,'slot separators are engraved dividers')
+-- Shard icon frame ends at 60 and a two-digit 13px count needs about 18 more.
+check(warlock.cells.resource.width==83 and warlock.cells.upkeep.x==90 and warlock.cells.upkeep.width==77
+    and warlock.cells.target.x+warlock.cells.target.width==398,
+    'the shard count has room inside its own slot and four equal cards fill the rest')
 upkeepCell.armorWarning:Hide()
 check(not upkeepCell.armorWarning.halo.shown and upkeepCell.iconFrame.alpha==1,'clearing the warning restores the neutral icon frame')
 upkeepCell.icon:SetShown(false)
