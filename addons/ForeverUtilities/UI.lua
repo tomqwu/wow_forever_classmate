@@ -168,6 +168,7 @@ events:SetScript('OnEvent',function(self,_,name)
     BindChanges()
     for _,module in pairs(NS.Classes) do module.Initialize(ForeverUtilitiesDB) end
     if NS.MailRecipients then NS.MailRecipients.Initialize(ForeverUtilitiesDB) end
+    if NS.Broker then NS.Broker.Initialize(OpenPanel) end
     self:UnregisterEvent('ADDON_LOADED')
     local module=Active()
     if module then Say(L('Loaded')..' '..L(module.name:gsub('Forever Classmate — ',''))..' v'..NS.Version..'. '..module.command..' '..L('opens settings.')) end

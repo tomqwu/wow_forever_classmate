@@ -5,8 +5,9 @@
 ## Notes-zhCN: 魔兽世界：永恒职业助手，提供升级增益提醒、小号及最近邮件收件人列表。
 ## IconTexture: Interface\AddOns\ForeverUtilities\Textures\ForeverClassmate
 ## Author: Codex
-## Version: 0.44.1
+## Version: 0.45.0
 ## SavedVariables: ForeverUtilitiesDB
+## X-Embeds: LibStub, CallbackHandler-1.0, LibDataBroker-1.1
 Core.lua
 Locale.lua
 SpellAliases.lua
@@ -26,4 +27,8 @@ ShamanContext.lua
 Shaman.lua
 StandardClasses.lua
 MinimapTray.lua
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Broker.lua
 UI.lua

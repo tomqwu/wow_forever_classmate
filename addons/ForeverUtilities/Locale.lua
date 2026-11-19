@@ -12,6 +12,7 @@ local zh={
     ['No confirmed missing buffs']='未确认有缺失的增益',
     ['Weapon imbue missing']='缺少武器强化',['Elemental shield missing']='缺少元素护盾',['Aspect missing']='缺少守护',
     ['Forever Classmate']='永恒战友',
+    ['Classmate']='战友',['Off']='关闭',['Left-click: settings']='左键：设置',['Right-click: fold or expand the bar']='右键：折叠或展开职业条',
     ['Hunter']='猎人',['Shaman']='萨满祭司',['Paladin']='圣骑士',['Warrior']='战士',
     ['Rogue']='潜行者',['Druid']='德鲁伊',['Mage']='法师',['Priest']='牧师',['Warlock']='术士',
     ['Multi-target attack.']='群体攻击。',['Group defense']='团队防御',

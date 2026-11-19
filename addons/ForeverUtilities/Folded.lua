@@ -263,7 +263,10 @@ function NS.Folded.Create(host,content,db,module)
         if border.SetWarm then border.SetWarm(warning) end
         pulse(collapsed and db.enabled and warning and db.flashMissingBuffs~=false)
         border:SetAlpha(alpha)
+        -- A broker display (Titan Panel) mirrors the same confirmed state.
+        if NS.Broker then NS.Broker.Refresh(module,host,visibleWarnings) end
     end
+    host.foldContent=content
     host.foldRefresh=Refresh
     content:HookScript('OnHide',Refresh);content:HookScript('OnShow',Refresh)
     return {Refresh=Refresh,overflow=overflow,button=button,fold=fold,badges=badges,wells=wells,frames=frames,glows=glows,halos=halos,

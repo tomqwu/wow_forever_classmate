@@ -1,3 +1,12 @@
+## 0.45.0
+
+- **Titan Panel support.** Classmate now publishes a LibDataBroker plugin named **Classmate**, so Titan Panel (and ChocolateBar, Bazooka or any other broker bar) can show it. It shows your class crest, the same stat as the compact card (Soul Shards, mana, ammo, poison time and so on) and the first confirmed missing buff with `+N` for more, or `Off` when the class bar is disabled.
+- Hover the plugin for the class, stat and every confirmed warning. Left-click opens settings; right-click folds or expands the bar (not while dead).
+- The plugin only mirrors what the bar already confirmed. It adds no polling and updates only when something changes. Without a broker display installed nothing appears.
+- Embeds the standard LibStub, CallbackHandler-1.0 and LibDataBroker-1.1 libraries, unmodified.
+
+Use `/reload`. Automated checks use mocked APIs; still needs in-game confirmation with Titan Panel installed.
+
 ## 0.44.1
 
 - Slot spacing on the Paladin, Warrior, Rogue, Druid, Mage, Priest and Warlock bars is rebuilt. Each slot is now a small card: the icon and its state ("Ready", "2/2", a timer) on the first row, and the name on its own row across the whole slot, so "All active", "Blood Fury" and similar names are no longer cut off.

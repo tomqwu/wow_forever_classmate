@@ -12,6 +12,7 @@ The interface follows the WoW client language: English and Simplified Chinese (`
 - **Compact card.** Fold the bar into a small card: your class crest on top, then one class stat and any confirmed missing buffs, each in a matching framed cell with an ember glow.
 - **Class stat at a glance.** The card always shows the number your class watches most: Hunter ammo, Warlock soul shards, Shaman Ankhs, Mage conjured water, Rogue poison time, mana for Paladin, Priest and Druid, and health for Warrior.
 - **Fold outside combat, expand in combat.** Optional automatic switching with a class-colored flare as the bar bursts out or the card drops in.
+- **Titan Panel support.** A broker plugin shows your class stat and any missing buff on Titan Panel or another broker bar.
 - **One minimap icon.** Other addons' minimap buttons gather into a tray that opens when you hover over the Classmate button.
 - **Leveling reminders** for the sleeping bag and XP food buffs below level 60, and an **alt and recent recipient list** beside Send Mail.
 
@@ -52,6 +53,10 @@ When you die the bar folds down to your crest, which fades to a ghostly tint ins
 With **Group addon minimap buttons** on (the default), other addons' minimap buttons move into a framed tray behind the Classmate button, so it is the only icon around your map. Hover over Classmate to open the tray; its first cell opens Classmate settings. Left-click Classmate for settings and right-click to inspect your target. Buttons keep their own clicks and tooltips, and the tray closes on a click, on Escape, or two seconds after you move away.
 
 Only named addon launchers (LibDBIcon, ForeverCore and similar) are collected. Blizzard minimap controls, map pins and protected frames are never touched, and nothing moves during combat. Turn the option off to return every button to its original spot.
+
+## Titan Panel and other broker bars
+
+Classmate publishes a LibDataBroker plugin named **Classmate**. Titan Panel, ChocolateBar, Bazooka and other broker displays can show it with your class crest, the same stat as the compact card (Soul Shards, mana, ammo and so on) and the first confirmed missing buff, or **Off** when the class bar is disabled. Hover for the full list; left-click opens settings and right-click folds or expands the bar. It mirrors what the bar already confirmed and adds no extra polling. Without a broker display installed it does nothing.
 
 ## Leveling reminders
 
